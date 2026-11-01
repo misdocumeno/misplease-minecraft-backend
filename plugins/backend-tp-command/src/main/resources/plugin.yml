@@ -1,0 +1,37 @@
+name: TeleportCommand
+main: io.github.misdocumeno.BackendTeleportCommandPlugin
+version: '0.1.0'
+api-version: '1.20'
+commands:
+  tp:
+    description: Teleport to a player
+    usage: /tp <player> [otherplayer]
+    permission: misplease.tp.command
+  tphere:
+    description: Teleport a player to you
+    usage: /tphere <player>
+    permission: misplease.tphere.command
+  tpa:
+    description: Request to teleport to the specified player
+    usage: /tpa <player>
+    permission: misplease.tpa.command
+  tpahere:
+    description: Request that the specified player teleport to you
+    usage: /tpahere <player>
+    permission: misplease.tpahere.command
+  tpaccept:
+    description: Accept a teleport request
+    usage: /tpaccept [player|*]
+    permission: misplease.tpaccept.command
+  tpdeny:
+    description: Reject teleport requests
+    usage: /tpdeny [player|*]
+    permission: misplease.tpdeny.command
+  tpacancel:
+    description: Cancel an outgoing teleport request
+    usage: /tpacancel [player|*]
+    permission: misplease.tpacancel.command
+  tpall:
+    description: Teleport all players
+    usage: /tpall [player]
+    permission: misplease.tpall.command

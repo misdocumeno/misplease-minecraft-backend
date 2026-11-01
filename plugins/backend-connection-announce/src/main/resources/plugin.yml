@@ -1,0 +1,4 @@
+name: backend-connection-announce
+main: io.github.misdocumeno.BackendConnectionAnnounce
+version: 0.1.0-SNAPSHOT
+api-version: '1.20'

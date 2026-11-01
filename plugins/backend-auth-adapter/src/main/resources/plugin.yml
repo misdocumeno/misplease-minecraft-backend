@@ -1,0 +1,8 @@
+name: backend-auth-adapter
+main: io.github.misdocumeno.BackendAuthAdapterPlugin
+version: 0.1.0-SNAPSHOT
+api-version: '1.20'
+commands:
+  login:
+    description: Authenticate yourself
+    usage: /login <password>

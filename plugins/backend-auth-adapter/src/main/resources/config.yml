@@ -1,0 +1,13 @@
+messages:
+  unauthenticated:
+    title: "<dark_purple>Please login</dark_purple>"
+    subtitle: "<grey>Use /login <password><grey>"
+  authenticated:
+    title: "<dark_purple>Login successful</dark_purple>"
+    subtitle: "<grey>Welcome!</grey>"
+  wrong-password: "<red>Wrong password.</red>"
+  kick-timeout: "<red>You took too long to login.</red>"
+  already-logged-in: "<red>You are already logged in.</red>"
+sounds:
+  wrong-password: ENTITY_VILLAGER_NO
+  already-logged-in: ENTITY_VILLAGER_NO

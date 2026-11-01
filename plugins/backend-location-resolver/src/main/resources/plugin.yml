@@ -1,0 +1,4 @@
+name: backend-location-resolver
+main: io.github.misdocumeno.BackendLocationResolverPlugin
+version: 0.1.0-SNAPSHOT
+api-version: '1.20'

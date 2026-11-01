@@ -1,0 +1,4 @@
+name: backend-global-teleporter
+main: io.github.misdocumeno.BackendGlobalTeleporterPlugin
+version: 0.1.0-SNAPSHOT
+api-version: '1.20'
