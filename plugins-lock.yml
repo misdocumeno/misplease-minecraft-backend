@@ -1,0 +1,210 @@
+# TODO: tener un plugins-lock.yml por server. que todos descarguen sus jars en un mismo directorio,
+# y luego el materializer los copie o mueva a su destino correspondiente, para evitar duplicar descargas
+
+# TODO: --dev option to generate lock file with dev versions when possible (citizens, superSkyBlock2)
+# TODO: change to modrinth if it has a better api and plugins update at the same time, or more regularly (some update less than in spigot, so do not use modrinth with those)
+
+# TODO: algunos plugins spigot los marca como "external link". esos no deberian ser descargados con spiget, asique ver como descargarlos, y cambiarles el source, ya que se nos paso mas de uno seguro, chequear cada uno
+versions:
+  - name: ActionHealth
+    source: github
+    url: https://github.com/zeshan321/ActionHealth/releases/download/3.5.9/ActionHealth-3.5.9-all.jar
+  - name: AdvancedRegionMarket
+    source: spiget
+    resourceId: 58732
+    versionId: 579317
+  - name: AutoSellChests
+    source: spiget
+    resourceId: 103060
+    versionId: 611671
+  - name: chunky
+    source: spiget
+    resourceId: 81534
+    versionId: 594423
+  - name: Citizens2
+    source: jetkins # TODO: implement
+    url: https://ci.citizensnpcs.co/job/citizens2/
+  - name: CMILib
+    source: spiget
+    resourceId: 87610
+    versionId: 619070
+  - name: ColoredSigns
+    source: spiget
+    resourceId: 31676
+    versionId: 582194
+  - name: CommandRegions
+    source: spiget
+    resourceId: 68727
+    versionId: 281057
+  - name: CoreProtect
+    source: spiget
+    resourceId: 8631
+    versionId: 618082
+  - name: DeathCoordinates
+    source: spiget
+    resourceId: 43318
+    versionId: 455215
+  - name: DecentHolograms
+    source: spiget
+    resourceId: 96927
+    versionId: 618069
+  - name: Dynmap
+    source: spiget
+    resourceId: 274
+    versionId: 598416
+  - name: EconomyShopGUI
+    source: spiget
+    resourceId: 69927
+    versionId: 617343
+  - name: EpicPluginLib
+    source: spiget
+    resourceId: 80448
+    versionId: 530263
+  # TODO: implement git. with a list of artifacts maybe? bc there are multiple jars.
+  # ask chatgpt how to abstract this to any repo releases. use package or something to inspect releases
+  # (EssentialsX, EssentialsXChat? no se que hace, EssentialsXProtect? ver que hace, EssentialsXSpawn )
+  # - name: EssentialsX
+  #   url: https://github.com/EssentialsX/Essentials/releases
+  - name: ExtraContexts
+    source: jetkins # TODO: implement
+    url: https://ci.lucko.me/job/ExtraContexts/
+  - name: FastAsyncWorldEdit
+    source: modrinth
+    url: https://cdn.modrinth.com/data/z4HZZnLr/versions/qE0gYHJh/FastAsyncWorldEdit-Paper-2.14.3.jar
+    sha1: 98961a19efd24fc22d2b137e1e66a1babdd6035a
+  # TODO: ver que es, y si hace falta, y como es el tema con velocity
+  # - name: Floodgate
+  #   url: https://geysermc.org/wiki/floodgate/
+  # TODO: ver como es con velocity ahora. la idea es que se pueda entrar con versiones futuras a todos los sv
+  # - name: Geyser
+  - name: GravityTubes
+    source: spiget
+    resourceId: 64624
+    versionId: 440120
+  - name: GSit
+    source: spiget
+    resourceId: 62325
+    versionId: 619703
+  - name: CustomImages # TODO: reeplazar por este, que tiene imagenes animadas https://modrinth.com/plugin/imageframe
+    source: spiget
+    resourceId: 53036
+    versionId: 610087
+  - name: NBT-API
+    source: spiget
+    resourceId: 7939
+    versionId: 617312
+  - name: Jobs
+    source: spiget
+    resourceId: 4216
+    versionId: 613729
+  - name: LightCleaner
+    source: spiget
+    resourceId: 42469
+    versionId: 486939
+  # TODO: ver como es con velocity
+  # - name: LuckPerms
+  #   source: modrinth
+  #   url: https://modrinth.com/plugin/luckperms/versions?l=paper
+  # TODO: tiene versiones beta. ver como filtrar solo releases, opcionalmente beta, en el creador de lock
+  - name: Multiverse-Core
+    source: modrinth
+    url: https://cdn.modrinth.com/data/3wmN97b8/versions/8qqcmJXj/multiverse-core-5.5.0-pre.jar
+    sha1: 898880f68fa4b30e3abd872873a5b2ac3430d288
+  - name: Multiverse-Inventories
+    source: modrinth
+    url: https://cdn.modrinth.com/data/qvdtDX3s/versions/YgwE3Cbi/multiverse-inventories-5.3.0.jar
+    sha1: 4a1772b1964839081832373f310e41e7c5c53fc1
+  - name: NetherPortal
+    source: spiget
+    resourceId: 27349
+    versionId: 279525
+  # TODO: cambiar openinv por este. tiene mas features, y es de modrinth en lugar de bukkit
+  - name: OpenInventory
+    source: modrinth
+    url: https://cdn.modrinth.com/data/CJ1sB5q4/versions/LWx1CW8q/Open-inv-0.4.jar
+    sha1: 3f6db9b7a495ee79b864ca6b9b39a932ae9300a9
+  - name: PlaceholderAPI
+    source: spiget
+    resourceId: 6245
+    versionId: 613916
+  - name: PlayMoreSounds
+    source: spiget
+    resourceId: 37429
+    versionId: 443906
+  - name: PL-Hide
+    source: spiget
+    resourceId: 68767
+    versionId: 606131
+  - name: Plot2Dynmap
+    source: spiget
+    resourceId: 1292
+    versionId: 503999
+  - name: PlotSquared
+    source: local
+    # TODO: compile jar locally and put it in some local folder, where my own plugins should be too, but not "misplease" ones
+  - name: ProtectionStones
+    source: spiget
+    resourceId: 61797
+    versionId: 548257
+  - name: QuickShop
+    source: local
+    # TODO: creo que lo estabamos compilando local para lo de las shulker, no? si es asi, mantener, mientras no falle. sino aplicar el cambio a una version mas nueva, pero mantener siendo local
+  - name: RoseStacker
+    source: spiget
+    resourceId: 82729
+    versionId: 613591
+  - name: SimpleScore
+    source: spiget
+    resourceId: 23243
+    versionId: 618734
+  - name: SkinsRestorer
+    source: modrinth
+    url: https://cdn.modrinth.com/data/TsLS8Py5/versions/gtqGepWi/SkinsRestorer.jar
+    sha1: f3009f9e4152194050270d20f1cd9db35cbeead0
+  - name: Slimefun
+    source: local
+    # TODO: claramente local, ni es soportado en la 1.21, nosotros lo upgradeamos. ver si alguien retomo el proyecto pero
+  - name: spark
+    source: spiget
+    resourceId: 57242
+    versionId: 567862
+  - name: CommandSigns
+    source: spiget
+    resourceId: 10512
+    versionId: 295826
+  - name: SuperBlockCommands
+    source: spiget
+    resourceId: 49684
+    versionId: 199340
+  - name: SuperSkyBlock
+    source: ??
+    url: https://bg-software.com/superiorskyblock/
+    # TODO: preguntar a chatgpt si hay una alternativa mejor a scrapping
+  - name: TabList
+    source: spiget
+    resourceId: 46229
+    versionId: 554144
+  - name: VaultUnlocked
+    source: spiget
+    resourceId: 117277
+    versionId: 613300
+  # TODO: ver como es ahora con velocity
+  # - name: ViaVersion
+  #   source: modrinth
+  #   url: https://modrinth.com/plugin/viaversion/versions?l=paper
+  - name: VillagerTradeLimiter
+    source: spiget
+    resourceId: 123557
+    versionId: 590819
+  - name: VoidGen
+    source: modrinth
+    url: https://cdn.modrinth.com/data/DCTiMOWF/versions/2hsK4Z87/VoidGen-2.3.4.jar
+    sha1: 6f5b2d23c6f4128df8dd0a22d6b2e9ac3bca352e
+  - name: WorldBorder
+    source: spiget
+    resourceId: 111156
+    versionId: 508079
+  - name: WorldGuardExtraFlags
+    source: spiget
+    resourceId: 4823
+    versionId: 545199

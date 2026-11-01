@@ -1,0 +1,134 @@
+platform: paper
+
+plugins:
+  - source: github
+    repo: zeshan321/ActionHealth
+  - source: github # TODO: tiene -sources y -javadoc, excluir por default, solo requerir assetRegex si hay mas jars aun excluyendo eso
+    repo: alex9849/advanced-region-market
+  - source: hangar
+    project: GPPlugins/AutoSellChests
+  - source: modrinth
+    slug: chunky
+  # - name: Citizens2
+  #   source: jetkins # TODO: implement
+  #   url: https://ci.citizensnpcs.co/job/citizens2/
+  - source: github
+    repo: Zrips/CMILib
+  - source: spiget
+    name: ColoredSigns
+    resourceId: 31676
+  - source: spiget
+    name: CommandRegions
+    resourceId: 68727
+  - source: modrinth
+    slug: coreprotect
+  - source: modrinth
+    slug: deathcoords
+  - source: modrinth
+    slug: decentholograms
+  - source: modrinth
+    slug: dynmap
+    channe: beta
+  - source: spiget
+    name: EconomyShopGUI
+    resourceId: 69927
+  - source: github
+    repo: chrisrnj/EpicPluginLib
+  # TODO: implement git. with a list of artifacts maybe? bc there are multiple jars.
+  # ask chatgpt how to abstract this to any repo releases. use package or something to inspect releases
+  # (EssentialsX, EssentialsXChat? no se que hace, EssentialsXProtect? ver que hace, EssentialsXSpawn )
+  # - name: EssentialsX
+  #   url: https://github.com/EssentialsX/Essentials/releases
+  # - name: ExtraContexts
+  #   source: jetkins # TODO: implement
+  #   url: https://ci.lucko.me/job/ExtraContexts/
+  - source: modrinth
+    slug: fastasyncworldedit
+  # TODO: ver que es, y si hace falta, y como es el tema con velocity
+  # - name: Floodgate
+  #   url: https://geysermc.org/wiki/floodgate/
+  # TODO: ver como es con velocity ahora. la idea es que se pueda entrar con versiones futuras a todos los sv
+  # - name: Geyser
+  - source: spiget
+    name: GravityTubes
+    resourceId: 64624
+  - source: github
+    repo: gecolay/GSit
+  - source: spiget
+    name: CustomImages # TODO: reeplazar por este, que tiene imagenes animadas https://modrinth.com/plugin/imageframe
+    resourceId: 53036
+  - source: modrinth
+    slug: nbtapi
+  - source: github
+    repo: Zrips/Jobs
+  - source: spiget
+    name: LightCleaner
+    resourceId: 42469
+  # TODO: ver como es con velocity
+  # - name: LuckPerms
+  #   source: modrinth
+  #   url: https://modrinth.com/plugin/luckperms/versions?l=paper
+  # TODO: tiene versiones beta. ver como filtrar solo releases, opcionalmente beta, en el creador de lock
+  - source: modrinth
+    slug: multiverse-core
+  - source: modrinth
+    slug: multiverse-inventories
+  - source: spiget
+    name: NetherPortal
+    resourceId: 27349
+  - source: modrinth
+    slug: open-inventory
+  - source: modrinth
+    slug: placeholderapi
+  - source: github
+    repo: chrisrnj/PlayMoreSounds
+  - source: modrinth
+    slug: simple-plugin-hider
+  - source: modrinth
+    slug: plot2dynmap
+  - name: PlotSquared
+    source: local
+    # TODO: compile jar locally and put it in some local folder, where my own plugins should be too, but not "misplease" ones
+  - source: modrinth
+    slug: protectionstones
+  - name: QuickShop
+    source: local
+    # TODO: creo que lo estabamos compilando local para lo de las shulker, no? si es asi, mantener, mientras no falle. sino aplicar el cambio a una version mas nueva, pero mantener siendo local
+  - source: modrinth
+    slug: rosestacker
+  - source: modrinth
+    slug: simplescore
+  - source: modrinth
+    slug: skinsrestorer
+  - name: Slimefun
+    source: local
+    # TODO: claramente local, ni es soportado en la 1.21, nosotros lo upgradeamos. ver si alguien retomo el proyecto pero
+  - source: modrinth
+    slug: spark
+  - source: spiget
+    name: CommandSigns
+    resourceId: 10512
+  - source: spiget
+    name: SuperBlockCommands
+    resourceId: 49684
+  # TODO: preguntar a chatgpt si hay una alternativa mejor a scrapping
+  - name: SuperSkyBlock
+    source: ??
+    url: https://bg-software.com/superiorskyblock/
+  - source: github
+    repo: NEZNAMY/TAB
+  - source: modrinth
+    slug: vaultunlocked
+  # TODO: ver como es ahora con velocity
+  # - name: ViaVersion
+  #   source: modrinth
+  #   url: https://modrinth.com/plugin/viaversion/versions?l=paper
+  - source: spiget
+    name: VillagerTradeLimiter
+    resourceId: 123557
+  - source: modrinth
+    slug: voidgen
+  - source: github
+    repo: Echo24h/WorldBorder
+  - source: github
+    repo: aromaa/WorldGuardExtraFlags
