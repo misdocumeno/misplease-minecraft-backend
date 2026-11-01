@@ -1,0 +1,27 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "cSpell.words": [
+      "appendonly",
+      "Dynmap",
+      "esbuild",
+      "isready",
+      "itzg",
+      "johnrengelman",
+      "kapt",
+      "misplease",
+      "modrinth",
+      "PURPUR",
+      "requirepass",
+      "spiget",
+      "stdlib",
+      "usecases",
+      "velocitypowered"
+    ],
+    "cSpell.ignorePaths": [".env", "plugins.yml"]
+  }
+}
