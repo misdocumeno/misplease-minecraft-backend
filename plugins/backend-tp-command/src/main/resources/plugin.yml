@@ -35,3 +35,28 @@ commands:
     description: Teleport all players
     usage: /tpall [player]
     permission: misplease.tpall.command
+permissions:
+  misplease.tpa.command:
+    description: Request to teleport to a player
+    default: true
+  misplease.tpahere.command:
+    description: Request that a player teleport to you
+    default: true
+  misplease.tpaccept.command:
+    description: Accept a teleport request
+    default: true
+  misplease.tpdeny.command:
+    description: Reject a teleport request
+    default: true
+  misplease.tpacancel.command:
+    description: Cancel an outgoing teleport request
+    default: true
+  misplease.tp.command:
+    description: Teleport to a player immediately
+    default: op
+  misplease.tphere.command:
+    description: Teleport a player to you immediately
+    default: op
+  misplease.tpall.command:
+    description: Teleport all players
+    default: op

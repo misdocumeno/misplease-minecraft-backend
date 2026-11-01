@@ -58,3 +58,37 @@ commands:
     description: Checks if there is any warp or home at the current world edit selection.
     usage: /<command>
     permission: better.warps.check.selection.command
+permissions:
+  better.warps.warp.command:
+    description: Teleport to a warp or list warps
+    default: true
+  better.warps.home.command:
+    description: Teleport to a home or list homes
+    default: true
+  better.warps.set.home.command:
+    description: Set a home
+    default: true
+  better.warps.del.home.command:
+    description: Delete a home
+    default: true
+  better.warps.spawn.command:
+    description: Teleport to spawn
+    default: true
+  better.warps.add.warp.command:
+    description: Create a warp
+    default: op
+  better.warps.del.warp.command:
+    description: Delete a warp
+    default: op
+  better.warps.set.spawn.command:
+    description: Set the spawn
+    default: op
+  better.warps.purge.warps.command:
+    description: Purge warps in missing worlds
+    default: op
+  better.warps.reload.command:
+    description: Reload BetterWarps
+    default: op
+  better.warps.check.selection.command:
+    description: Check warps inside a WorldEdit selection
+    default: op
