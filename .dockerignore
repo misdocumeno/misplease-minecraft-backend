@@ -1,0 +1,11 @@
+.git
+.cursor
+**/.gradle
+**/build
+**/bin
+**/*.db
+.env
+.env.*
+plugins-main
+plugins-tech
+plugins-velocity

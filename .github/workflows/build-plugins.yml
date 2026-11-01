@@ -1,0 +1,15 @@
+name: build-plugins
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  jars:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build plugin jars
+        run: docker build -f docker/plugins.Dockerfile -t misplease-plugins .
