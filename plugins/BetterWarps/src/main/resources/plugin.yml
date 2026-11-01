@@ -1,0 +1,60 @@
+name: BetterWarps
+version: 0.1.0
+author: Mis
+main: io.github.misdocumeno.betterwarps.BetterWarps
+api-version: 1.17
+commands:
+  warp:
+    description: Teleport to a specified warp or list all available warps.
+    usage: /<command> <name>
+    aliases: [ warps ]
+    permission: better.warps.warp.command
+  addwarp:
+    description: Add a new warp.
+    usage: /<command> <name> <description> <material> <enchanted> (1|0)
+    aliases: [ setwarp ]
+    permission: better.warps.add.warp.command
+  delwarp:
+    description: Delete an existing warp.
+    usage: /<command> <name>
+    aliases: [ removewarp ]
+    permission: better.warps.del.warp.command
+  home:
+    description: Teleport to a specified home or list all available homes.
+    usage: /<command> <name>
+    aliases: [ homes ]
+    permission: better.warps.home.command
+  sethome:
+    description: Add a new home.
+    usage: /<command> <name> <description> <material> <enchanted> (1|0)
+    aliases: [ addhome ]
+    permission: better.warps.set.home.command
+  delhome:
+    description: Delete an existing home.
+    usage: /<command> <name>
+    aliases: [ removehome ]
+    permission: better.warps.del.home.command
+  spawn:
+    description: Teleport to the server spawn.
+    usage: /<command>
+    aliases: [ lobby ]
+    permission: better.warps.spawn.command
+  setspawn:
+    description: Set the spawn location.
+    usage: /<command>
+    aliases: [ addspawn, createspawn ]
+    permission: better.warps.set.spawn.command
+  purgewarps:
+    description: Delete all warps/homes with non existing worlds.
+    usage: /<command>
+    aliases: [ warpspurge ]
+    permission: better.warps.purge.warps.command
+  warpsreload:
+    description: Reload config and database.
+    usage: /<command>
+    aliases: [ reloadwarps, warpreload, reloadwarp ]
+    permission: better.warps.reload.command
+  checkselection:
+    description: Checks if there is any warp or home at the current world edit selection.
+    usage: /<command>
+    permission: better.warps.check.selection.command
