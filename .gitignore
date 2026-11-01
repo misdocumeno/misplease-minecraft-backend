@@ -1,0 +1,35 @@
+# Local agent notes and the SSH key for the VM
+.cursor/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# SSH keys
+*.pem
+id_ed25519
+id_ed25519.pub
+id_rsa
+id_rsa.pub
+
+# Build output
+**/build/
+**/.gradle/
+**/bin/
+**/node_modules/
+**/dist/
+**/dependency-reduced-pom.xml
+
+# Jars are built into images. These folders were manual copies.
+plugins-main/
+plugins-tech/
+plugins-velocity/
+
+# Runtime data
+infra/minecraft/**/data/
+**/*.db
+
+# OS
+Thumbs.db
+Desktop.ini
