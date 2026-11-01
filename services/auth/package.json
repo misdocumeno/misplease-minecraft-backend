@@ -1,0 +1,27 @@
+{
+  "name": "@misplease/auth",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Auth service for MisPlease",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/misdocumeno/misplease-minecraft-backend"
+  },
+  "scripts": {
+    "build": "node esbuild.config.mjs",
+    "generate": "npx drizzle-kit generate"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.0.3",
+    "drizzle-kit": "^0.31.8",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.1",
+    "express": "^5.2.1",
+    "postgres": "^3.4.7",
+    "redis": "^5.10.0",
+    "zod": "^4.2.1"
+  }
+}
