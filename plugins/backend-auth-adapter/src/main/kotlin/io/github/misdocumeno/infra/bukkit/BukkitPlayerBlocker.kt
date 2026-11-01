@@ -6,11 +6,16 @@ import org.bukkit.Bukkit
 import org.bukkit.plugin.Plugin
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
 class BukkitPlayerBlocker(private val plugin: Plugin) : PlayerBlocker {
 
+    private val hidden = ConcurrentHashMap.newKeySet<UUID>()
+
     override fun block(player: PlayerHandle) = onMain {
         val p = (player as BukkitPlayerHandle).unwrap()
+        hidden.add(p.uniqueId)
 
         Bukkit.getOnlinePlayers().forEach {
             it.hidePlayer(plugin, p)
@@ -35,10 +40,7 @@ class BukkitPlayerBlocker(private val plugin: Plugin) : PlayerBlocker {
 
     override fun unblock(player: PlayerHandle) = onMain {
         val p = (player as BukkitPlayerHandle).unwrap()
-
-        Bukkit.getOnlinePlayers().forEach {
-            it.showPlayer(plugin, p)
-        }
+        val wasHidden = hidden.remove(p.uniqueId)
 
         p.isInvisible = false
         p.isInvulnerable = false
@@ -46,6 +48,15 @@ class BukkitPlayerBlocker(private val plugin: Plugin) : PlayerBlocker {
         p.canPickupItems = true
 
         p.removePotionEffect(PotionEffectType.BLINDNESS)
+
+        if (!wasHidden) return@onMain
+
+        // The entity tracker sends the spawn packet after PlayerJoinEvent.
+        // showPlayer in that same moment is dropped, and the player stays invisible.
+        Bukkit.getScheduler().runTaskLater(plugin, Runnable {
+            if (!p.isOnline || p.uniqueId in hidden) return@Runnable
+            Bukkit.getOnlinePlayers().forEach { it.showPlayer(plugin, p) }
+        }, 5L)
     }
 
     private fun onMain(block: () -> Unit) {
