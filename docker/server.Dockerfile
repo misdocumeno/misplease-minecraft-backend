@@ -1,5 +1,8 @@
 # One image for main, tech, and the proxy. The lock decides the server jar and the third-party plugins.
 # Our Kotlin plugins are compiled here and copied in by PLUGIN_PREFIX (backend- or velocity-).
+#
+# FROM-substitution ARGs must be declared before the first FROM (BuildKit global scope).
+ARG RUNTIME_JAVA=21
 
 FROM eclipse-temurin:21-jdk AS plugins
 
@@ -59,7 +62,6 @@ RUN --mount=type=secret,id=github_token \
 
 # Runtime JRE only — main/proxy stay on 21; Paper 26.3 (tech) needs 25+.
 # Plugin compile + fetch stay on 21 (bytecode runs fine on a newer JRE).
-ARG RUNTIME_JAVA=21
 FROM eclipse-temurin:${RUNTIME_JAVA}-jre
 
 USER root
