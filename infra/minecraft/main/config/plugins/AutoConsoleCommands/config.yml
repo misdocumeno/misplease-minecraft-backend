@@ -1,0 +1,86 @@
+startup-commands: []
+first-tick-commands:
+    - mvregen recursos2 -s
+    - mvconfirm
+    - mvregen end -s
+    - mvconfirm
+    - mvregen nether -s
+    - mvconfirm
+    - mvrule announceAdvancements false world
+    - mvrule doFireTick false world
+    - mvrule keepInventory true world
+    - mvrule mobGriefing false world
+    - mvrule sendCommandFeedback false world
+    - mvrule announceAdvancements false world2
+    - mvrule doFireTick false world2
+    - mvrule keepInventory true world2
+    - mvrule mobGriefing false world2
+    - mvrule sendCommandFeedback false world2
+    - mvrule announceAdvancements false newspawn
+    - mvrule doFireTick false newspawn
+    - mvrule keepInventory true newspawn
+    - mvrule mobGriefing false newspawn
+    - mvrule sendCommandFeedback false newspawn
+    - mvrule announceAdvancements false spawn_recursos2
+    - mvrule doFireTick false spawn_recursos2
+    - mvrule keepInventory true spawn_recursos2
+    - mvrule mobGriefing false spawn_recursos2
+    - mvrule sendCommandFeedback false spawn_recursos2
+    - mvrule announceAdvancements false recursos2
+    - mvrule doFireTick false recursos2
+    - mvrule keepInventory true recursos2
+    - mvrule mobGriefing false recursos2
+    - mvrule sendCommandFeedback false recursos2
+    - mvrule announceAdvancements false recursos_custom
+    - mvrule doFireTick false recursos_custom
+    - mvrule keepInventory true recursos_custom
+    - mvrule mobGriefing false recursos_custom
+    - mvrule sendCommandFeedback false recursos_custom
+    - mvrule announceAdvancements false spawn_nether
+    - mvrule doFireTick false spawn_nether
+    - mvrule keepInventory true spawn_nether
+    - mvrule mobGriefing false spawn_nether
+    - mvrule sendCommandFeedback false spawn_nether
+    - mvrule announceAdvancements false nether
+    - mvrule doFireTick false nether
+    - mvrule keepInventory true nether
+    - mvrule mobGriefing false nether
+    - mvrule sendCommandFeedback false nether
+    - mvrule announceAdvancements false nether_noreset
+    - mvrule doFireTick false nether_noreset
+    - mvrule keepInventory true nether_noreset
+    - mvrule mobGriefing false nether_noreset
+    - mvrule sendCommandFeedback false nether_noreset
+    - mvrule announceAdvancements false spawn_the_end
+    - mvrule doFireTick false spawn_the_end
+    - mvrule keepInventory true spawn_the_end
+    - mvrule mobGriefing false spawn_the_end
+    - mvrule sendCommandFeedback false spawn_the_end
+    - mvrule announceAdvancements false world_the_end_noreset
+    - mvrule doFireTick false world_the_end_noreset
+    - mvrule keepInventory true world_the_end_noreset
+    - mvrule mobGriefing false world_the_end_noreset
+    - mvrule sendCommandFeedback false world_the_end_noreset
+    - mvrule announceAdvancements false end
+    - mvrule doFireTick false end
+    - mvrule keepInventory true end
+    - mvrule mobGriefing false end
+    - mvrule sendCommandFeedback false end
+    - mvrule announceAdvancements false spawn_overworld
+    - mvrule doFireTick false spawn_overworld
+    - mvrule keepInventory true spawn_overworld
+    - mvrule mobGriefing false spawn_overworld
+    - mvrule sendCommandFeedback false spawn_overworld
+    - mvrule announceAdvancements false survival
+    - mvrule doFireTick false survival
+    - mvrule keepInventory true survival
+    - mvrule mobGriefing true survival
+    - mvrule sendCommandFeedback false survival
+    - mvrule tntexplodes false world_the_end_noreset
+    - mvrule keepInventory true SuperiorWorld
+    - mvrule keepInventory true test
+    - mvrule doInsomnia false SuperiorWorld
+    - mvrule keepInventory true test
+    - mvrule keepInventory true chapi_buildings
+    - mvrule doMobSpawning false chapi_buildings
+shutdown-commands: []

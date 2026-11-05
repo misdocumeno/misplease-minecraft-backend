@@ -1,0 +1,72 @@
+# This is an example config. You can try it by giving yourself the permission villagertradelimiter.group.example
+
+Cooldown: 0h
+MaxHeroLevel: -1
+MaxDiscount: 0.3
+MaxDemand: -1
+MaxUses: -1
+
+Overrides:
+  bookshelf:
+    MaxUses: 2
+    MaxDiscount: 20.0
+    Result:
+      Material: book
+      Amount: 1
+  feather_falling_4:
+    Disabled: true
+  mending_1:
+    MaxDiscount: -1.0
+    MaxDemand: 60
+    MaxUses: 2
+    Cooldown: 7d
+    Item1:
+      Material: emerald_block
+      Amount: 64
+    Item2:
+      Material: book
+      Amount: 7
+    Result:
+      Material: enchanted_book
+      Amount: 1
+      Data: 0
+      Unbreakable: false
+      Name: ''
+      Lore: []
+      Enchantments:
+      - feather_falling_4
+  name_tag:
+    Cooldown: 7d
+    MaxDiscount: -1
+    MaxDemand: 60
+    MaxUses: 2
+    PriceMultiplier: 0.2
+    Item1:
+      Material: glowstone_dust
+      Amount: 64
+    Item2:
+      Material: book
+      Amount: 1
+    Result:
+      Material: book
+      Amount: 1
+      Unbreakable: true
+      Name: <#FFCC00>Forbidden Tome
+      Lore:
+      - '&7An ancient tome'
+      - '&7thought to have been'
+      - '&7lost to the ages...'
+      - '&7'
+      - <#993333>Doomed are those who
+      - <#993333>dare read these
+      - <#993333>cursed pages.
+      Enchantments:
+      - binding_curse_1
+      Flags:
+      - hide_enchants
+      - hide_unbreakable
+  clock:
+    MaxDemand: 12
+  paper:
+    MaxUses: 1
+    Cooldown: 1h

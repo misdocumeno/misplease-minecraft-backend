@@ -1,0 +1,25 @@
+# Desired set only. Versions live in plugins-lock.yml (Paper 26.3 stack).
+server:
+  source: papermc
+  id: paper
+
+plugins:
+  - name: DecentHolograms
+    source: modrinth
+    slug: decentholograms
+  - name: EssentialsX
+    source: github
+    repo: EssentialsX/Essentials
+    jar: /^EssentialsX-[0-9]/
+  - name: FastAsyncWorldEdit
+    source: modrinth
+    slug: fastasyncworldedit
+  - name: LuckPerms
+    source: modrinth
+    slug: luckperms
+  - name: WorldGuard
+    source: modrinth
+    slug: worldguard
+  - name: GriefPrevention
+    source: modrinth
+    slug: griefprevention

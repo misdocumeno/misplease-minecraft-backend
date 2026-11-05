@@ -1,0 +1,18 @@
+# Configuration Options for Colored Signs
+options:
+  # What character should be used for color codes?
+  # Default: '&'
+  color character: '&'
+  
+  # Should permissions be used instead of allowing everyone to color their signs?
+  # Default: false
+  use permissions: false
+  
+  # Should a message be broadcasted when Colored Signs is enabled on the server?
+  # Default: true
+  broadcast startup: true
+  
+  # Should debug messages be printed to the server console?
+  # This option should only be used if you are having issues or SirBlobman asks for it.
+  # Default: false
+  debug: false

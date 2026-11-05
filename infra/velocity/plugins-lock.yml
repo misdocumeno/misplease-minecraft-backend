@@ -1,0 +1,14 @@
+server:
+  name: velocity
+  source: papermc
+  version: 3.6.0-SNAPSHOT+613
+  filename: velocity-3.6.0-SNAPSHOT-613.jar
+  url: https://fill-data.papermc.io/v1/objects/a87eea534bd483209aa5ccb03822cb14d5006796d9c18a59e6e34cfd3c28b5b0/velocity-3.6.0-SNAPSHOT-613.jar
+  sha256: a87eea534bd483209aa5ccb03822cb14d5006796d9c18a59e6e34cfd3c28b5b0
+plugins:
+  - name: ViaVersion
+    source: modrinth
+    version: 5.12.2
+    filename: ViaVersion-5.12.2.jar
+    url: https://cdn.modrinth.com/data/P1OZGk5p/versions/cVhZ1kgN/ViaVersion-5.12.2.jar
+    sha512: c6af11f50e14bc1ba239f5a90be653cce85feee30c473a4b53336b4d5527d790369cf43843f7cb06d3ac3a34fc207e7203436737ca719070644101472453401b

@@ -1,0 +1,152 @@
+# Set a sound to play when a player type a specific command.
+#
+#  There are five filters to choose:
+#
+#  -> Contains:
+#  Use this section to play a sound to every command that contains the word you specify.
+#  Sample:
+#
+#Contains:
+#  play:
+#    Cancellable: true
+#    Enabled: true
+#    Prevent Other Sounds:
+#      Default Sound: true # This will prevent the default sound set on sounds.yml from playing.
+#      Other Filters: true # If the command match other filters, this will make so this is the only filter that will play a sound.
+#
+#  -> Contains SubString:
+#  Use this section to play a sound to every command that contains the following string you specify.
+#  This is different than Contains because Contains check for words, this checks for any part of the command.
+#  Sample:
+#
+#Contains SubString:
+#  set:
+#    Cancellable: true
+#    Enabled: true
+#    Prevent Other Sounds:
+#      Default Sound: true # This will prevent the default sound set on sounds.yml from playing.
+#      Other Filters: true # If the command match other filters, this will make so this is the only filter that will play a sound.
+#
+#  -> Ends With:
+#  Self explanatory. If a command ends with the sentence specified, the sound will play.
+#  Sample:
+#
+#Ends With:
+#  -force:
+#    Cancellable: true
+#    Enabled: true
+#    Prevent Other Sounds:
+#      Default Sound: true
+#      Other Filters: true
+#    Sounds:
+#      '0':
+#        Delay: 0
+#        Options:
+#          Radius: 0.0
+#        Pitch: 1.0
+#        Sound: 'ENTITY_CREEPER_PRIMED'
+#        Volume: 10.0
+#
+#  -> Equals Exactly:
+#  When a command equals exactly like the specified here. (Case sensitive)
+#  Sample:
+#
+#Equals Exactly:
+#  /warp MALL:
+#    Cancellable: true
+#    Enabled: true
+#    Prevent Other Sounds:
+#      Default Sound: true
+#      Other Filters: true
+#    Sounds:
+#      '0':
+#        Delay: 1
+#        Options:
+#          Radius: 0.0
+#        Pitch: 2.0
+#        Sound: 'BLOCK_PORTAL_TRAVEL'
+#        Volume: 0.4
+#
+#  -> Equals Ignore Case:
+#  When a command is equals to the specified but, it doesn't matter if it's on lower case or
+# upper case.
+#  If a player accidentally toggled upper case on it's keyboard and typed /SPAWN and you want
+# to set a sound for the command "/spawn", put him in this section so the sound will be played
+# even if is on upper case.
+#  Sample:
+#
+#Equals Ignore Case:
+#  /spawn:
+#    Cancellable: false
+#    Enabled: true
+#    Prevent Other Sounds:
+#      Default Sound: true
+#      Other Filters: true
+#    Sounds:
+#      '1':
+#        Delay: 0
+#        Options:
+#          Radius: 0.0
+#        Pitch: 2.0
+#        Sound: 'BLOCK_PORTAL_TRAVEL'
+#        Volume: 0.4
+#
+#  -> Starts With:
+#  This is the most used of them all. Plays a sound when a command starts with the sentence
+# you specify.
+#  Sample:
+#
+#Starts With:
+#  /teleport:
+#    Cancellable: true
+#    Enabled: true
+#    Prevent Other Sounds:
+#      Default Sound: true
+#      Other Filters: true
+#    Sounds:
+#      '1':
+#        Delay: 0
+#        Options:
+#          Radius: 0.0
+#        Pitch: 2.0
+#        Sound: 'BLOCK_PORTAL_TRAVEL'
+#        Volume: 0.4
+#
+# More information about sounds on sounds.yml
+# The following sounds are here just to prevent the default sound on sounds.yml from playing.
+
+Version: '4.0.2'
+
+Starts With:
+  /tp:
+    Cancellable: false
+    Enabled: true
+    Prevent Other Sounds:
+      Default Sound: true
+      Other Filters: true
+  /warp:
+    Cancellable: false
+    Enabled: true
+    Prevent Other Sounds:
+      Default Sound: true
+      Other Filters: true
+  /spawn:
+    Cancellable: false
+    Enabled: true
+    Prevent Other Sounds:
+      Default Sound: true
+      Other Filters: true
+  /gamemode:
+    Cancellable: false
+    Enabled: true
+    Prevent Other Sounds:
+      Default Sound: true
+      Other Filters: true
+
+Contains SubString:
+  play:
+    Cancellable: false
+    Enabled: true
+    Prevent Other Sounds:
+      Default Sound: true
+      Other Filters: true

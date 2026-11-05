@@ -1,0 +1,34 @@
+# Same behavior as the old backend-nether-hub:
+# NETHER_PORTAL from world / survival → fixed hub in nether.
+# Tweak x/y/z/yaw/pitch to the real hub on deploy.
+portal-types:
+  - NETHER_PORTAL
+
+routes:
+  - name: survival-to-nether-hub
+    from:
+      world: survival
+    to:
+      world: nether
+      x: 0.5
+      y: 64.0
+      z: 0.5
+      yaw: 0.0
+      pitch: 0.0
+
+  - name: world-to-nether-hub
+    from:
+      world: world
+    to:
+      world: nether
+      x: 0.5
+      y: 64.0
+      z: 0.5
+      yaw: 0.0
+      pitch: 0.0
+
+global-teleporter:
+  enabled: false
+  redis-url: ""
+  channel: misplease-global-teleporter
+  server-name: main

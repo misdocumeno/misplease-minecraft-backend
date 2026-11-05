@@ -1,0 +1,47 @@
+# config
+teleport-delay: 3
+# if a player has used /back once or more, and it's not in the most recent position of the teleportation history
+# what should we do when the player uses a teleport command? (warp, home, etc.)
+# true: clear all history after this point (recommended, the player probably doesn't want to go back if they have teleported to a new place)
+# false: keep the current history and add the new location to the end of it
+remove-future-history: true
+
+# messages
+nowhere-back: '§5§lBack §8§l>> §4¡No hay adonde volver!'
+nowhere-back-title: '§4:('
+nowhere-back-subtitle: ''
+teleported-back: '§5§lBack §8§l>> §2¡Teletransportadx a tu ubicación anterior!'
+nowhere-forward: '§5§lBack §8§l>> §4¡No hay adonde avanzar!'
+nowhere-forward-title: '§4:('
+nowhere-forward-subtitle: ''
+teleported-forward: '§5§lBack §8§l>> §2¡Teletransportadx a tu proxima ubicación!'
+teleporting-in-chat: '§5§lBack §8§l>> §6Teletransportando en §e{seconds} §6segundos...'
+teleporting-in-title: '§5Teletransportando en {seconds}'
+teleporting-in-subtitle: '§f¡No te muevas!'
+teleported-title: '§5¡Teletransportadx!'
+teleported-subtitle: ''
+teleport-cancelled-chat: '§5§lBack §8§l>> §4¡Te tenés que quedar quietx para ser teletransportadx!'
+teleport-cancelled-title: '§4>:('
+teleport-cancelled-subtitle: '§f¡Te moviste!'
+
+# if any point in the player tp history is located in one of these worlds, the player will be teleported to this
+# specified location and not to the actual location. this is useful for hub/spawn worlds
+world-fixed-locations:
+  newspawn:
+    x: 0.5
+    y: 65.0625
+    z: 0.5
+    yaw: -180.0
+    pitch: 0.0
+  spawn_nether:
+    x: 0.5
+    y: 64.0
+    z: 0.5
+    yaw: 0.0
+    pitch: 0.0
+  spawn_the_end:
+    x: -24.5
+    y: 72.0625
+    z: -576.5
+    yaw: 0.0
+    pitch: 0.0

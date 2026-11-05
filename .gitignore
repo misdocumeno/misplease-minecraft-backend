@@ -25,6 +25,8 @@ id_rsa.pub
 plugins-main/
 plugins-tech/
 plugins-velocity/
+.plugin-lock-cache/
+.cursor/materialized*/
 
 # Runtime data
 infra/minecraft/**/data/
@@ -33,3 +35,6 @@ infra/minecraft/**/data/
 # OS
 Thumbs.db
 Desktop.ini
+
+# One-off agent helpers
+tools/_tmp-*

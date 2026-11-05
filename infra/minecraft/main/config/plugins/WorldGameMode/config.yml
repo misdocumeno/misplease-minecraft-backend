@@ -1,0 +1,10 @@
+worlds:
+  creativo:
+    join: CREATIVE
+    leave: SURVIVAL
+  bici:
+    join: CREATIVE
+    leave: SURVIVAL
+  world_mya:
+    join: CREATIVE
+    leave: SURVIVAL

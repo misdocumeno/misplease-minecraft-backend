@@ -1,0 +1,172 @@
+#
+#      db      `7MM"""Mq.  `7MMM.     ,MMF'#
+#     ;MM:       MM   `MM.   MMMb    dPMM  #
+#    ,V^MM.      MM   ,M9    M YM   ,M MM  #
+#   ,M  `MM      MMmmdM9     M  Mb  M' MM  #
+#   AbmmmqMA     MM  YM.     M  YM.P'  MM  #
+#  A'     VML    MM   `Mb.   M  `YM'   MM  #
+AutoPrice:
+  example1:
+    price: 200.0
+    extendTime: 2d
+    autoPriceCalculation: static
+    maxExtendTime: 7d
+  example2:
+    price: 2.0
+    extendTime: 12h
+    autoPriceCalculation: per_m2
+    maxExtendTime: 2d
+  example3:
+    price: 0.05
+    extendTime: 7d
+    autoPriceCalculation: per_m3
+    maxExtendTime: 30d
+DefaultAutoprice:
+  price: 2.0
+  extendTime: 1d
+  autoPriceCalculation: per_m2
+  maxExtendTime: 7d
+Limits:
+  examplegroup1:
+    regionkinds:
+      Default: -1
+      starter: 1
+      small: 1
+      medium: 0
+      large: 0
+      shop: 1
+    total: 2
+    regionkindgroups: {}
+  examplegroup2:
+    regionkinds:
+      Default: -1
+      starter: 1
+      small: 2
+      medium: 1
+      large: 1
+      shop: 1
+    total: 10
+    regionkindgroups: {}
+  examplegroup3:
+    regionkinds:
+      Default: -1
+      starter: 1
+      small: 2
+      medium: 2
+      large: 2
+      shop: 2
+    total: -1
+    regionkindgroups: {}
+Other:
+  userResetCooldown: 7d
+  TeleportAfterSellRegionBought: true
+  TeleportAfterRentRegionBought: false
+  TeleportAfterRentRegionExtend: false
+  TeleportAfterContractRegionBought: true
+  TeleportAfterRegionBoughtCountdown: false
+  SendRentRegionExpirationWarning: true
+  RentRegionExpirationWarningTime: 2d
+  SendContractRegionExtendMessage: true
+  SignAndResetUpdateInterval: 2
+  DateTimeFormat: dd.MM.yyyy hh:mm
+  CompleteRegionsOnTabComplete: true
+  TeleporterTimer: 0
+  RegionInfoParticleBorder: true
+  AllowRegionfinderTeleportToBuySign: true
+  RemoveEntitiesOnRegionBlockReset: false
+  Language: en
+  RemoveEntitiesOnRegionRestore: true
+Subregions:
+  SubregionAutoReset: true
+  deleteSubregionsOnParentRegionUnsell: false
+  deleteSubregionsOnParentRegionBlockReset: false
+  allowParentRegionOwnersBuildOnSubregions: true
+  SubregionInactivityReset: true
+  AllowSubregionUserRestore: false
+  SubregionAutoRestore: false
+  deleteSubregionsOnParentRegionRestore: false
+  SubregionMaxMembers: -1
+  SubregionPaybackPercentage: 0
+Reselling:
+  Offers:
+    OfferTimeOut: 30
+GUI:
+  RegionOwnerItem: ENDER_CHEST
+  RegionMemberItem: CHEST
+  RegionFinderItem: COMPASS
+  GoBackItem: OAK_DOOR
+  WarningYesItem: MELON
+  WarningNoItem: REDSTONE_BLOCK
+  TPItem: ENDER_PEARL
+  SellRegionItem: DIAMOND
+  ResetItem: TNT
+  ExtendItem: CLOCK
+  InfoItem: BOOK
+  PromoteMemberToOwnerItem: LADDER
+  RemoveMemberItem: LAVA_BUCKET
+  FillItem: GRAY_STAINED_GLASS_PANE
+  ContractItem: WRITABLE_BOOK
+  SubRegionItem: GRASS_BLOCK
+  TeleportToSignItem: SIGN
+  TeleportToRegionItem: GRASS_BLOCK
+  DeleteItem: BARRIER
+  NextPageItem: ARROW
+  PrevPageItem: ARROW
+  HotelSettingItem: RED_BED
+  UnsellItem: NAME_TAG
+  DisplayRegionOwnerButton: true
+  DisplayRegionMemberButton: true
+  DisplayRegionFinderButton: true
+  FlageditorItem: BANNER
+  FlagItem: SIGN
+  FlagSettingsSelectedItem: EMERALD_BLOCK
+  FlagSettingsNotSelectedItem: REDSTONE_BLOCK
+  FlagGroupSelectedItem: EMERALD_BLOCK
+  FlagGroupNotSelectedItem: REDSTONE_BLOCK
+  FlagRemoveItem: BARRIER
+  FlagUserInputItem: WRITABLE_BOOK
+  FlageditorResetItem: TNT
+  DisplayPlayerSkins: false
+  RegionFinderSellTypeSelectorItem: BRICK
+  EntityLimitGroupItem: CHICKEN_SPAWN_EGG
+Version: 3.5.0
+SignClickActions:
+  RightClickNotSneakCmd: buyaction
+  RightClickSneakCmd: arm sellback %regionid%
+  LeftClickNotSneakCmd: arm info %regionid%
+  LeftClickSneakCmd: arm info %regionid%
+RegionKinds:
+  activateRegionKindPermissions: false
+PriceFormatting:
+  locale: US
+  minimumFractionDigits: 2
+  maximumFractionDigits: 2
+  minimumIntegerDigits: 1
+SignLinkingMode:
+  regionblacklist:
+    world:
+    - blacklistedTestRegionInWorld1
+    - blacklistedTestRegionInWorld2
+    world_nether:
+    - blacklistedTestRegionInWorld_nether1
+    - blacklistedTestRegionInWorld_nether2
+    world_the_end:
+    - anotherBlacklistedRegion
+DefaultInactivityExpiration:
+  resetAfter: none
+  takeOverAfter: none
+InactivityExpiration:
+  examplegroup1:
+    resetAfter: 30d
+    takeOverAfter: 20d
+  examplegroup2:
+    resetAfter: 60d
+    takeOverAfter: 50d
+  examplegroup3:
+    resetAfter: none
+    takeOverAfter: none
+FlagGroups:
+  enabled: true
+Backups:
+  createBackupOnRegionRestore: true
+  createBackupOnRegionUnsell: true

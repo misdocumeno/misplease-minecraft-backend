@@ -1,0 +1,47 @@
+# Set a sound to play when you enter, exit or stand on a specific biome.
+#
+# Sample:
+# (Take a note that this is a sample and the sounds may not be available
+# on your MC version.)
+#
+#world: = The world name.
+#  PLAINS: = The biome name.
+#    Enter: = When a player enters this biome.
+#      Cancellable: true
+#      Enabled: true
+#      Sounds:
+#        '0':
+#          Options:
+#            Radius:
+#              Range: 0
+#          Pitch: 1
+#          Sound: BLOCK_NOTE_BLOCK_PLING
+#          Volume: 10
+#    Leave: = When a player exits this biome.
+#      Cancellable: true
+#      Enabled: true
+#      Sounds:
+#        '0':
+#          Options:
+#            Radius:
+#              Range: 0
+#          Pitch: 1
+#          Sound: BLOCK_NOTE_BLOCK_BASS
+#          Volume: 10
+#    Loop: = When a player enters the biome, a loop will be triggered and play.
+#      Cancellable: true
+#      Delay: 0 = Time in ticks to wait to start the loop once triggered.
+#      Enabled: true
+#      Period: 100 = Time in ticks to wait before playing these sounds again.
+#      Sounds:
+#        '0':
+#          Options:
+#            Radius:
+#              Range: 0
+#          Pitch: 1
+#          Sound: BLOCK_NOTE_BLOCK_BASS
+#          Volume: 10
+#
+# This is a small sample. You can add more biomes, worlds and more options
+# to the sound options.
+# More information about sounds on sounds.yml.

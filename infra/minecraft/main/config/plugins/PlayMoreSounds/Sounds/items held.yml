@@ -1,0 +1,54 @@
+# Set a sound to play when a player holds a specific item in their hand.
+#
+# To set a sound create a section with the name of the item.
+# Bukkit item names: https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html
+#
+#IRON_SWORD: # This sound will play when a player holds an iron sword.
+#  Enabled: true
+#  Cancellable: true
+#  Prevent Other Sounds:
+#    Default Sound: true # This will prevent the default Change Held Item sound set on sounds.yml from playing.
+#    Other Criteria: true # If the item held event matches more than one criteria, this will prevent the others from playing.
+#  Sounds:
+#    '0':
+#      Delay: 0
+#      Options:
+#        Radius: 0.0
+#      Pitch: 2.0
+#      Sound: 'ENTITY_ZOMBIE_ATTACK_IRON_DOOR'
+#      Volume: 1.0
+#
+# Items support criteria, like the ones found on commands.yml, chat sounds.yml, hit sounds.yml, items clicked.yml and items swung.yml.
+# You have the following criteria: Contains[], EndsWith[], Equals[], and StartsWith[].
+#
+# Examples:
+#
+#   If I want to play a sound for any kind of coral:
+#   Contains[DIAMOND]
+#
+#   If I want to play a sound for any kind of sword:
+#   EndsWith[SWORD]
+#
+#   If I want to play a sound for any diamond item:
+#   StartsWith[DIAMOND]
+#
+# You can also use commas if you want to play the same sound for many criteria.
+#
+# Examples:
+#
+#   If I want to play the same sound wools and carpets:
+#   Contains[WOOL,CARPET]
+#
+#   If I want to play the same sound for glass and glass panes:
+#   EndsWith[GLASS,GLASS_PANE]
+#
+#   If I want to play the same sound for furnaces and blast furnaces:
+#   Equals[FURNACE,BLAST_FURNACE]
+#
+#   If I want to play the same sound for iron and diamond items:
+#   StartsWith[IRON,DIAMOND]
+#
+# Hope everything is clear, if you have any doubts of a criteria that you wanna use but can't find how, contact me on discord:
+# https://discord.gg/eAHPbc3
+
+Version: '4.0.2'

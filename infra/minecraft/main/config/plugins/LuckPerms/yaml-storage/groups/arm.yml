@@ -1,0 +1,30 @@
+name: arm
+permissions:
+    # https://github.com/alex9849/advanced-region-market/wiki/Commands-and-permissions
+    - arm.help
+    - arm.member.buy
+    - arm.buy.rentregion
+    - arm.buy.contractregion
+    - arm.member.settplocation
+    - arm.member.listregions
+    - arm.member.removemember
+    - arm.member.addmember
+    - arm.member.tptofreeregion
+    - arm.member.info
+    - arm.member.sellback
+    - arm.member.restore
+    - arm.member.regionfinder
+    - arm.member.regionfinder.tptoregion
+    - arm.member.regionfinder.tptosign
+    - arm.member.gui
+    - arm.member.tp
+    - arm.member.offer.create
+    - arm.member.offer.answer
+    - arm.subregion.create.sellregion
+    - arm.subregion.create.contractregion
+    - arm.subregion.create.rentregion
+    - arm.subregion.delete.available
+    - arm.subregion.setishotel
+    - arm.subregion.tp
+    - arm.subregion.unsell
+    - arm.subregion.help

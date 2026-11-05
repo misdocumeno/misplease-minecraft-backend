@@ -1,0 +1,10 @@
+# an example for creating city roads
+streets:
+    blocks:
+        'ff202020': gray_concrete
+        'ffffffff': white_concrete
+        'ffaaaaaa': polished_andesite_slab[type=top]
+    ignored-blocks: [oak_leaves, oak_log]
+    remove-ignored-blocks: false
+    ignore-passable: true
+    remove-passable: true

@@ -1,0 +1,16 @@
+# https://github.com/toolbox4minecraft/amidst/wiki/Biome-Color-Table
+biomes:
+    'FF8DB360': PLAINS
+    'FFFA9418': DESERT
+    'FF056621': FOREST
+    'FF40511A': DARK_FOREST
+    'FF307444': BIRCH_FOREST
+    'FFD94515': BADLANDS
+    'FF537B09': JUNGLE
+    'FF000070': OCEAN
+    'FF0B6659': TAIGA
+    'FF606060': WINDSWEPT_HILLS
+    'FF7070D6': FROZEN_OCEAN
+    'FF31554A': SNOWY_TAIGA
+    'FFBDB25F': SAVANNA
+    'FF07F9B2': SWAMP

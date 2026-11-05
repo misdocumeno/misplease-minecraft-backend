@@ -1,0 +1,62 @@
+export interface DesiredPlugin {
+  name: string
+  source: string
+  id?: string
+  version?: string
+  build?: string
+  asset?: string
+  channel?: string
+  commit?: string
+  builder?: string
+  task?: string
+  jar?: string
+  server?: string
+  java?: string
+  release?: string
+  serverMinecraft?: string
+}
+
+export interface DesiredFile {
+  minecraft?: string
+  server?: DesiredPlugin
+  plugins: DesiredPlugin[]
+}
+
+export interface LockedArtifact {
+  name: string
+  source: string
+  version: string
+  filename: string
+  url: string
+  sha256?: string
+  sha512?: string
+  sha1?: string
+  minecraft?: string[]
+  task?: string
+  jar?: string
+  builder?: string
+  java?: string
+  release?: string
+}
+
+export interface LockFile {
+  server?: LockedArtifact
+  plugins: LockedArtifact[]
+}
+
+export interface ResolvedArtifact {
+  name: string
+  source: string
+  version: string
+  filename: string
+  url: string
+  minecraft?: string[]
+  sha256?: string
+  sha512?: string
+  sha1?: string
+  task?: string
+  jar?: string
+  builder?: string
+  java?: string
+  release?: string
+}

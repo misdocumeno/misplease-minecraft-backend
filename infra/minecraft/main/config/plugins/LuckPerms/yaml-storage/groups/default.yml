@@ -1,0 +1,50 @@
+name: default
+permissions:
+    - weight.10
+parents:
+    - arm:
+          context:
+              world: survival_alias
+    - basic:
+          context:
+              world: survival_alias
+    - better-back:
+          context:
+              world: survival_alias
+    - better-warps:
+          context:
+              world: survival_alias
+    - economy-shop-gui:
+          context:
+              world: survival_alias
+    - essentials:
+          context:
+              world: survival_alias
+    - jobs:
+          context:
+              world: survival_alias
+    - plots:
+          context:
+              world: survival_alias
+    - protection-stones:
+          context:
+              world: survival_alias
+    - quickshop:
+          context:
+              world: survival_alias
+    - skyblock:
+          context:
+              world: survival_alias
+    - worldguard:
+          context:
+              world: survival_alias
+    - creativo:
+          context:
+              world: creativo_alias
+    - worldguard:
+          context:
+              world: creativo_alias
+    - autoteleport
+prefixes:
+    - '&3':
+          priority: 1

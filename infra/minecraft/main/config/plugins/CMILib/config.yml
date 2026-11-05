@@ -1,0 +1,5 @@
+# Keep CMILib from downloading newer jars into plugins/.
+# The image already owns the jar; AutoUpdate would leave extras in the overlay.
+AutoUpdate: false
+AutoFileRemoval: false
+LanguageDownload: false

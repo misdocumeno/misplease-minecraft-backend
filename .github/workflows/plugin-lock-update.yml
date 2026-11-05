@@ -1,0 +1,49 @@
+# Resolve plugins.yml → plugins-lock.yml on a GitHub runner (usually not Spiget-banned).
+# Uploads locks as an artifact — does NOT commit. Download once, commit locally, done.
+# Unchanged pins are reused from the checked-in lock (see reusePinned), so re-runs
+# only hit Spiget/etc for missing or changed entries.
+name: plugin-lock-update
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: tools/plugin-lock/package-lock.json
+
+      - name: Update locks
+        env:
+          GITHUB_TOKEN: ${{ secrets.PLUGIN_GITHUB_TOKEN }}
+        run: |
+          set -eux
+          cd tools/plugin-lock
+          npm ci --omit=dev --ignore-scripts
+          node src/cli.ts update \
+            --desired "${{ github.workspace }}/infra/minecraft/main/plugins.yml" \
+            --lock "${{ github.workspace }}/infra/minecraft/main/plugins-lock.yml"
+          node src/cli.ts update \
+            --desired "${{ github.workspace }}/infra/minecraft/tech/plugins.yml" \
+            --lock "${{ github.workspace }}/infra/minecraft/tech/plugins-lock.yml"
+          node src/cli.ts update \
+            --desired "${{ github.workspace }}/infra/velocity/plugins.yml" \
+            --lock "${{ github.workspace }}/infra/velocity/plugins-lock.yml"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plugins-locks
+          path: |
+            infra/minecraft/main/plugins-lock.yml
+            infra/minecraft/tech/plugins-lock.yml
+            infra/velocity/plugins-lock.yml
+          retention-days: 7

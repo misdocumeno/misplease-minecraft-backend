@@ -1,0 +1,11 @@
+{
+  "name": "@misplease/plugin-lock",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "yaml": "^2.8.1"
+  }
+}

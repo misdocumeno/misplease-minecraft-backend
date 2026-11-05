@@ -1,0 +1,5 @@
+not-your-shulker: '§cEsa shulker no es tuya!'
+shulker-placed: '§aNo te olvides la shulker cuando te vayas!'
+not-a-shulker: '§cEso no es una shulker'
+shulker-has-no-owner: '§cEsa shulker no esta siendo usada por este plugin'
+player-owner-is: '§bEl dueño de esa shulker es §a%player%'

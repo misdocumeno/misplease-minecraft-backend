@@ -1,0 +1,68 @@
+# Plugin prefix
+plugin-prefix: '#FF7070&lSell#CDCDCD&lChests &8>>'
+# The inventory title of the screen when someone right-clicks a AutoSellChest
+info-screen-title: '&8&lChest information'
+# The inventory title of the chest settings menu
+chest-settings-title: '&8&lChest settings'
+# This message shows how many items a single chest has sold
+sold-items-info: <gradient:#FF4A4A>Total items sold:</gradient:#FFDBDB> &a%amount%
+# This will display the current amount of money they player has made using this chest
+income-info: <gradient:#FF4A4A>Total profit made:</gradient:#FFDBDB> &a%profit%
+# Displays the current profit the player can claim
+claim-able-info: <gradient:#55FF55>Click to view unclaimed profits.</gradient:#FFFFFF>
+# Available profit
+available-profit: <gradient:#FFAA00>Click to claim</gradient:#FFE7B6> &a%profit%&6&l.
+# The inventory title of the claim-able profits menu
+available-profit-menu-title: '&8&lAvailable profits'
+# Message send to player when a sellchest has been placed
+sellchest-placed: '&aYou have successfully placed a #FF7070Sell#CDCDCDChest&a, left click it for more info.'
+# Action bar shown above the players inventory quick-slots which shows the amount of chests the player currently has placed
+placed-sell-chests-action-bar: '&6&lPlaced sell chests: &c%amount%&c&4/&c%limit%'
+# Boss bar shown on top of screen which shows the amount of chests the player currently has placed
+placed-sell-chests-boss-bar: '&a&lPlaced sell chests:'
+# Action bar message that is shown to players which can place unlimited amount of chests
+placed-sell-chests-action-bar-max: ∞
+# Message send to player when a sellchest is broken
+sellchest-broken: '&cYou have picked-up a #FF7070Sell#CDCDCDChest'
+# Message send to player when the maximum amount of sell chests placed has been reached
+max-sellchests-reached: '&cYou already have &a%maxSellChests% &cplaced and cannot place anymore'
+# Direct message send to player when items have been sold using a chest
+items-sold-player-log: '&a&lYour %chest-name% &a&lhas sold &6%amount% &a&litem(s) for &6%profit%'
+# Message send to console when the configured interval for chest logging is set
+items-sold-console-interval: Completed %count% sell interval(s) for %chests% loaded sell chest(s) and sold %items% item(s) in the last %interval%.
+# Message send to console when items are sold using a player's sell chest
+items-sold-console-log: Sell chest with id '%id%' from player %player% on location %location% has sold %amount% item(s) for %profit%
+# When player tries to use a command, place a chest, ... without permissions
+no-permissions: '&cYou do not have permissions for that'
+# Message that gets logged when a player is given a chest
+sell-chest-given-log: '%player_name% was given %amount% AutoSellChests'
+# Message send to player when they receive a sell chest
+player-sell-chest-given: '&cYou were given &7%amount% #FF7070Sell#CDCDCDChests'
+# Message sent to player when given a sell chest, but they don't have enough inventory space
+not-enough-inventory-space: '&cYou do not have enough space in your inventory'
+# Option to destroy the sell chest when inside the information screen
+destroy-chest: '<gradient:#FF4A4A>Pick up this</gradient:#FFDBDB> #FF7070Sell#CDCDCDChests'
+# The displayname of the block information item inside the info screen
+sell-chest-block-info: <gradient:#FF4A4A>Chest info:</gradient:#FFDBDB>
+# The owner of the sell chest
+sell-chest-owner: '&eOwner: #FF7070%player_name%'
+# The location of the sell chest
+sell-chest-location: '&eLocation: #FF7070%loc%'
+# The internal id of the sell chest
+sell-chest-id: '&eChest ID: #FF7070%id%'
+# The next interval the chest is selling its contents
+sell-chest-next-sell: '&eNext sell interval: #FF7070%time%'
+# The displayname of the chest settings item in the info screen
+sell-chest-settings: <gradient:#FF4A4A>Chest settings</gradient:#FFDBDB>
+# Toggle sold items logging
+toggle-sold-items-logging: <gradient:#FF4A4A>Toggle sold item logging</gradient:#FFDBDB>
+# The current value for a toggle able action
+current-value: '&eCurrent value: &a%value%'
+# Change the chest name
+change-chest-name: <gradient:#FF4A4A>Click to update the name of this chest</gradient:#FFDBDB>
+# The current name of the AutoSellChest
+current-displaymame: '&eCurrent: &a%chest-name%'
+# When a sell chest is placed against a regular chest or non sell chest
+cannot-form-double-chest: '&cThe sell chest cannot be a placed against a non sell chest'
+# When a player tries to remove someone's else's sell chest and doesn't have permissions
+cannot-remove-sell-chest: '&cYou do not have the required permissions to remove this sell chest'

@@ -1,0 +1,131 @@
+# Prod pipeline: push to main (paths) or manual dispatch → build, smoke, push GHCR.
+# Hosts never build: docker compose -f docker-compose.prod.yml pull && up -d
+name: images
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docker/**"
+      - "docker-compose.yml"
+      - "docker-compose.prod.yml"
+      - "infra/**"
+      - "plugins/**"
+      - "services/auth/**"
+      - "tools/plugin-lock/**"
+      - ".github/workflows/images.yml"
+  pull_request:
+    paths:
+      - "docker/**"
+      - "docker-compose.yml"
+      - "docker-compose.prod.yml"
+      - "infra/**"
+      - "plugins/**"
+      - "services/auth/**"
+      - "tools/plugin-lock/**"
+      - ".github/workflows/images.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  # Push images on main builds and manual runs; PRs only load+smoke locally on the runner.
+  PUSH_IMAGES: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+
+jobs:
+  auth:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        if: env.PUSH_IMAGES == 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./services/auth
+          push: ${{ env.PUSH_IMAGES == 'true' }}
+          tags: |
+            ghcr.io/${{ github.repository }}/auth:${{ github.sha }}
+            ghcr.io/${{ github.repository }}/auth:dev
+          cache-from: type=gha,scope=auth
+          cache-to: type=gha,mode=max,scope=auth
+
+  servers:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: main
+            lock: infra/minecraft/main/plugins-lock.yml
+            prefix: backend-
+            kind: server
+            config: infra/minecraft/main/config
+            runtime_java: "21"
+            smoke: true
+          - name: tech
+            lock: infra/minecraft/tech/plugins-lock.yml
+            prefix: backend-
+            kind: server
+            config: infra/minecraft/tech/config
+            runtime_java: "25"
+            smoke: true
+          - name: velocity
+            lock: infra/velocity/plugins-lock.yml
+            prefix: velocity-
+            kind: proxy
+            config: infra/velocity/config
+            runtime_java: "21"
+            smoke: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        if: env.PUSH_IMAGES == 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/server.Dockerfile
+          # Always load into the runner so smoke can run without pulling GHCR.
+          load: true
+          push: ${{ env.PUSH_IMAGES == 'true' }}
+          build-args: |
+            LOCK=${{ matrix.lock }}
+            PLUGIN_PREFIX=${{ matrix.prefix }}
+            RUNTIME_JAVA=${{ matrix.runtime_java }}
+          secrets: |
+            github_token=${{ secrets.PLUGIN_GITHUB_TOKEN }}
+          cache-from: type=gha,scope=server-${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=server-${{ matrix.name }}
+          tags: |
+            misplease/${{ matrix.name }}:smoke
+            ghcr.io/${{ github.repository }}/${{ matrix.name }}:${{ github.sha }}
+            ghcr.io/${{ github.repository }}/${{ matrix.name }}:dev
+
+      - name: Smoke boot
+        if: matrix.smoke
+        run: |
+          chmod +x docker/smoke-check.sh
+          # Standard GHA runners have ~7GiB RAM; keep the heap well under that
+          # (Docker + Postgres + Redis share the machine). Prod heaps stay in compose.prod.
+          SMOKE_HEAP=1536M SMOKE_TIMEOUT_S=360 \
+            ./docker/smoke-check.sh \
+            "misplease/${{ matrix.name }}:smoke" \
+            "${{ matrix.kind }}" \
+            "${{ matrix.config }}"

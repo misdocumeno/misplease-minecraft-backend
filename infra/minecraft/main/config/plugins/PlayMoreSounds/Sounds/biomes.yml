@@ -1,0 +1,82 @@
+# Set a sound to play when you enter, leave or stand on a specific biome.
+#
+# To set a sound, just create a configuration section with the name of the biome or just copy the
+# sample below.
+# Biome list: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/block/Biome.html
+#
+# Sample:
+# (Take a note that this is a sample and the sounds and biomes may not be available on your MC
+# version.)
+#
+#world: # The world name, replace 'world' with the name of the world you want to play the sound.
+#  PLAINS: # The biome name.
+#    Enter: # When a player enters this biome.
+#      Cancellable: true
+#      Enabled: true
+#      Stop On Exit:
+#        Enabled: true # If enabled, the sound will be stopped when the player leaves the biome.
+#        Delay: 20 # The time to wait before stopping the sound.
+#      Sounds:
+#        '1':
+#          Delay: 0
+#          Options:
+#            Ignores Disabled: false
+#            Permission Required: ''
+#            Permission To Listen: ''
+#            Radius: 0.0
+#            Relative Location:
+#              FRONT_BACK: 0.0
+#              LEFT_RIGHT: 0.0
+#              UP_DOWN: 0.0
+#          Pitch: 1.0
+#          Sound: BLOCK_NOTE_BLOCK_PLING
+#          Volume: 10.0
+#
+#    Leave: # When a player exits this biome.
+#      Cancellable: true
+#      Enabled: true
+#      Sounds:
+#        '1':
+#          Delay: 0
+#          Options:
+#            Ignores Disabled: false
+#            Permission Required: ''
+#            Permission To Listen: ''
+#            Radius: 0.0
+#            Relative Location:
+#              FRONT_BACK: 0.0
+#              LEFT_RIGHT: 0.0
+#              UP_DOWN: 0.0
+#          Pitch: 1.0
+#          Sound: BLOCK_NOTE_BLOCK_BASS
+#          Volume: 10.0
+#
+#    Loop: # When a player enters the biome, a loop will be triggered and play.
+#      Cancellable: true
+#      Delay: 0 # Time in ticks to wait to start the loop once triggered.
+#      Enabled: true
+#      Period: 100 # Time in ticks to wait before playing these sounds again.
+#      Stop On Exit:
+#        Enabled: true
+#        Delay: 20
+#      Prevent Enter Sound: true # Makes so Enter sound is not played when Loop is enabled.
+#      Sounds:
+#        '1':
+#          Delay: 0
+#          Options:
+#            Ignores Disabled: false
+#            Permission Required: ''
+#            Permission To Listen: ''
+#            Radius: 0.0
+#            Relative Location:
+#              FRONT_BACK: 0.0
+#              LEFT_RIGHT: 0.0
+#              UP_DOWN: 0.0
+#          Pitch: 1.0
+#          Sound: BLOCK_NOTE_BLOCK_BASS
+#          Volume: 10.0
+#
+# This is a small sample. You can add more biomes, worlds and more options to the sound options.
+# More information about sounds on sounds.yml.
+
+Version: '4.0.2'

@@ -1,0 +1,15 @@
+# Borders are defined per-world after install with /chunky border.
+# Migrate former WorldBorder sizes here when deploying (see pending notes).
+version: 1
+check-interval: 20
+message: "&cYou have reached the world border."
+use-actionbar: true
+effect: none
+effect-duration: 1
+visualizer-size: 1.0
+visualizer-particle: redstone
+visualizer-color: "FF0000"
+prevent-mob-spawning: false
+prevent-enderpearl: true
+prevent-chorusfruit: true
+wrap: false

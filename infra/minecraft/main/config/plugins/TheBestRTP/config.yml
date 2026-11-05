@@ -1,0 +1,185 @@
+# the regions of each world where the player will be able to make a rtp
+worlds:
+    survival:
+        1:
+            x: -2000000
+            z: -2000000
+        2:
+            x: 2000000
+            z: 2000000
+    recursos2:
+        1:
+            x: -2000000
+            z: -2000000
+        2:
+            x: 2000000
+            z: 2000000
+    recursos_custom:
+        1:
+            x: 1500
+            z: 1500
+        2:
+            x: 4500
+            z: 4500
+    nether:
+        1:
+            x: -2000000
+            z: -2000000
+        2:
+            x: 2000000
+            z: 2000000
+    nether_noreset:
+        1:
+            x: -2000000
+            z: -2000000
+        2:
+            x: 2000000
+            z: 2000000
+    end:
+        1:
+            x: -2000000
+            z: -2000000
+        2:
+            x: 2000000
+            z: 2000000
+    world_the_end_noreset:
+        1:
+            x: -2000000
+            z: -2000000
+        2:
+            x: 2000000
+            z: 2000000
+
+# the valid blocks for rtp in each world
+rtp-blocks:
+    survival:
+        - GRASS_BLOCK
+        - COARSE_DIRT
+        - PODZOL
+        - SAND
+        - RED_SAND
+        - TERRACOTTA
+        - SNOW
+        - SNOW_BLOCK
+        - PACKED_ICE
+        - ICE
+    recursos2:
+        - GRASS_BLOCK
+        - COARSE_DIRT
+        - PODZOL
+        - SAND
+        - RED_SAND
+        - TERRACOTTA
+        - SNOW
+        - SNOW_BLOCK
+        - PACKED_ICE
+        - ICE
+    recursos_custom:
+        - GRASS_BLOCK
+        - COARSE_DIRT
+        - PODZOL
+        - SAND
+        - RED_SAND
+        - TERRACOTTA
+        - SNOW
+        - SNOW_BLOCK
+        - PACKED_ICE
+        - ICE
+    nether:
+        - NETHERRACK
+        - NETHER_BRICKS
+        - GRAVEL
+        - SOUL_SAND
+        - SOUL_SOIL
+        - CRIMSON_NYLIUM
+        - WARPED_NYLIUM
+        - BLACKSTONE
+        - BASALT
+        - NETHER_QUARTZ_ORE
+        - NETHER_GOLD_ORE
+    nether_noreset:
+        - NETHERRACK
+        - NETHER_BRICKS
+        - GRAVEL
+        - SOUL_SAND
+        - SOUL_SOIL
+        - CRIMSON_NYLIUM
+        - WARPED_NYLIUM
+        - BLACKSTONE
+        - BASALT
+        - NETHER_QUARTZ_ORE
+        - NETHER_GOLD_ORE
+    end:
+        - END_STONE
+    world_the_end_noreset:
+        - END_STONE
+
+# if a world doesn't have a specified region
+# it will use this default limit
+default:
+    1:
+        x: -30000
+        z: -30000
+    2:
+        x: 30000
+        z: 30000
+
+# if a world doesn't have specific spawn blocks
+# it will use these default blocks
+rtp-blocks-default:
+    - GRASS_BLOCK
+    - COARSE_DIRT
+    - PODZOL
+    - SAND
+    - RED_SAND
+    - TERRACOTTA
+    - SNOW
+    - SNOW_BLOCK
+    - PACKED_ICE
+    - ICE
+    - NETHERRACK
+    - NETHER_BRICKS
+    - GRAVEL
+    - SOUL_SAND
+    - SOUL_SOIL
+    - CRIMSON_NYLIUM
+    - WARPED_NYLIUM
+    - BLACKSTONE
+    - BASALT
+    - NETHER_QUARTZ_ORE
+    - NETHER_GOLD_ORE
+    - END_STONE
+
+# players will not be able to rtp to these worlds
+forbidden-worlds:
+    - forbiden_world
+    - secret_world
+
+# how many locations per world should be precalculated?
+# so when the player uses the /rtp command, we can teleport it as fast as possible!
+cache-size: 20
+# when the rtp cache is empty, new random locations will be calculated, this is the delay between each calculation (in seconds)
+# (if a player needs a rtp location before this timer gets one, a new one will be calculated instantly, so don't worry about big delays)
+rtp-location-delay: 3
+# every time the cache is emptied, new rtp locations will be calculated, but, they can also be calculated every once in a while
+# how often do you want the cache to be filled? (the timer above will be used, they will not be calculated instantly all at once)
+rtp-locations-calculation-timer: 600
+# default teleport delay
+teleport-delay: 3
+# calculate rtp locations in worlds not listed in the 'worlds' list?
+calculate-unspecified-worlds: false
+
+# messages
+invalid-world: '§5§lRTP §8§l>> §4¡Ese mundo no existe!'
+that-world-rtp-not-allowed: '§5§lRTP §8§l>> §4¡No podés hacer eso en ese mundo!'
+this-world-rtp-not-allowed: '§5§lRTP §8§l>> §4¡No podes hacer eso en este mundo!'
+teleporting-no-delay: '§5§lRTP §8§l>> §2¡Teletransportandote a un lugar random!'
+teleporting-in-chat: '§5§lRTP §8§l>> §6Teletransportandote en §e{seconds} §6segundos...'
+teleporting-in-title: '§5Teletransportando en {seconds}'
+teleporting-in-subtitle: '§f¡No te muevas!'
+teleported-chat: '§5§lRTP §8§l>> §2¡Fuiste teletransportado a un lugar random!'
+teleported-title: '§5¡Teletransportado!'
+teleported-subtitle: ''
+teleport-cancelled-chat: '§5§lRTP §8§l>> §4¡Te tenés que quedar quieto para ser teletransportado!'
+teleport-cancelled-title: '§4>:('
+teleport-cancelled-subtitle: '§f¡Te moviste!'

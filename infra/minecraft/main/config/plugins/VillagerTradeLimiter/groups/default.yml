@@ -1,0 +1,11 @@
+# This config applies to all players without a villagertradelimiter.group.<group> permission.
+
+Cooldown: 0h
+MaxHeroLevel: -1
+MaxDiscount: -1.0
+MaxDemand: -1
+MaxUses: -1
+
+Overrides:
+    bookshelf:
+        MaxDiscount: 0.7

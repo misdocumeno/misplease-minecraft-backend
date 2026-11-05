@@ -1,0 +1,16 @@
+# add permissions to players who you want to be automatically teleported
+# autoplayerteleport.<event>.<location>.<condition-world>
+# events can be: onjoin, onfirstjoin, onworldjoin, onquit, onshutdown
+# the world format is: world:x:y:z:yaw:pitch
+# if condition-world is set, players will only be teleported if they are in that world.
+# examples:
+# to spawn on join, regardless of the world: autoplayerteleport.onjoin.spawn
+# to nether hub when they enter the nether: autoplayerteleport.onworldjoin.netherhub.world_nether
+# to spawn if they quit on a temporary world: autoplayerteleport.onquit.spawn.temp_world
+# to spawn if they join in temporary world after a server restart: autoplayerteleport.onfirstjoin.spawn.temp_world
+
+locations:
+    spawn: 'newspawn:0.5:64.0625:0.5:180.0:0.0'
+
+# perform the player quit teleports to connected players when the server shuts down?
+quit-on-shutdown: true

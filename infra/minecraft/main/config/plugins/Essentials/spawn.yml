@@ -1,0 +1,8 @@
+spawns: 
+  default: 
+    world: newspawn
+    x: 0.5
+    y: 65.0625
+    z: 0.5
+    yaw: 180
+    pitch: 0

@@ -1,0 +1,29 @@
+regions:
+    - - ==: org.bukkit.Location
+        world: world
+        x: 50000.0
+        y: -65.0
+        z: 50000.0
+        pitch: 0.0
+        yaw: 0.0
+      - ==: org.bukkit.Location
+        world: world
+        x: -50000.0
+        y: 320.0
+        z: -50000.0
+        pitch: 0.0
+        yaw: 0.0
+# - - ==: org.bukkit.Location
+#     world: world
+#     x: 12.0
+#     y: 22.0
+#     z: 32.0
+#     pitch: 0.0
+#     yaw: 0.0
+#   - ==: org.bukkit.Location
+#     world: world
+#     x: 62.0
+#     y: 72.0
+#     z: 82.0
+#     pitch: 0.0
+#     yaw: 0.0

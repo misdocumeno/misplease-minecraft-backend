@@ -1,0 +1,19 @@
+pages:
+    page1:
+        items:
+            '9':
+                material: DIAMOND
+                buy: 1000
+                sell: 650
+            '11':
+                material: EMERALD
+                buy: 400
+                sell: 250
+            '14':
+                material: GOLD_INGOT
+                buy: 35
+                sell: 20
+            '16':
+                material: IRON_INGOT
+                buy: 25
+                sell: 15

@@ -1,0 +1,135 @@
+####################################################################################################
+##  PlayMoreSounds Configuration v4.0.2
+##
+## PlayMoreSounds configuration about general stuff like commands and regions, if you are looking
+##for event sounds, check sounds.yml. If you are looking for situational sounds, check the folder
+##'Sounds'.
+##
+## If you have any questions about PlayMoreSounds join the discord: https://discord.gg/eAHPbc3
+####################################################################################################
+
+# The version of this configuration, each configuration has one of this. If the version is too old
+#the configuration will be renamed to "outdated config.yml" and a new one will be generated so you
+#don't lose your properties and can update each property manually.
+Version: '4.0.2'
+
+# Available languages: EN_US, ES_LA, PT_BR, ZH_CN
+Language Locale: EN_US
+
+# All playing sounds will be logged to console with their location.
+Debug: false
+
+# Should the sounds disabled by "/pms toggle" be re-enabled on login?
+Enable Sounds On Login: false
+
+# A simple halloween event, disable if you find it annoying.
+Halloween Event: true
+
+Resource Packs:
+  # Request player to download a resource pack on join.
+  Request: false
+  # The URL of the resource pack. Must be a direct link.
+  URL: ''
+  # If a player denies the download, this player will be kicked immediately.
+  Force:
+    Enabled: false
+    # Should the player be kicked even if the download of the resource pack is accepted but fails?
+    Even If Download Fail: false
+
+# Sound Regions configuration:
+Sound Regions:
+  # The border particles of "/pms region info"
+  Border:
+    # A limit of how many players can see borders at once, for performance.
+    Max Showing Borders: 30
+    # The time in ticks of how long the border should be shown.
+    Showing Time: 140
+  # The max area in m³ a region can have.
+  # Use permission 'playmoresounds.region.create.unlimited.area' to bypass.
+  Max Area: 15625
+  # The max characters a region name can have.
+  Max Name Characters: 20
+  # The max regions a single player can have.
+  # Use permission 'playmoresounds.region.create.unlimited.regions' to bypass.
+  Max Regions: 5
+  # The region selection tool properties.
+  Wand:
+    Name: '&6&l&nRegion Selection Tool'
+    Glowing: true
+    Material: FEATHER
+
+# The worlds that sounds should not play.
+#
+# Example:
+#World Black List:
+#- 'world_nether'
+#- 'world_the_end'
+#
+# All sounds played by PlayMoreSounds will respect this, even plugins that hook to PlayMoreSounds to
+#play sounds.
+World Black List: []
+
+# Update scheduler
+Updater:
+  Enabled: true
+  # If false updater messages will only be logged when an update is available.
+  Log: false
+  # Updates will be checked every 144000 ticks or 1 hour.
+  Period: 144000
+
+# Properties of "/pms list" command.
+List:
+  Default:
+    Alternate Color: '&8'
+    Color: '&e'
+    Separator: '&f, '
+    Max Per Page: 10
+  # Properties of the sound list GUI.
+  Inventory:
+    Next Page Item:
+      Material: SPECTRAL_ARROW
+      Glowing: false
+    Stop Sound Item:
+      Material: BARRIER
+      Glowing: true
+    Previous Page Item:
+      Material: SPECTRAL_ARROW
+      Glowing: false
+    Sound Item:
+      # The item will be picked randomly from this list for each sound.
+      Material:
+      - MUSIC_DISC_13
+      - MUSIC_DISC_CAT
+      - MUSIC_DISC_CHIRP
+      - MUSIC_DISC_BLOCKS
+      - MUSIC_DISC_FAR
+      - MUSIC_DISC_MALL
+      - MUSIC_DISC_MELLOHI
+      - MUSIC_DISC_STAL
+      - MUSIC_DISC_STRAD
+      - MUSIC_DISC_WARD
+      - MUSIC_DISC_WAIT
+      Glowing: false
+    # How many rows of sounds should there be per page.
+    Rows Per Page: 4
+
+# Configuration for addon management and installer inventories.
+Addons Inventory:
+  Addon Item:
+    Material: IRON_BLOCK
+    Glowing: false
+  Done Item:
+    Material: GREEN_WOOL
+    Glowing: false
+  Info Item:
+    Material: PAPER
+    Glowing: false
+  Install Item:
+    Material: EMERALD_BLOCK
+    Glowing: true
+  Next Page Item:
+    Material: ARROW
+    Glowing: false
+  Previous Page Item:
+    Material: ARROW
+    Glowing: false

@@ -1,0 +1,9 @@
+# Desired set only. Versions live in plugins-lock.yml.
+server:
+  source: papermc
+  id: velocity
+
+plugins:
+  - name: ViaVersion
+    source: modrinth
+    slug: viaversion

@@ -1,0 +1,7 @@
+effect-unspecified: '§5§lEternal Effects §8§l>> §c¡Tenés que especificar un efecto! así:\n  §c/eternaleffect <efecto> <nivel>'
+effect-doesnt-exist: §5§lEternal Effects §8§l>> §cEse efecto no existe.
+no-permission: §5§lEternal Effects §8§l>> §cNo tenés permiso para usar ese efecto.
+effect-enabled: §5§lEternal Effects §8§l>> §2¡Efecto aplicado!
+effect-disabled: §5§lEternal Effects §8§l>> §2¡Efecto removido!
+no-permission-level: §5§lEternal Effects §8§l>> §cNo tenés permiso para usar ese nivel de efecto.
+level-not-a-number: §5§lEternal Effects §8§l>> §cEl nivel tiene que ser un número.

@@ -1,0 +1,26 @@
+name: protection-stones
+permissions:
+    # https://github.com/espidev/ProtectionStones/wiki/Permissions
+    - protectionstones.create
+    - protectionstones.destroy
+    - protectionstones.info
+    - protectionstones.info.others
+    - protectionstones.members
+    - protectionstones.owners
+    - protectionstones.flags
+    - protectionstones.rent
+    - protectionstones.tax
+    - protectionstones.buysell
+    - protectionstones.hide
+    - protectionstones.unhide
+    - protectionstones.setparent
+    - protectionstones.name
+    - protectionstones.tp
+    - protectionstones.view
+    - protectionstones.view.others
+    - protectionstones.unclaim
+    - protectionstones.priority
+    - protectionstones.list
+    - protectionstones.count
+    - protectionstones.count.others
+    - protectionstones.merge

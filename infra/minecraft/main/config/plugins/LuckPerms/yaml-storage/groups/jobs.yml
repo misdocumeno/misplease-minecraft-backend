@@ -1,0 +1,24 @@
+name: jobs
+permissions:
+    # https://github.com/Zrips/Jobs/wiki/Permissions
+    # https://github.com/Zrips/Jobs/wiki/Commands
+    - jobs.use
+    - jobs.max.3
+    - jobs.command.top
+    - jobs.command.gtop
+    - jobs.command.info
+    - jobs.command.join
+    - jobs.command.playerinfo
+    - jobs.command.quests
+    - jobs.command.archive
+    - jobs.command.blockinfo
+    - jobs.command.bonus
+    - jobs.command.browse
+    - jobs.command.clearownership
+    - jobs.command.employ
+    - jobs.command.fire
+    - jobs.command.fireall
+    - jobs.command.leave
+    - jobs.command.leaveall
+    - jobs.command.stats
+    - jobs.command.toggle

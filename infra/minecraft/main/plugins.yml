@@ -1,134 +1,213 @@
-platform: paper
+# Desired set only. Versions/builds/commits live in plugins-lock.yml.
+# `name` is the stable label (used by update --only). Required when several
+# plugins share one repo (EssentialsX*) or when the slug/repo label would differ
+# from the lock name.
+# GitHub multi-jar releases: jar: exact filename, or /regex/ (YAML has no regex type).
+server:
+  source: purpur
 
 plugins:
-  - source: github
+  - name: ActionHealth
+    source: github
     repo: zeshan321/ActionHealth
-  - source: github # TODO: tiene -sources y -javadoc, excluir por default, solo requerir assetRegex si hay mas jars aun excluyendo eso
+  - name: AdvancedRegionMarket
+    source: github
     repo: alex9849/advanced-region-market
-  - source: hangar
+  - name: AutoSellChests
+    source: hangar
     project: GPPlugins/AutoSellChests
-  - source: modrinth
+  - name: Chunky
+    source: modrinth
     slug: chunky
-  # - name: Citizens2
-  #   source: jetkins # TODO: implement
-  #   url: https://ci.citizensnpcs.co/job/citizens2/
-  - source: github
-    repo: Zrips/CMILib
-  - source: spiget
-    name: ColoredSigns
-    resourceId: 31676
-  - source: spiget
-    name: CommandRegions
-    resourceId: 68727
-  - source: modrinth
+  - name: ChunkyBorder
+    source: modrinth
+    slug: chunkyborder
+  - name: CoreProtect
+    source: modrinth
     slug: coreprotect
-  - source: modrinth
-    slug: deathcoords
-  - source: modrinth
-    slug: decentholograms
-  - source: modrinth
-    slug: dynmap
-    channe: beta
-  - source: spiget
-    name: EconomyShopGUI
-    resourceId: 69927
-  - source: github
-    repo: chrisrnj/EpicPluginLib
-  # TODO: implement git. with a list of artifacts maybe? bc there are multiple jars.
-  # ask chatgpt how to abstract this to any repo releases. use package or something to inspect releases
-  # (EssentialsX, EssentialsXChat? no se que hace, EssentialsXProtect? ver que hace, EssentialsXSpawn )
-  # - name: EssentialsX
-  #   url: https://github.com/EssentialsX/Essentials/releases
-  # - name: ExtraContexts
-  #   source: jetkins # TODO: implement
-  #   url: https://ci.lucko.me/job/ExtraContexts/
-  - source: modrinth
-    slug: fastasyncworldedit
-  # TODO: ver que es, y si hace falta, y como es el tema con velocity
-  # - name: Floodgate
-  #   url: https://geysermc.org/wiki/floodgate/
-  # TODO: ver como es con velocity ahora. la idea es que se pueda entrar con versiones futuras a todos los sv
-  # - name: Geyser
-  - source: spiget
-    name: GravityTubes
-    resourceId: 64624
-  - source: github
+  - name: EssentialsX
+    source: github
+    repo: EssentialsX/Essentials
+    # Versioned core jar only (not EssentialsXChat-/Protect-/…).
+    jar: /^EssentialsX-[0-9]/
+  - name: EssentialsXChat
+    source: github
+    repo: EssentialsX/Essentials
+    jar: /^EssentialsXChat-/
+  - name: EssentialsXProtect
+    source: github
+    repo: EssentialsX/Essentials
+    jar: /^EssentialsXProtect-/
+  - name: EssentialsXSpawn
+    source: github
+    repo: EssentialsX/Essentials
+    jar: /^EssentialsXSpawn-/
+  - name: GSit
+    source: github
     repo: gecolay/GSit
-  - source: spiget
-    name: CustomImages # TODO: reeplazar por este, que tiene imagenes animadas https://modrinth.com/plugin/imageframe
-    resourceId: 53036
-  - source: modrinth
-    slug: nbtapi
-  - source: github
-    repo: Zrips/Jobs
-  - source: spiget
-    name: LightCleaner
-    resourceId: 42469
-  # TODO: ver como es con velocity
-  # - name: LuckPerms
-  #   source: modrinth
-  #   url: https://modrinth.com/plugin/luckperms/versions?l=paper
-  # TODO: tiene versiones beta. ver como filtrar solo releases, opcionalmente beta, en el creador de lock
-  - source: modrinth
-    slug: multiverse-core
-  - source: modrinth
+  - name: Multiverse-Inventories
+    source: modrinth
     slug: multiverse-inventories
-  - source: spiget
-    name: NetherPortal
-    resourceId: 27349
-  - source: modrinth
-    slug: open-inventory
-  - source: modrinth
-    slug: placeholderapi
-  - source: github
-    repo: chrisrnj/PlayMoreSounds
-  - source: modrinth
-    slug: simple-plugin-hider
-  - source: modrinth
+  - name: NBTAPI
+    source: modrinth
+    slug: nbtapi
+  - name: Plot2Dynmap
+    source: modrinth
     slug: plot2dynmap
+  - name: VoxelSniper
+    source: modrinth
+    slug: fastasyncvoxelsniper
+  - name: FastAsyncWorldEdit
+    source: modrinth
+    slug: fastasyncworldedit
+  - name: SuperiorSkyblock2
+    source: jenkins
+    server: https://hub.bg-software.com
+    job: SuperiorSkyblock2 - Stable Builds
   - name: PlotSquared
-    source: local
-    # TODO: compile jar locally and put it in some local folder, where my own plugins should be too, but not "misplease" ones
-  - source: modrinth
+    source: git
+    repo: https://github.com/IntellectualSites/PlotSquared.git
+  - name: DecentHolograms
+    source: modrinth
+    slug: decentholograms
+  - name: Dynmap
+    source: modrinth
+    slug: dynmap
+    channel: beta
+  - name: LuckPerms
+    source: modrinth
+    slug: luckperms
+  - name: Multiverse-Core
+    source: modrinth
+    slug: multiverse-core
+  - name: PlaceholderAPI
+    source: modrinth
+    slug: placeholderapi
+  - name: ProtectionStones
+    source: modrinth
     slug: protectionstones
-  - name: QuickShop
-    source: local
-    # TODO: creo que lo estabamos compilando local para lo de las shulker, no? si es asi, mantener, mientras no falle. sino aplicar el cambio a una version mas nueva, pero mantener siendo local
-  - source: modrinth
+  - name: RoseStacker
+    source: modrinth
     slug: rosestacker
-  - source: modrinth
+  - name: SimpleScore
+    source: modrinth
     slug: simplescore
-  - source: modrinth
-    slug: skinsrestorer
-  - name: Slimefun
-    source: local
-    # TODO: claramente local, ni es soportado en la 1.21, nosotros lo upgradeamos. ver si alguien retomo el proyecto pero
-  - source: modrinth
-    slug: spark
-  - source: spiget
-    name: CommandSigns
-    resourceId: 10512
-  - source: spiget
-    name: SuperBlockCommands
-    resourceId: 49684
-  # TODO: preguntar a chatgpt si hay una alternativa mejor a scrapping
-  - name: SuperSkyBlock
-    source: ??
-    url: https://bg-software.com/superiorskyblock/
-  - source: github
-    repo: NEZNAMY/TAB
-  - source: modrinth
-    slug: vaultunlocked
-  # TODO: ver como es ahora con velocity
-  # - name: ViaVersion
-  #   source: modrinth
-  #   url: https://modrinth.com/plugin/viaversion/versions?l=paper
-  - source: spiget
-    name: VillagerTradeLimiter
-    resourceId: 123557
-  - source: modrinth
+  - name: VoidGen
+    source: modrinth
     slug: voidgen
-  - source: github
-    repo: Echo24h/WorldBorder
-  - source: github
+  - name: WorldGuard
+    source: modrinth
+    slug: worldguard
+  - name: Vault
+    source: github
+    repo: MilkBowl/Vault
+  # OpenInv: prod stub (jaxy) has no public source — own rewrite later.
+  - name: TabList
+    source: github
+    repo: montlikadani/TabList
+    jar: /^TabList-bukkit-/
+  # ImageFrame replaces Spiget Images (maps must be re-created once on deploy).
+  - name: ImageFrame
+    source: modrinth
+    slug: imageframe
+  # Paper cannot accept client legacy & codes on sign edit; keep a tiny color plugin.
+  - name: ColoredSigns
+    source: modrinth
+    slug: coloredsigns
+  - name: SignManager
+    source: modrinth
+    slug: signmanager
+  - name: AdvancedPlHide
+    source: modrinth
+    slug: advancedplhide
+  - name: ExtraContexts
+    source: jenkins
+    server: https://ci.lucko.me
+    job: ExtraContexts
+  - name: spark
+    source: jenkins
+    server: https://ci.lucko.me
+    job: spark
+  - name: Jobs
+    source: spiget
+    id: "4216"
+  - name: CMILib
+    source: spiget
+    id: "87610"
+  # CommandRegions → WorldGuardExtraFlags command-on-entry / console-command-on-entry.
+  # DeathCoordinates → Essentials backAfterDeath click + essentials.back.ondeath.
+  - name: VillagerTradeLimiter
+    source: spiget
+    id: "87210"
+  - name: GravityTubes
+    source: spiget
+    id: "64624"
+  - name: LightCleaner
+    source: spiget
+    id: "42469"
+  - name: EconomyShopGUI
+    source: modrinth
+    slug: economyshopgui
+  - name: PlayMoreSounds
+    source: github
+    repo: chrisrnj/PlayMoreSounds
+  - name: WorldGuardExtraFlags
+    source: github
     repo: aromaa/WorldGuardExtraFlags
+  - name: AutoConsoleCommands
+    source: github
+    repo: misdocumeno/AutoConsoleCommands
+  - name: AutoPlayerTeleport
+    source: github
+    repo: misdocumeno/AutoPlayerTeleport
+  - name: BetterBack
+    source: github
+    repo: misdocumeno/BetterBack
+  - name: BetterWarps
+    source: github
+    repo: misdocumeno/BetterWarps
+  - name: BiomePrinter
+    source: github
+    repo: misdocumeno/BiomePrinter
+  - name: ConnectionLogger
+    source: github
+    repo: misdocumeno/ConnectionLogger
+  - name: EternalEffects
+    source: github
+    repo: misdocumeno/EternalEffects
+  - name: GetWorldName
+    source: github
+    repo: misdocumeno/GetWorldName
+  - name: HiddenHolograms
+    source: github
+    repo: misdocumeno/HiddenHolograms
+  - name: NoSlimesInMisPark
+    source: github
+    repo: misdocumeno/NoSlimesInMisPark
+  - name: PermissionShops
+    source: github
+    repo: misdocumeno/PermissionShops
+  - name: PermitShulkers
+    source: github
+    repo: misdocumeno/PermitShulkers
+  - name: PortalRoutes
+    source: github
+    repo: misdocumeno/PortalRoutes
+  - name: TheBestRTP
+    source: github
+    repo: misdocumeno/TheBestRTP
+  - name: TrackPlayTime
+    source: github
+    repo: misdocumeno/TrackPlayTime
+  - name: WorldGameMode
+    source: github
+    repo: misdocumeno/WorldGameMode
+  - name: WorldPrinter
+    source: github
+    repo: misdocumeno/WorldPrinter
+  - name: Slimefun
+    source: github
+    repo: misdocumeno/Slimefun4
+  - name: QuickShop
+    source: github
+    repo: misdocumeno/QuickShop-Reremake

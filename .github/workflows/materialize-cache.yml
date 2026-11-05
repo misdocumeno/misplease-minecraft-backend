@@ -1,0 +1,48 @@
+# Optional: download locked jars on Actions to warm BuildKit on the next `images` run.
+# Prefer running after locks are complete. Primary jar reuse is BuildKit `type=gha` inside
+# server.Dockerfile — this job only proves Spiget works from GitHub's IP.
+name: materialize-cache
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: main
+            lock: infra/minecraft/main/plugins-lock.yml
+          - name: tech
+            lock: infra/minecraft/tech/plugins-lock.yml
+          - name: velocity
+            lock: infra/velocity/plugins-lock.yml
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: tools/plugin-lock/package-lock.json
+
+      - name: Download lock jars
+        env:
+          GITHUB_TOKEN: ${{ secrets.PLUGIN_GITHUB_TOKEN }}
+        run: |
+          set -eux
+          cd tools/plugin-lock
+          npm ci --omit=dev --ignore-scripts
+          out="${{ github.workspace }}/.materialized/${{ matrix.name }}"
+          mkdir -p "$out"
+          # Default cache lands in repo .plugin-lock-cache (gitignored).
+          node src/cli.ts download \
+            --lock "${{ github.workspace }}/${{ matrix.lock }}" \
+            --out "$out" \
+            --server-out "$out"
+          du -sh "${{ github.workspace }}/.plugin-lock-cache" || true

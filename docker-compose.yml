@@ -1,63 +1,107 @@
+# Local / Docker Desktop: builds images here.
+# Preprod + prod: use docker-compose.prod.yml (GHCR pull only).
 services:
   velocity:
-    image: itzg/mc-proxy:java21@sha256:fbbb3b24e12226857bf796a624e3093a6c731d2f36c2d94e2845ea1b694d4026
+    image: misplease/velocity:dev
+    build:
+      context: .
+      dockerfile: docker/server.Dockerfile
+      args:
+        LOCK: infra/velocity/plugins-lock.yml
+        PLUGIN_PREFIX: velocity-
     container_name: misplease-proxy
+    init: true
+    stop_grace_period: 30s
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
+    devices:
+      - /dev/fuse
     environment:
-      - TYPE=VELOCITY
-      - VELOCITY_VERSION=3.4.0-SNAPSHOT
-      - OVERRIDE_CONFIG=true
+      - KIND=proxy
+      - JVM_OPTS=-Xms256M -Xmx512M
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
     volumes:
-      - ./infra/velocity/config:/config
-      - ./infra/velocity/plugins:/plugins
+      - ./infra/velocity/config:/config:ro
+      - ./infra/velocity/data:/data
     ports:
       - 25565:25577
+    depends_on:
+      redis:
+        condition: service_healthy
     restart: unless-stopped
 
   main:
-    image: itzg/minecraft-server:java21@sha256:f6d0b91029e73afd765ae8b0689cdac754067f3e36cb2d60608366f82d650008
+    image: misplease/main:dev
+    build:
+      context: .
+      dockerfile: docker/server.Dockerfile
+      args:
+        LOCK: infra/minecraft/main/plugins-lock.yml
+        PLUGIN_PREFIX: backend-
     container_name: misplease-main
+    init: true
+    stop_grace_period: 90s
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
+    devices:
+      - /dev/fuse
     environment:
+      - KIND=server
       - SERVER_ID=main
-      - TYPE=PURPUR
-      - VERSION=1.20.1
-      - EULA=TRUE
-      - ONLINE_MODE=FALSE
-      - OVERRIDE_SERVER_PROPERTIES=FALSE
-      - MEMORY=4G
-      - OPS=f62a41ae-4198-391b-ad68-6dbbc530da23
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
       - DATABASE_URL=postgres://misplease:${DB_PASSWORD}@db:5432/misplease
-      - JVM_OPTS=-Xms1G -Xmx5G -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC -Dorg.maxgamer.quickshop.util.envcheck.skip.SIGNATURE_VERIFY --add-modules=jdk.incubator.vector
-      - COPY_CONFIG_DEST=/data
+      - JVM_OPTS=-Xms1G -Xmx5G -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC -Dorg.maxgamer.quickshop.util.envcheck.skip.SIGNATURE_VERIFY -Dpaper.preferSparkPlugin=true --add-modules=jdk.incubator.vector
+      - RCON_PASSWORD=${RCON_PASSWORD:-}
     volumes:
-      - ./infra/minecraft/main/config:/config
-      - ./infra/minecraft/main/plugins:/plugins
+      - ./infra/minecraft/main/config:/config:ro
       - ./infra/minecraft/main/data:/data
     ports:
       # dynmap
       - 8080:25568
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
 
   tech:
-    image: itzg/minecraft-server:java21@sha256:f6d0b91029e73afd765ae8b0689cdac754067f3e36cb2d60608366f82d650008
+    image: misplease/tech:dev
+    build:
+      context: .
+      dockerfile: docker/server.Dockerfile
+      args:
+        LOCK: infra/minecraft/tech/plugins-lock.yml
+        PLUGIN_PREFIX: backend-
+        RUNTIME_JAVA: "25"
     container_name: misplease-tech
+    init: true
+    stop_grace_period: 90s
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
+    devices:
+      - /dev/fuse
     environment:
+      - KIND=server
       - SERVER_ID=tech
-      - TYPE=PAPER
-      - VERSION=1.21.11
-      - EULA=TRUE
-      - ONLINE_MODE=FALSE
-      - OVERRIDE_SERVER_PROPERTIES=FALSE
-      - OPS=f62a41ae-4198-391b-ad68-6dbbc530da23
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
       - DATABASE_URL=postgres://misplease:${DB_PASSWORD}@db:5432/misplease
-      - JVM_OPTS=-Xms512M -Xmx4G -XX:+UseG1GC -XX:MaxGCPauseMillis=200
-      - COPY_CONFIG_DEST=/data
+      - JVM_OPTS=-Xms512M -Xmx4G -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Dpaper.preferSparkPlugin=true
+      - RCON_PASSWORD=${RCON_PASSWORD:-}
     volumes:
-      - ./infra/minecraft/tech/config:/config
-      - ./infra/minecraft/tech/plugins:/plugins
+      - ./infra/minecraft/tech/config:/config:ro
       - ./infra/minecraft/tech/data:/data
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     restart: unless-stopped
 
   auth:
@@ -90,7 +134,7 @@ services:
     command: node /app/dist/migrate.js
 
   db:
-    image: postgres:18.6-alpine
+    image: postgres:18-alpine
     container_name: misplease-db
     restart: unless-stopped
     environment:
@@ -108,7 +152,7 @@ services:
       - 5432:5432
 
   redis:
-    image: redis:8.10.3-alpine
+    image: redis:8.10-alpine
     container_name: misplease-redis
     restart: unless-stopped
     command: >

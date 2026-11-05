@@ -1,0 +1,34 @@
+# shop creation
+sell-or-modify-not-specified: '§5§lPerm Shop §8§l>> §cNo especificaste si esta es una tienda §6sell §co §6modify§c, creación de tienda cancelada.'
+book-given: '§5§lPerm Shop §8§l>> §2Editá este libro para crear una tienda de permisos §7(usa §c/cancel §7para cancelar)'
+no-slot-for-book: '§5§lPerm Shop §8§l>> §cNo tenes espacio en el inventario para el libro, creación de tienda cancelada.'
+price-not-a-number: '§5§lPerm Shop §8§l>> §c{price} no es un precio válido, asegurate de que sea un numero positivo.'
+invalid-mod: '§5§lPerm Shop §8§l>> §c{modification} no es una modificación valida para un permiso, asegurate que sea un numero entero, positivo o negativo, pero no cero.'
+invalid-level: '§5§lPerm Shop §8§l>> §c{level} no es un nivel válido, asegurate que es un numero entero.'
+invalid-item: '§5§lPerm Shop §8§l>> §c{item} no es un item válido, asegurate que aparezca acá: https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html'
+invalid-permission: '§5§lPerm Shop §8§l>> §c{permission} no es un permiso válido, asegurate de que solo usa letras minúsculas, numeros y puntos.'
+remove-levels-not-boolean: '§5§lPerm Shop §8§l>> §c{boolean} no es válido, podes usar (true, yes, 1, y) o (false, no, not, 0, n).'
+enchantment-not-boolean: '§5§lPerm Shop §8§l>> §c{boolean} no es válido, podes usar (true, yes, 1, y) o (false, no, not, 0, n).'
+shop-created: '§5§lPerm Shop §8§l>> §2¡Tienda creada!'
+shop-cancelled: '§5§lPerm Shop §8§l>> §cCreación de tienda cancelada.'
+
+# buyer messages
+confirm-buy: '§5§lPerm Shop §8§l>> §2¿Estás segurx de que queres comprar esto? §7(Apretá de nuevo para confirmar)'
+success-buy: '§5§lPerm Shop §8§l>> §2¡Comprado!'
+success-buy-plural: '§5§lPerm Shop §8§l>> §2¡Comprados!'
+do-not-meet-prerequisites: '§5§lPerm Shop §8§l>> §cNo podés comprar esto.'
+not-enough-money: "§cNo tenés dinero suficiente para esto."
+cant-upgrade-this: "§cNo podés mejorar esto porque no lo tenés."
+cant-upgrade-more: "§cYa mejoraste esto hasta el límite."
+already-purchased: '§5§lPerm Shop §8§l>> §cYa compraste esto.'
+already-purchased-plural: '§5§lPerm Shop §8§l>> §cYa compraste todo esto.'
+amount-withdrawn: '§5§lPerm Shop §8§l>> §2Solo se te retiró §6{amount} §2porque ya tenías algunas de estas cosas!'
+
+# others
+shop-deleted: '§5§lPerm Shop §8§l>> §cTienda de permisos removida.'
+invalid-cancel: '§5§lPerm Shop §8§l>> §cNo estas creando una tienda de permisos.'
+already-creating-shop: '§5§lPerm Shop §8§l>> §cYa estas creando una tienda, terminala o cancelala para poder empezar a crear otra.'
+
+# for group manager
+command-add-permission: manuaddp {playername} {permission}
+command-remove-permission: manudelp {playername} {permission}

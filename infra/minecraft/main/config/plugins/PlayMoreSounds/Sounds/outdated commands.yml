@@ -1,0 +1,139 @@
+# Set a sound to play when a player type a specific command.
+#
+#  There are three filters to choose from:
+#
+#  -> Contains:
+#  Use this section to play a sound to every command sent that
+# contains the sentence you specified.
+#  Sample:
+#
+#Contains:
+#  play:
+#    Cancellable: true
+#    Enabled: true
+#    # While StopOtherSounds = true, the sound on sounds.yml
+#    #won't play and won't conflict with any other sounds
+#    #played by command.
+#    # (You don't have to add 'Sounds' section since you won't
+#    #play any sound. Cancellable and Enabled will interfere
+#    #how this configuration works.)
+#    StopOtherSounds: true
+#
+#  -> EndsWith:
+#  Self explanatory. If a sent command ends with the sentence
+# specified, the determined sound will play.
+#  Sample:
+#
+#EndsWith:
+#  -force:
+#    Cancellable: true
+#    Enabled: true
+#    StopOtherSounds: true
+#    Sounds:
+#      '0':
+#        Options:
+#          Radius:
+#            Range: '0.0'
+#        Pitch: '1.0'
+#        Sound: 'ENTITY_CREEPER_PRIMED'
+#        Volume: '10.0'
+#
+#  -> EqualsExactly:
+#  When a command equals exactly like the specified here.
+#  Sample:
+#
+#EqualsExactly:
+#  /wArP MALl2:
+#    Cancellable: true
+#    Enabled: true
+#    StopOtherSounds: true
+#    Sounds:
+#      '1':
+#        Options:
+#          Radius:
+#            Range: '0.0'
+#        Pitch: '2.0'
+#        Sound: 'BLOCK_PORTAL_TRAVEL'
+#        Volume: '0.4'
+#
+#  -> EqualsIgnoreCase:
+#  When a command is equals to the specified but, it doesn't
+# matter if it's on lower case or upper case.
+#  If a player accidentally toggled upper case on it's keyboard
+# and typed /SPAWN and you want to set a sound for the command
+# "/spawn", put him in this section so the sound will be played
+# even if is on upper case.
+#  Sample:
+#
+#EqualsIgnoreCase:
+#  /spawn:
+#    Cancellable: false
+#    Enabled: true
+#    StopOtherSounds: true
+#    Sounds:
+#      '1':
+#        Options:
+#          Radius:
+#            Range: '0.0'
+#        Pitch: '2.0'
+#        Sound: 'BLOCK_PORTAL_TRAVEL'
+#        Volume: '0.4'
+#
+#  -> StartsWith:
+#  This is the most used of them all. When a command starts with
+# the sentence you specify.
+#  Sample:
+#
+#StartsWith:
+#  /tp:
+#    Cancellable: false
+#    Enabled: true
+#    StopOtherSounds: true
+#    Sounds:
+#      '1':
+#        Options:
+#          Radius:
+#            Range: '0.0'
+#        Pitch: '2.0'
+#        Sound: 'BLOCK_PORTAL_TRAVEL'
+#        Volume: '0.4'
+#  /warp:
+#    Cancellable: false
+#    Enabled: true
+#    StopOtherSounds: true
+#    Sounds:
+#      '1':
+#        Options:
+#          Radius:
+#            Range: '0.0'
+#        Pitch: '2.0'
+#        Sound: 'BLOCK_PORTAL_TRAVEL'
+#        Volume: '0.4'
+#  /spawn:
+#    Cancellable: false
+#    Enabled: true
+#    StopOtherSounds: true
+#    Sounds:
+#      '1':
+#        Options:
+#          Radius:
+#            Range: '0.0'
+#        Pitch: '2.0'
+#        Sound: 'BLOCK_PORTAL_TRAVEL'
+#        Volume: '0.4'
+#
+# More information about sounds on sounds.yml
+
+EqualsExactly:
+  /mvtp test:
+    Cancellable: true
+    Enabled: true
+    StopOtherSounds: true
+    Sounds:
+      '1':
+        Options:
+          Radius:
+            Range: '0.0'
+        Pitch: '1.0'
+        Sound: 'MUSIC_DISC_CAT'
+        Volume: '1'

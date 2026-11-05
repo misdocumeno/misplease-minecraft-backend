@@ -1,0 +1,49 @@
+language: en
+checkForUpdates: true
+worlds:
+  # World names are case-insensitive
+  world:
+  - world
+  recursos_custom:
+  - recursos_custom
+  recursos2:
+  - recursos2
+  survival:
+  - survival
+  spawn_recursos2:
+  - spawn_recursos2
+  newspawn:
+  - newspawn
+  world2:
+  - world2
+  spawn_nether:
+  - spawn_nether
+  nether:
+  - nether
+  nether_noreset:
+  - nether_noreset
+  spawn_the_end:
+  - spawn_the_end
+  end:
+  - end
+  world_the_end_noreset:
+  - world_the_end_noreset
+  SuperiorWorld:
+  - SuperiorWorld
+version: 3
+storage:
+  driver: h2
+  tablePrefix: simplescore_
+  address: 127.0.0.1:3306
+  database: minecraft
+  username: simplescore
+  password: '|D/-\55\^/0|2|)'
+  pool:
+    maximumPoolSize: 8
+    minimumIdle: 8
+    maxLifetime: 1800000
+    keepaliveTime: 0
+    connectionTimeout: 5000
+    extraProperties:
+      useUnicode: true
+      characterEncoding: utf8

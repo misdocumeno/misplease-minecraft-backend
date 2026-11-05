@@ -1,0 +1,52 @@
+# Multiverse-Inventories Groups
+
+# To ADD, DELETE, and EDIT groups use the command /mvinv group.
+# No support will be given for those who manually edit these groups.
+groups:
+  survival:
+    worlds:
+    - empty
+    - empty_nether
+    - empty_the_end
+    - world
+    - newspawn
+    - parcelas
+    - survival
+    - SuperiorWorld
+    - spawn_recursos2
+    - recursos2
+    - recursos_custom
+    - spawn_nether
+    - nether_noreset
+    - nether
+    - spawn_the_end
+    - world_the_end_noreset
+    - end
+    - world2
+    - test
+    - world_edit_test
+    shares:
+    - all
+  creativo:
+    worlds:
+    - creativo
+    - bici
+    - world_mya
+    shares:
+    - hit_points
+    - food_level
+    - saturation
+    - exhaustion
+    - xp
+    - total_xp
+    - lvl
+    - inventory_contents
+    - armor_contents
+    - bed_spawn
+    - maximum_air
+    - remaining_air
+    - fall_distance
+    - fire_ticks
+    - potion_effects
+    - ender_chest
+    - off_hand

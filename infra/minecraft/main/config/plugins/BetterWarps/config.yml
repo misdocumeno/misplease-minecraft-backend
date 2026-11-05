@@ -1,0 +1,74 @@
+# teleport messages
+teleport-delay: 3
+teleporting-no-delay: '§5§lWarps §8§l>> §2¡Teletransportadx a §a{destination}§2!'
+teleporting-in: '§5§lWarps §8§l>> §6Teletransportandote a §e{destination} §6en §e{seconds} §6segundos...'
+teleport-title: '§5Teletransportando en {seconds}'
+teleport-subtitle: '§f¡No te muevas!'
+teleported: '§5§lWarps §8§l>> §2¡Fuiste teletransportadx a §a{destination}§2!'
+teleported-title: '§5¡Teletransportadx!'
+teleported-subtitle: ''
+teleport-cancelled: '§5§lWarps §8§l>> §4¡Te tenés que quedar quietx para ser teletransportadx!'
+teleport-cancelled-title: '§4>:('
+teleport-cancelled-subtitle: '§f¡Te moviste!'
+
+# spawn
+spawn-set: '§5§lWarps §8§l>> §2¡Spawn establecido!'
+
+# warp messages
+warp-does-not-exists-chat: '§5§lWarps §8§l>> §4¡Ese warp no existe!'
+warp-does-not-exists-title: '§4:('
+warp-does-not-exists-subtitle: '§fEso no existe'
+no-name-specified: '§5§lWarps §8§l>> §4Especificá un nombre para el warp.'
+warp-already-exists: '§5§lWarps §8§l>> §4Ya hay un warp con ese nombre.'
+no-item-specified: '§5§lWarps §8§l>> §4Especificá un item.'
+material-does-not-exists: '§5§lWarps §8§l>> §4Ese material no existe.'
+material-cant-be-used: '§5§lWarps §8§l>> §4No podés usar ese material.'
+no-enchantment-specified: '§5§lWarps §8§l>> §4Especificá si el item debería estar encantado o no (1 o 0).'
+enchantment-not-a-number: '§5§lWarps §8§l>> §4El argumento para encantamiento tiene que ser un número (1 o 0).'
+enchantment-not-one-or-zero: '§5§lWarps §8§l>> §4El argumento para encantamiento tiene que ser 1 o 0.'
+no-description-specified: '§5§lWarps §8§l>> §4Especificá una descripción para el warp.'
+warp-added: '§5§lWarps §8§l>> §2¡Warp creado!'
+no-name-specified-del-warp: '§5§lWarps §8§l>> §4Especificá el nombre del warp que querés borrar.'
+warp-deleted: '§5§lWarps §8§l>> §2¡Warp borrado!'
+
+# home messages
+no-name-specified-home: '§5§lWarps §8§l>> §4Especificá el nombre para este home.'
+home-already-exists: '§5§lWarps §8§l>> §4Ya tenés un home con ese nombre.'
+home-default-description: ''
+home-added: '§5§lWarps §8§l>> §2¡Home creado!'
+home-does-not-exists-chat: '§5§lWarps §8§l>> §4¡Ese home no existe!'
+home-does-not-exists-title: '§4:('
+home-does-not-exists-subtitle: '§fEso no existe'
+no-name-specified-del-home: '§5§lWarps §8§l>> §4Especificá el nombre del home que queres borrar.'
+home-deleted: '§5§lWarps §8§l>> §2¡Home borrado!'
+
+# inventory GUI
+warps-show-coordinates: false
+homes-show-coordinates: true
+coordinates-lore: '§6mundo: {world}\n§6X: {x}\n§6Y: {y}\n§6Z: {z}'
+default-home-items:
+    - ACACIA_DOOR
+    - BIRCH_DOOR
+    - DARK_OAK_DOOR
+    - JUNGLE_DOOR
+    - OAK_DOOR
+    - SPRUCE_DOOR
+
+# worlds aliases
+world-names:
+    world: MisLand
+    recursos2: Recursos Vanilla
+    recursos_custom: Recursos Custom
+    nether_noreset: Nether Permanente
+    nether: Nether Temporal
+    end: End Temporal
+    world_the_end_noreset: End Permanente
+    world2: MisPlease Capital
+
+# GUI stuff
+homes-gui-title-single-page: '§5§lHomes:'
+homes-gui-title: '§5§lHomes: §f§o(página {page})'
+warps-gui-title-single-page: '§5§lWarps:'
+warps-gui-title: '§5§lWarps: §f§o(página {page})'
+next-page: '§4§oPágina siguiente §4>'
+previous-page: '§4< §4§oPágina anterior'

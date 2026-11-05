@@ -1,0 +1,17 @@
+# Set a sound to play when a world reaches a specific time of the day.
+#
+# Sample:
+#
+#world: = The world that you want to track the time
+#  '13000': = The time that you want to play a sound.
+#    Enabled: true
+#    Sounds:
+#      '0':
+#        Options:
+#          Radius:
+#            Range: '-2.0' = It doesn't matter what radius you put here, radius will be always -2 no matter what.
+#        Pitch: '1.0'
+#        Sound: 'AMBIENCE_CAVE'
+#        Volume: '10.0'
+#
+# More informafion about sounds on sounds.yml

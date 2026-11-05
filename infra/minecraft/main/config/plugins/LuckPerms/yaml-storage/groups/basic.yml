@@ -1,0 +1,8 @@
+name: basic
+permissions:
+- autopickup.pickup.mined
+- mv.bypass.gamemode.*
+- endportal.use
+- gravitytubes.use
+- netherportal.use
+- simplescore.cmd.toggle

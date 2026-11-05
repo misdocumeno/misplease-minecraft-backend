@@ -1,0 +1,512 @@
+# # Scoreboards (https://github.com/r4g3baby/SimpleScore/blob/main/src/main/resources/scoreboards.yml)
+# This is where you create your scoreboards to be displayed.
+
+# You can create a scoreboard by creating a node with the scoreboard name and
+# then specifying a default "updateTime" and a list of "titles" and "scores".
+#
+# "updateTime": the default update time in ticks (optional and defaults to 20 ticks/1 second)
+# "titles": text to display or a list of frames*
+# "scores": the score number/value followed by the text to display or a list of frames* or a
+#  map with the "conditions" (list of conditions) and "frames" (list of frames*) attributes
+# *frames: is a list of strings or list of maps with the "text" (text to display) and
+#  "time" (time to stay visible, optional and defaults to "updateTime") attributes
+#
+# Check out the examples bellow for more information.
+
+# This is a simple scoreboard with only the top and bottom lines animated
+simple:
+    titles: '&7&LYour&6&lServer'
+    scores:
+        '13':
+            - '&7&m+----------------+'
+            - '&7&m------------------'
+        '12': '&7» &6&lPlayer'
+        '11': '    &7%player%'
+        '10': ''
+        '9': '&7» &6&lHealth'
+        '8': '    %hearts%'
+        '7': ''
+        '6': '&7» &6&lWorld'
+        '5': '    &7%world%'
+        '4': ''
+        '3': '&7» &6&lOnline Players'
+        '2': '    &7%online% &6players'
+        '1':
+            - '&7&m+----------------+'
+            - '&7&m------------------'
+
+# Scoreboard with a basic timing example
+customTiming:
+    updateTime: 100 # Any title or frame without a specified time will default to this
+    titles:
+        - text: '&c200 ticks/10 seconds title'
+          update: 200
+        - text: '&a100 ticks/5 seconds title'
+    scores:
+        '6': '&7You can set a per title and score time'
+        '5': '&7instead of using the default value'
+        '4': ''
+        '3':
+            - text: '&7This will last for &810 seconds'
+              update: 200
+            - text: '&7while this only lasts for &85 seconds'
+        '2': ''
+        '1':
+            - text: '&6Your current world is &7%world%&6.'
+              update: 60
+            - text: '&6There are &7%online% &6players online.'
+              update: 60
+
+# Scoreboard showing how conditions work
+conditional:
+    updateTime: 60
+    conditions:
+        - hasPermissionExample
+    titles: '&cRestricted Scoreboard'
+    scores:
+        '9': ''
+        '8': '&7Scoreboards with a list of conditions require'
+        '7': '&7that the player passes all of them.'
+        '6': ''
+        '5': '&7You can see this scoreboard because you'
+        '4': '&7passed the &8hasPermissionExample &7condition.'
+        '3':
+            conditions:
+                - equalsOperationExample
+            frames: ''
+        '2':
+            conditions:
+                - equalsOperationExample
+            frames:
+                - '&7You can see this line because you passed..'
+                - '&7the &8equalsOperationExample &7condition.'
+        '1': ''
+world:
+    updateTime: 80
+    titles:
+        - '&7&LMis&5&lPlease  '
+    scores:
+        '10':
+            - '&7&m+--------------+'
+        '9':
+            - '&7» &5&lMundo'
+        '8':
+            - '    &7MisLand'
+        '7':
+            - ''
+        '6':
+            - '&7» &5&lDinero'
+        '5':
+            - '&7    %vault_eco_balance_formatted%'
+        '4':
+            - ''
+        '3':
+            - '&7» &5&lWarps'
+        '2':
+            - '    &7Walmart'
+            - '    &7Sodimac'
+            - "    &7McDonald's"
+            - '    &7Protection Stones'
+            - '    &7Parcelas'
+            - '    &7Recursos'
+            - '    &7Departamentos'
+            - '    &7Barrio cheto'
+            - '    &7MisPark'
+        '1':
+            - '&7&m+--------------+'
+recursos_custom:
+    updateTime: 80
+    titles:
+        - '&7&LMis&5&lPlease   '
+    scores:
+        '15':
+            - '&7&m+----------------+'
+        '14':
+            - '&7» &5&lMundo'
+        '13':
+            - '    &7Recursos Custom'
+        '12':
+            - ''
+        '11':
+            - '&7» &5&lUbicación'
+        '10':
+            - '&7    X=%player_x%'
+        '9':
+            - '&7    Y=%player_y%'
+        '8':
+            - '&7    Z=%player_z%'
+        '7':
+            - ''
+        '6':
+            - '&7» &5&lDinero'
+        '5':
+            - '&7    %vault_eco_balance_formatted%'
+        '4':
+            - ''
+        '3':
+            - '&7» &5&lWarps'
+        '2':
+            - '    &7Bosque'
+            - '    &7Bosque abedul'
+            - '    &7Desierto'
+            - '    &7Hielo'
+            - '    &7Jungla'
+            - '    &7Mesa'
+        '1':
+            - '&7&m+----------------+'
+recursos2:
+    updateTime: 80
+    titles:
+        - '&7&LMis&5&lPlease   '
+    scores:
+        '12':
+            - '&7&m+----------------+'
+        '11':
+            - '&7» &5&lMundo'
+        '10':
+            - '    &7Recursos Vanilla'
+        '9':
+            - ''
+        '8':
+            - '&7» &5&lUbicación'
+        '7':
+            - '&7    X=%player_x%'
+        '6':
+            - '&7    Y=%player_y%'
+        '5':
+            - '&7    Z=%player_z%'
+        '4':
+            - ''
+        '3':
+            - '&7» &5&lDinero'
+        '2':
+            - '&7    %vault_eco_balance_formatted%'
+        '1':
+            - '&7&m+----------------+'
+survival:
+    updateTime: 80
+    titles:
+        - '&7&LMis&5&lPlease   '
+    scores:
+        '12':
+            - '&7&m+----------------+'
+        '11':
+            - '&7» &5&lMundo'
+        '10':
+            - '    &7Survival'
+        '9':
+            - ''
+        '8':
+            - '&7» &5&lUbicación'
+        '7':
+            - '&7    X=%player_x%'
+        '6':
+            - '&7    Y=%player_y%'
+        '5':
+            - '&7    Z=%player_z%'
+        '4':
+            - ''
+        '3':
+            - '&7» &5&lDinero'
+        '2':
+            - '&7    %vault_eco_balance_formatted%'
+        '1':
+            - '&7&m+----------------+'
+spawn_recursos2:
+    updateTime: 80
+    titles:
+        - '&7&LMis&5&lPlease   '
+    scores:
+        '7':
+            - '&7&m+-------------+'
+        '6':
+            - '&7» &5&lMundo'
+        '5':
+            - '    &7Recursos'
+        '4':
+            - ''
+        '3':
+            - '&7» &5&lDinero'
+        '2':
+            - '&7    %vault_eco_balance_formatted%'
+        '1':
+            - '&7&m+-------------+'
+newspawn:
+    updateTime: 80
+    titles:
+        - '&7&LMis&5&lPlease   '
+    scores:
+        '7':
+            - '&7&m+--------------------+'
+        '6':
+            - '&7&L     ¡Bienvenido a'
+        '5':
+            - '         &5&LMis&5&LPlease&7&L!'
+        '4':
+            - ''
+        '3':
+            - '&7       &8&7Registrate con&8'
+            - '&7      &8&7Inicia sesión con&8'
+        '2':
+            - '  &8/register *contraseña*'
+            - '    &8/login *contraseña*'
+        '1':
+            - '&7&m+--------------------+'
+world2:
+    updateTime: 80
+    titles:
+        - '&7&LMis&5&lPlease   '
+    scores:
+        '8':
+            - '&7&m+---------------+'
+        '7':
+            - '&7» &5&lMundo'
+        '6':
+            - '    &7MisPlease Capital'
+        '5':
+            - ''
+        '4':
+            - '&7» &5&lDinero'
+        '3':
+            - '&7    %vault_eco_balance_formatted%'
+        '2':
+            - ''
+        '1':
+            - '&7&m+---------------+'
+spawn_nether:
+    updateTime: 80
+    titles:
+        - '&7&LMis&5&lPlease   '
+    scores:
+        '7':
+            - '&7&m+-------------+'
+        '6':
+            - '&7» &5&lMundo'
+        '5':
+            - '    &7Nether Hub'
+        '4':
+            - ''
+        '3':
+            - '&7» &5&lDinero'
+        '2':
+            - '&7    %vault_eco_balance_formatted%'
+        '1':
+            - '&7&m+-------------+'
+nether:
+    updateTime: 80
+    titles:
+        - '&7&LMis&5&lPlease   '
+    scores:
+        '12':
+            - '&7&m+----------------+'
+        '11':
+            - '&7» &5&lMundo'
+        '10':
+            - '    &7Nether Temporal'
+        '9':
+            - ''
+        '8':
+            - '&7» &5&lUbicación'
+        '7':
+            - '&7    X=%player_x%'
+        '6':
+            - '&7    Y=%player_y%'
+        '5':
+            - '&7    Z=%player_z%'
+        '4':
+            - ''
+        '3':
+            - '&7» &5&lDinero'
+        '2':
+            - '&7    %vault_eco_balance_formatted%'
+        '1':
+            - '&7&m+----------------+'
+nether_noreset:
+    updateTime: 80
+    titles:
+        - '&7&LMis&5&lPlease   '
+    scores:
+        '12':
+            - '&7&m+-----------------+'
+        '11':
+            - '&7» &5&lMundo'
+        '10':
+            - '    &7Nether Permanente'
+        '9':
+            - ''
+        '8':
+            - '&7» &5&lUbicación'
+        '7':
+            - '&7    X=%player_x%'
+        '6':
+            - '&7    Y=%player_y%'
+        '5':
+            - '&7    Z=%player_z%'
+        '4':
+            - ''
+        '3':
+            - '&7» &5&lDinero'
+        '2':
+            - '&7    %vault_eco_balance_formatted%'
+        '1':
+            - '&7&m+-----------------+'
+spawn_the_end:
+    updateTime: 80
+    titles:
+        - '&7&LMis&5&lPlease   '
+    scores:
+        '7':
+            - '&7&m+------------+'
+        '6':
+            - '&7» &5&lMundo'
+        '5':
+            - '    &7End Hub'
+        '4':
+            - ''
+        '3':
+            - '&7» &5&lDinero'
+        '2':
+            - '&7    %vault_eco_balance_formatted%'
+        '1':
+            - '&7&m+------------+'
+end:
+    updateTime: 80
+    titles:
+        - '&7&LMis&5&lPlease   '
+    scores:
+        '12':
+            - '&7&m+--------------+'
+        '11':
+            - '&7» &5&lMundo'
+        '10':
+            - '    &7End Temporal'
+        '9':
+            - ''
+        '8':
+            - '&7» &5&lUbicación'
+        '7':
+            - '&7    X=%player_x%'
+        '6':
+            - '&7    Y=%player_y%'
+        '5':
+            - '&7    Z=%player_z%'
+        '4':
+            - ''
+        '3':
+            - '&7» &5&lDinero'
+        '2':
+            - '&7    %vault_eco_balance_formatted%'
+        '1':
+            - '&7&m+--------------+'
+world_the_end_noreset:
+    updateTime: 80
+    titles:
+        - '&7&LMis&5&lPlease   '
+    scores:
+        '12':
+            - '&7&m+----------------+'
+        '11':
+            - '&7» &5&lMundo'
+        '10':
+            - '    &7End Permanente'
+        '9':
+            - ''
+        '8':
+            - '&7» &5&lUbicación'
+        '7':
+            - '&7    X=%player_x%'
+        '6':
+            - '&7    Y=%player_y%'
+        '5':
+            - '&7    Z=%player_z%'
+        '4':
+            - ''
+        '3':
+            - '&7» &5&lDinero'
+        '2':
+            - '&7    %vault_eco_balance_formatted%'
+        '1':
+            - '&7&m+----------------+'
+SuperiorWorld:
+    updateTime: 80
+    titles:
+        - '&7&LMis&5&lPlease   '
+    scores:
+        '13':
+            - '&7&m+----------------+'
+        '12':
+            - '&7» &5&lMundo'
+        '11':
+            - '    &7SkyBlock'
+        '10':
+            - ''
+        '9':
+            - '&7» &5&lUbicación'
+        '8':
+            - '&7    X=%player_x%'
+        '7':
+            - '&7    Y=%player_y%'
+        '6':
+            - '&7    Z=%player_z%'
+        '5':
+            - ''
+        '4':
+            - '&7» &5&lDinero'
+        '3':
+            - '&7    %vault_eco_balance_formatted%'
+        '2':
+            - ''
+        '1':
+            - '&7&m+----------------+'
+parcelas:
+    updateTime: 80
+    titles:
+        - '&7&LMis&5&lPlease  '
+    scores:
+        '10':
+            - '&7&m+--------------+'
+        '9':
+            - '&7» &5&lMundo'
+        '8':
+            - '    &7Parcelas'
+        '7':
+            - ''
+        '6':
+            - '&7» &5&lDinero'
+        '5':
+            - '&7    %vault_eco_balance_formatted%'
+        '4':
+            - ''
+        '3':
+            - '&7» &5&lWarps'
+        '2':
+            - '    &7Walmart'
+            - '    &7Sodimac'
+            - "    &7McDonald's"
+            - '    &7Protection Stones'
+            - '    &7Parcelas'
+            - '    &7Recursos'
+            - '    &7Departamentos'
+            - '    &7Barrio cheto'
+            - '    &7MisPark'
+        '1':
+            - '&7&m+--------------+'
+creativo:
+    updateTime: 80
+    titles:
+        - '&7&LMis&5&lPlease   '
+    scores:
+        '7':
+            - '&7&m+-------------+'
+        '6':
+            - '&7» &5&lMundo'
+        '5':
+            - '    &7Creativo'
+        '4':
+            - ''
+        '3':
+            - '&7» &5&lDinero'
+        '2':
+            - '&7    %vault_eco_balance_formatted%'
+        '1':
+            - '&7&m+-------------+'

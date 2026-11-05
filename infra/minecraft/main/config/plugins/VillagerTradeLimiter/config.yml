@@ -1,0 +1,127 @@
+#---------------------------------------------------------------------------------#
+#                          VTL ~ VillagerTradeLimiter                             #
+#                                By: PretzelJohn                                  #
+#---------------------------------------------------------------------------------#
+
+
+#-------------------------------- GLOBAL SETTINGS --------------------------------#
+# This helps me keep track of what server versions are being used. Please leave this set to true.
+bStats: true
+
+# Database connection settings
+database:
+  mysql: false
+  host: 127.0.0.1
+  port: 3306
+  database: villagertradelimiter
+  username: root
+  password: root
+  encoding: utf8
+  useSSL: false
+
+# Add world names for worlds that you want to have unaltered, vanilla villager trading in. Set to [] to disable this feature.
+DisableWorlds:
+- world_nether
+- world_the_end
+
+# Ignore Citizens NPCs, and/or Shopkeepers NPCs if true
+IgnoreCitizens: true
+IgnoreShopkeepers: true
+
+# Ignore interactions when the player is holding one of these item types (e.g. spawn_egg, name_tag)
+# Without disabling nametag, you cannot rename a villager with a profession. Do not remove name_tag if you want to retain vanilla behavior.
+# Ghast spawn egg is added to add compatibility with Safarinet plugin. If your server doesn't give ghast egg to noromal players you can ignore it.
+# Set to [] to disable this feature.
+IgnoreHeldItems:
+- name_tag
+- ghast_spawn_egg
+
+# Add world names for worlds that you want to completely disable ALL villager trading. Set to [] to disable this feature.
+DisableTrading: []
+
+# Add profession names that you want to prevent villagers from acquiring
+DisableProfessions: []
+
+# Add item names that you want to prevent villagers from offering as trades.
+# This is a permanent change. The items can't be re-added to the villager's trades.
+DisableItems: []
+
+# The maximum level of the "Hero of the Village" (HotV) effect that a player can have. This limits HotV price decreases.
+#   * Set to -1 to disable this feature and keep vanilla behavior.
+#   * Set to a number between 0 and 5 to set the maximum HotV effect level players can have
+# For more information, see https://minecraft.fandom.com/wiki/Hero_of_the_Village#Price_decrement
+MaxHeroLevel: -1
+
+# The maximum discount (%) you can get from trading/healing zombie villagers. This limits reputation-based price decreases.
+#   * Set to -1.0 to disable this feature and keep vanilla behavior
+#   * Set to a number between 0.0 and 1.0 to limit the maximum discount a player can get. (NOTE: 30% = 0.3)
+#   * Set to a number above 1.0 to increase the maximum discount a player can get. (NOTE: 250% = 2.5)
+MaxDiscount: 0.3
+
+# The maximum demand for all items. This limits demand-based price increases.
+#   * Set to -1 to disable this feature and keep vanilla behavior
+#   * Set to 0 or higher to set the maximum demand for all items
+# WARNING: The previous demand cannot be recovered if it was higher than the MaxDemand.
+# For more information, see https://minecraft.fandom.com/wiki/Trading#Economics
+MaxDemand: -1
+
+# The maximum number of times a player can make any trade before a villager is out of stock.
+#   * Set to -1 to disable this feature and keep vanilla behavior
+#   * Set to 0 or higher to change the maximum number of uses for all items
+# For more information, see https://minecraft.fandom.com/el/wiki/Trading#Java_Edition
+MaxUses: -1
+
+# The per-player, per-trade cooldown in real-world time.
+# After a player makes a trade <MaxUses> times, the trade will be disabled for the player until the cooldown is over.
+#   * Set to 0 to disable this feature and keep vanilla behavior
+#   * Set to a number and interval to add a per-player, per-trade cooldown for all trades (see below)
+# A valid cooldown follows the <Number><Interval> format, such as 7d or 30s. The valid intervals are:
+#   * s = seconds (e.g. 30s)
+#   * m = minutes (e.g. 10m)
+#   * h = hours   (e.g. 1h)
+#   * d = days    (e.g. 3d)
+#   * w = weeks   (e.g. 2w)
+Cooldown: 0
+
+# The per-villager, per-trade cooldown in real-world time.
+# This is the same as Cooldown, but applies to a villager's restocking function
+#   * Set to 0 to disable this feature and keep vanilla behavior
+#   * Set to a number and interval to add a per-villager, per-trade cooldown for all trades (see below)
+Restock: 0h
+
+
+#-------------------------------- PER-ITEM SETTINGS --------------------------------#
+# Override the global settings for individual items. To disable, set like this --> Overrides: none
+# To enable, add items below!
+#   * Enchanted books must follow the format: enchantment_name_level (ex: mending_1)
+#   * All other items must follow the format: item_name (ex: stone_bricks)
+# For each item you add, you can disable the trade (set Disabled: true), or override MaxDiscount and/or MaxDemand.
+Overrides:
+  mending_1:
+    MaxDiscount: 0.1
+    MaxDemand: 36
+  depth_strider_3:
+    MaxDiscount: 0.6
+  name_tag:
+    MaxDiscount: -1.0
+    MaxDemand: 60
+    MaxUses: 2
+    Cooldown: 7d
+    Item1:
+      Material: book
+      Amount: 64
+    Item2:
+      Material: ink_sac
+      Amount: 48
+    Result:
+      Material: name_tag
+      Amount: 2
+  flint_left:
+    MaxUses: 8
+  flint_right:
+    MaxUses: 1
+  clock:
+    MaxDemand: 12
+  paper:
+    MaxUses: 1
+    Restock: 1h
