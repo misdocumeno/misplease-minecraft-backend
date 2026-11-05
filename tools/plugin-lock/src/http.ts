@@ -50,10 +50,32 @@ async function sleep(ms: number): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+function isSpigetUrl(url: string): boolean {
+  try {
+    const host = new URL(url).hostname
+    return host === "api.spiget.org" || host.endsWith(".spiget.org") || host === "cdn.spiget.org"
+  } catch {
+    return false
+  }
+}
+
+function retryDelayMs(url: string, attempt: number, response?: Response): number {
+  const retryAfter = response?.headers.get("retry-after")
+  if (retryAfter) {
+    const seconds = Number(retryAfter)
+    if (Number.isFinite(seconds) && seconds > 0) return Math.min(seconds * 1_000, 120_000)
+  }
+  // Spiget/Cloudflare rate-limits GitHub Actions egress; back off harder there.
+  if (isSpigetUrl(url)) return Math.min(15_000 * 2 ** attempt, 120_000)
+  return 5_000 * (attempt + 1)
+}
+
 export async function downloadBytes(url: string): Promise<Buffer> {
+  const attempts = isSpigetUrl(url) ? 8 : 5
   let lastError: Error | undefined
-  for (let attempt = 0; attempt < 5; attempt += 1) {
-    if (attempt > 0) await sleep(5_000 * attempt)
+  let nextDelayMs = 0
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    if (nextDelayMs > 0) await sleep(nextDelayMs)
     const response = await fetch(url, {
       headers: requestHeaders(url, isGithubUrl(url) ? { accept: "application/octet-stream" } : {}),
       redirect: "follow",
@@ -61,6 +83,7 @@ export async function downloadBytes(url: string): Promise<Buffer> {
     })
     if (response.status === 429 || response.status === 503) {
       lastError = new Error(`${response.status} while downloading ${url}`)
+      nextDelayMs = retryDelayMs(url, attempt, response)
       continue
     }
     if (!response.ok) {
@@ -71,6 +94,7 @@ export async function downloadBytes(url: string): Promise<Buffer> {
       const text = bytes.slice(0, 80).toString("utf8")
       if (text.includes("error code") || text.includes("Just a moment")) {
         lastError = new Error(`download blocked while fetching ${url}`)
+        nextDelayMs = retryDelayMs(url, attempt, response)
         continue
       }
       throw new Error(`download is not a jar: ${url}`)

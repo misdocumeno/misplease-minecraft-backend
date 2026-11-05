@@ -124,8 +124,11 @@ async function download(lockPath: string, outDir: string, serverOut?: string): P
   if (lock.server) jobs.push({ artifact: lock.server, directory: serverOut ?? outDir })
   const remote = jobs.filter(({ artifact }) => artifact.source !== "git")
   const built = jobs.filter(({ artifact }) => artifact.source === "git")
+  // Spiget rate-limits parallel CI downloads; keep those serial, parallelize the rest.
+  const spiget = remote.filter(({ artifact }) => artifact.source === "spiget")
+  const otherRemote = remote.filter(({ artifact }) => artifact.source !== "spiget")
   await Promise.all(
-    remote.map(async ({ artifact, directory }) => {
+    otherRemote.map(async ({ artifact, directory }) => {
       try {
         await downloadArtifact(artifact, directory)
       } catch (error) {
@@ -134,6 +137,14 @@ async function download(lockPath: string, outDir: string, serverOut?: string): P
       }
     }),
   )
+  for (const { artifact, directory } of spiget) {
+    try {
+      await downloadArtifact(artifact, directory)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      errors.push(`${artifact.name}: ${message}`)
+    }
+  }
   for (const { artifact, directory } of built) {
     try {
       await downloadArtifact(artifact, directory)

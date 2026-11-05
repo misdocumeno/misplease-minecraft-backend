@@ -113,8 +113,9 @@ jobs:
             github_token=${{ secrets.PLUGIN_GITHUB_TOKEN }}
           cache-from: type=gha,scope=server-${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=server-${{ matrix.name }}
+          # Only GHCR tags — a bare misplease/*:smoke tag makes buildx try Docker Hub on push.
           tags: |
-            misplease/${{ matrix.name }}:smoke
+            ghcr.io/${{ github.repository }}/${{ matrix.name }}:smoke
             ghcr.io/${{ github.repository }}/${{ matrix.name }}:${{ github.sha }}
             ghcr.io/${{ github.repository }}/${{ matrix.name }}:dev
 
@@ -126,6 +127,6 @@ jobs:
           # (Docker + Postgres + Redis share the machine). Prod heaps stay in compose.prod.
           SMOKE_HEAP=1536M SMOKE_TIMEOUT_S=360 \
             ./docker/smoke-check.sh \
-            "misplease/${{ matrix.name }}:smoke" \
+            "ghcr.io/${{ github.repository }}/${{ matrix.name }}:smoke" \
             "${{ matrix.kind }}" \
             "${{ matrix.config }}"
