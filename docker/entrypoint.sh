@@ -48,8 +48,6 @@ if [ -n "$(find "$JARS" -mindepth 1 -maxdepth 1 -name '*.jar' -print -quit)" ]; 
 fi
 find "$STATE/plugins" -mindepth 1 -maxdepth 1 \( -type f -o -type l \) -name '*.jar' -delete 2>/dev/null || true
 
-chown 1000:1000 "$STATE" "$WORK" 2>/dev/null || true
-
 if [ -z "$(find "$LOWER/plugins" -mindepth 1 -maxdepth 1 -name '*.jar' -print -quit)" ]; then
   echo "the image has no plugin jars" >&2
   exit 1
@@ -68,7 +66,6 @@ else
     echo "kernel overlay failed, trying fuse-overlayfs" >&2
     rm -rf "$WORK"
     mkdir -p "$WORK"
-    chown 1000:1000 "$WORK" 2>/dev/null || true
     if ! fuse-overlayfs -o "lowerdir=$LOWER,upperdir=$STATE,workdir=$WORK" "$MERGED"; then
       echo "could not mount the server directory" >&2
       exit 1
@@ -78,6 +75,9 @@ else
     echo "mounted kernel overlay on $MERGED"
   fi
 fi
+
+# Java drops to uid 1000; anything we copied/created as root must be writable.
+chown -R 1000:1000 "$DATA" 2>/dev/null || true
 
 server_jar="$(find /opt/misplease/server -maxdepth 1 -type f -name '*.jar' -print -quit)"
 if [ -z "$server_jar" ]; then
