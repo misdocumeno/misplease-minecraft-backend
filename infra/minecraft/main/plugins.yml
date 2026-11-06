@@ -95,9 +95,11 @@ plugins:
   - name: VoidGen
     source: modrinth
     slug: voidgen
+  # FAWE 2.9.0 (1.20.1) ships an older WorldEdit API; WG 7.0.10+ calls BlockVector2.x() and crashes.
   - name: WorldGuard
     source: modrinth
     slug: worldguard
+    version: "7.0.9"
   - name: Vault
     source: github
     repo: MilkBowl/Vault
@@ -142,6 +144,11 @@ plugins:
   - name: GravityTubes
     source: spiget
     id: "64624"
+  # LightCleaner hard-requires BKCommonLib at enable time.
+  - name: BKCommonLib
+    source: modrinth
+    slug: bkcommonlib
+    version: "1.20.1-v3"
   - name: LightCleaner
     source: spiget
     id: "42469"

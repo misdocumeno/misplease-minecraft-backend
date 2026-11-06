@@ -8,8 +8,12 @@
 # FROM-substitution ARGs must be declared before the first FROM (BuildKit global scope).
 ARG RUNTIME_JAVA=21
 ARG LOCK_VARIANT=local
+# backend- | velocity- — only compile matching projects (avoids 11 cold Gradle JVMs per image).
+ARG PLUGIN_PREFIX=backend-
 
 FROM eclipse-temurin:21-jdk AS plugins
+
+ARG PLUGIN_PREFIX
 
 USER root
 WORKDIR /src
@@ -19,6 +23,11 @@ COPY plugins ./plugins
 RUN set -eux; \
     find plugins -name gradlew -exec chmod +x {} \; ; \
     find plugins -name gradlew -printf '%h\n' | while read -r project; do \
+      base="$(basename "$project")"; \
+      case "$base" in \
+        ${PLUGIN_PREFIX}*) ;; \
+        *) echo "skip $base (prefix ${PLUGIN_PREFIX})"; continue ;; \
+      esac; \
       (cd "$project" && ./gradlew shadowJar --no-daemon || ./gradlew build --no-daemon); \
     done; \
     mkdir -p /out; \
