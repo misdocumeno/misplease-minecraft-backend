@@ -799,8 +799,8 @@ plugins:
     source: github
     version: v0.1.2
     filename: PortalRoutes-0.1.2.jar
-    url: https://api.github.com/repos/misdocumeno/PortalRoutes/releases/assets/712919611
-    sha256: 16e7a96c687e76de8e749caed265cecc7fe73b96590791a92be859f0d147f78f
+    url: https://api.github.com/repos/misdocumeno/PortalRoutes/releases/assets/712923959
+    sha256: d4027a60567af71a981bf5dd1aa90f3fb7719bcb5dd88c81f514b174b7782261
   - name: TheBestRTP
     source: github
     version: v0.1.0
