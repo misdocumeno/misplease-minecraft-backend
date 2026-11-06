@@ -46,10 +46,16 @@ plugins:
       - "26.3"
   - name: WorldGuard
     source: modrinth
-    version: 7.0.21
-    filename: worldguard-bukkit-7.0.21.jar
-    url: https://cdn.modrinth.com/data/DKY9btbd/versions/fiHLM6oY/worldguard-bukkit-7.0.21.jar
-    sha512: 4253b97627f93ea007d91e977c15f5f4a3219865589083fa3b523d8b15a2cfe26d71076c8eb98c0122e7fde618ad3fc44cb986dbd40a222f09678b91a98245c2
+    version: 7.0.18
+    filename: worldguard-bukkit-7.0.18.jar
+    url: https://cdn.modrinth.com/data/DKY9btbd/versions/btHBavWa/worldguard-bukkit-7.0.18.jar
+    sha512: 9404a0eacebc5c85bdcf4a7d343330b4894dcd87246548adca75c43dbf2a3c0539f75bb15665cdd04d7f980e8d0d2a95d79e96861ba74fcd5636d685496f47f2
+    minecraft:
+      - "26.1"
+      - 26.1.1
+      - 26.1.2
+      - "26.2"
+      - "26.3"
   - name: GriefPrevention
     source: modrinth
     version: 16.18.8

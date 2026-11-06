@@ -25,7 +25,8 @@ LOG="$(mktemp)"
 cleanup() {
   docker rm -f "$NAME" "$REDIS" "$DB" >/dev/null 2>&1 || true
   docker network rm "$NET" >/dev/null 2>&1 || true
-  rm -rf "$DATA" "$LOG"
+  # Bind-mounted /data is often owned by container uid 1000; never fail the job on cleanup.
+  rm -rf "$DATA" "$LOG" 2>/dev/null || true
 }
 trap cleanup EXIT
 
