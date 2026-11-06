@@ -45,10 +45,14 @@ COPY tools/plugin-lock tools/plugin-lock
 ARG LOCK
 COPY ${LOCK} /lock.yml
 
+# Jar reuse is owned by tools/plugin-lock (.plugin-lock-cache, keyed by content hash).
+# CI seeds that directory via actions/cache + host prefetch, then passes it as the
+# `plugin-cache` build context. Local compose uses .plugin-lock-cache or docker/empty-plugin-cache.
+# Do not rely on BuildKit layer cache for jar bytes — cancelled/failed image builds must not wipe them.
+COPY --from=plugin-cache . /plugin-lock-cache/
+
 # github_token: fine-grained PAT for private plugin releases (optional in local builds).
-# BuildKit cache (type=gha in CI) keeps jar bytes across builds — host .plugin-lock-cache stays out of the image context.
 RUN --mount=type=secret,id=github_token \
-    --mount=type=cache,id=misplease-plugin-lock,target=/plugin-lock-cache,sharing=locked \
     set -eux; \
     export PLUGIN_LOCK_CACHE=/plugin-lock-cache; \
     if [ -f /run/secrets/github_token ]; then \

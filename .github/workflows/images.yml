@@ -33,8 +33,67 @@ permissions:
 env:
   # Push images on main builds and manual runs; PRs only load+smoke locally on the runner.
   PUSH_IMAGES: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+  # Content-addressed jar/JDK cache for every server lock (main, tech, velocity, future).
+  # Owned by tools/plugin-lock — not BuildKit. Survives failed/cancelled image builds.
+  PLUGIN_LOCK_CACHE_KEY: plugin-lock-jars-${{ hashFiles('infra/**/plugins-lock.yml', 'tools/plugin-lock/src/**', 'tools/plugin-lock/package-lock.json') }}
 
 jobs:
+  # Warm .plugin-lock-cache for every infra/**/plugins-lock.yml before any image build.
+  jar-cache:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache/restore@v4
+        id: restore
+        with:
+          path: |
+            .plugin-lock-cache
+            ~/.cache/misplease
+          key: ${{ env.PLUGIN_LOCK_CACHE_KEY }}
+          restore-keys: |
+            plugin-lock-jars-
+
+      - uses: actions/setup-node@v4
+        if: steps.restore.outputs.cache-hit != 'true'
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: tools/plugin-lock/package-lock.json
+
+      - name: Prefetch all plugin locks
+        if: steps.restore.outputs.cache-hit != 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.PLUGIN_GITHUB_TOKEN }}
+          PLUGIN_LOCK_CACHE: ${{ github.workspace }}/.plugin-lock-cache
+        run: |
+          set -eux
+          cd tools/plugin-lock
+          npm ci --omit=dev --ignore-scripts
+          mkdir -p "$PLUGIN_LOCK_CACHE"
+          # Any new server under infra/** with a plugins-lock.yml is included automatically.
+          mapfile -t locks < <(find "${{ github.workspace }}/infra" -type f -name 'plugins-lock.yml' | sort)
+          if [ "${#locks[@]}" -eq 0 ]; then
+            echo "no plugins-lock.yml under infra/" >&2
+            exit 1
+          fi
+          for lock in "${locks[@]}"; do
+            rel="${lock#${{ github.workspace }}/}"
+            out="${{ github.workspace }}/.prefetch/$(echo "$rel" | tr '/' '_')"
+            mkdir -p "$out/jars" "$out/server"
+            echo "prefetch $rel"
+            node src/cli.ts download --lock "$lock" --out "$out/jars" --server-out "$out/server"
+          done
+          du -sh "$PLUGIN_LOCK_CACHE" ~/.cache/misplease 2>/dev/null || true
+
+      - uses: actions/cache/save@v4
+        if: always() && steps.restore.outputs.cache-hit != 'true'
+        with:
+          path: |
+            .plugin-lock-cache
+            ~/.cache/misplease
+          key: ${{ env.PLUGIN_LOCK_CACHE_KEY }}
+
   auth:
     runs-on: ubuntu-latest
     steps:
@@ -60,6 +119,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=auth
 
   servers:
+    needs: jar-cache
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -89,6 +149,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/cache/restore@v4
+        with:
+          path: |
+            .plugin-lock-cache
+            ~/.cache/misplease
+          key: ${{ env.PLUGIN_LOCK_CACHE_KEY }}
+          restore-keys: |
+            plugin-lock-jars-
+          fail-on-cache-miss: false
+
+      - name: Ensure plugin-cache context
+        run: mkdir -p .plugin-lock-cache
+
       - uses: docker/setup-buildx-action@v3
 
       - uses: docker/login-action@v3
@@ -106,6 +179,8 @@ jobs:
           file: docker/server.Dockerfile
           load: true
           push: false
+          build-contexts: |
+            plugin-cache=.plugin-lock-cache
           build-args: |
             LOCK=${{ matrix.lock }}
             PLUGIN_PREFIX=${{ matrix.prefix }}

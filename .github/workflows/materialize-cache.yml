@@ -1,6 +1,5 @@
-# Optional: download locked jars on Actions to warm BuildKit on the next `images` run.
-# Prefer running after locks are complete. Primary jar reuse is BuildKit `type=gha` inside
-# server.Dockerfile — this job only proves Spiget works from GitHub's IP.
+# Optional manual warm of the shared plugin-lock jar cache (same key as images.yml).
+# Prefer the automatic jar-cache job on images; use this to refresh after Spiget flakes.
 name: materialize-cache
 
 on:
@@ -9,21 +8,24 @@ on:
 permissions:
   contents: read
 
+env:
+  PLUGIN_LOCK_CACHE_KEY: plugin-lock-jars-${{ hashFiles('infra/**/plugins-lock.yml', 'tools/plugin-lock/src/**', 'tools/plugin-lock/package-lock.json') }}
+
 jobs:
   materialize:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: main
-            lock: infra/minecraft/main/plugins-lock.yml
-          - name: tech
-            lock: infra/minecraft/tech/plugins-lock.yml
-          - name: velocity
-            lock: infra/velocity/plugins-lock.yml
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/cache/restore@v4
+        id: restore
+        with:
+          path: |
+            .plugin-lock-cache
+            ~/.cache/misplease
+          key: ${{ env.PLUGIN_LOCK_CACHE_KEY }}
+          restore-keys: |
+            plugin-lock-jars-
 
       - uses: actions/setup-node@v4
         with:
@@ -31,18 +33,29 @@ jobs:
           cache: npm
           cache-dependency-path: tools/plugin-lock/package-lock.json
 
-      - name: Download lock jars
+      - name: Download all plugin locks
         env:
           GITHUB_TOKEN: ${{ secrets.PLUGIN_GITHUB_TOKEN }}
+          PLUGIN_LOCK_CACHE: ${{ github.workspace }}/.plugin-lock-cache
         run: |
           set -eux
           cd tools/plugin-lock
           npm ci --omit=dev --ignore-scripts
-          out="${{ github.workspace }}/.materialized/${{ matrix.name }}"
-          mkdir -p "$out"
-          # Default cache lands in repo .plugin-lock-cache (gitignored).
-          node src/cli.ts download \
-            --lock "${{ github.workspace }}/${{ matrix.lock }}" \
-            --out "$out" \
-            --server-out "$out"
-          du -sh "${{ github.workspace }}/.plugin-lock-cache" || true
+          mkdir -p "$PLUGIN_LOCK_CACHE"
+          mapfile -t locks < <(find "${{ github.workspace }}/infra" -type f -name 'plugins-lock.yml' | sort)
+          for lock in "${locks[@]}"; do
+            rel="${lock#${{ github.workspace }}/}"
+            out="${{ github.workspace }}/.prefetch/$(echo "$rel" | tr '/' '_')"
+            mkdir -p "$out/jars" "$out/server"
+            echo "prefetch $rel"
+            node src/cli.ts download --lock "$lock" --out "$out/jars" --server-out "$out/server"
+          done
+          du -sh "$PLUGIN_LOCK_CACHE" ~/.cache/misplease 2>/dev/null || true
+
+      - uses: actions/cache/save@v4
+        if: always() && steps.restore.outputs.cache-hit != 'true'
+        with:
+          path: |
+            .plugin-lock-cache
+            ~/.cache/misplease
+          key: ${{ env.PLUGIN_LOCK_CACHE_KEY }}
