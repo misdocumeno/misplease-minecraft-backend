@@ -98,13 +98,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Load locally for smoke. Push is a separate docker push so load+push cannot
+      # race GHCR package creation (velocity hit write_package with both enabled).
       - uses: docker/build-push-action@v6
         with:
           context: .
           file: docker/server.Dockerfile
-          # Always load into the runner so smoke can run without pulling GHCR.
           load: true
-          push: ${{ env.PUSH_IMAGES == 'true' }}
+          push: false
           build-args: |
             LOCK=${{ matrix.lock }}
             PLUGIN_PREFIX=${{ matrix.prefix }}
@@ -113,11 +114,8 @@ jobs:
             github_token=${{ secrets.PLUGIN_GITHUB_TOKEN }}
           cache-from: type=gha,scope=server-${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=server-${{ matrix.name }}
-          # Only GHCR tags — a bare misplease/*:smoke tag makes buildx try Docker Hub on push.
           tags: |
             ghcr.io/${{ github.repository }}/${{ matrix.name }}:smoke
-            ghcr.io/${{ github.repository }}/${{ matrix.name }}:${{ github.sha }}
-            ghcr.io/${{ github.repository }}/${{ matrix.name }}:dev
 
       - name: Smoke boot
         if: matrix.smoke
@@ -130,3 +128,13 @@ jobs:
             "ghcr.io/${{ github.repository }}/${{ matrix.name }}:smoke" \
             "${{ matrix.kind }}" \
             "${{ matrix.config }}"
+
+      - name: Push to GHCR
+        if: env.PUSH_IMAGES == 'true'
+        run: |
+          set -eux
+          image="ghcr.io/${{ github.repository }}/${{ matrix.name }}"
+          docker tag "${image}:smoke" "${image}:${{ github.sha }}"
+          docker tag "${image}:smoke" "${image}:dev"
+          docker push "${image}:${{ github.sha }}"
+          docker push "${image}:dev"

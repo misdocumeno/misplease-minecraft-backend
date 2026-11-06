@@ -283,7 +283,7 @@ plugins:
     version: fdc887850c58445f8b3181866def05798cbb386f
     filename: plotsquared-bukkit-7.2.0.jar
     url: https://github.com/IntellectualSites/PlotSquared.git
-    sha256: 574223c83325e3784af7a0724acefed7886575a2e58a5de7263b7cc0efa81243
+    sha256: 0bcee4f486a1d896764b7f96d4a95494cd603bdfb39609145ce0d6348f81f170
     jar: Bukkit/build/libs/plotsquared-bukkit-7.2.0.jar
     java: 17.0.20.1+1
   - name: DecentHolograms

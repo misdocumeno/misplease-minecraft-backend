@@ -12,6 +12,8 @@ if [ ! -d "$CONFIG_DIR" ]; then
   echo "missing config dir: $CONFIG_DIR" >&2
   exit 1
 fi
+# Docker treats relative -v sources as volume names; always mount a host path.
+CONFIG_DIR="$(cd "$CONFIG_DIR" && pwd)"
 
 NET="misplease-smoke-$$"
 NAME="misplease-smoke-$$"
