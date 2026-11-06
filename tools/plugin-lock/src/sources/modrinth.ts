@@ -1,4 +1,5 @@
 import { getJson } from "../http.ts"
+import { pickNewestFittingCeiling } from "../minecraft-version.ts"
 import type { DesiredPlugin, ResolvedArtifact } from "../model.ts"
 
 interface ModrinthFile {
@@ -46,7 +47,22 @@ function pickFile(version: ModrinthVersion, asset: string | undefined): Modrinth
   throw new Error(`modrinth version ${version.version_number} needs an exact asset name; jars: ${names}`)
 }
 
-export async function resolveModrinth(plugin: DesiredPlugin): Promise<ResolvedArtifact> {
+function toResolved(plugin: DesiredPlugin, chosen: ModrinthVersion): ResolvedArtifact {
+  const file = pickFile(chosen, plugin.asset)
+  return {
+    name: plugin.name,
+    source: "modrinth",
+    version: chosen.version_number,
+    filename: file.filename,
+    url: file.url,
+    sha256: file.hashes?.sha256,
+    sha512: file.hashes?.sha512,
+    sha1: file.hashes?.sha1,
+    minecraft: chosen.game_versions,
+  }
+}
+
+async function listServerVersions(plugin: DesiredPlugin): Promise<ModrinthVersion[]> {
   if (!plugin.id) throw new Error("modrinth plugin needs an id")
   const types = acceptedTypes(plugin.channel)
   const matches: ModrinthVersion[] = []
@@ -62,30 +78,33 @@ export async function resolveModrinth(plugin: DesiredPlugin): Promise<ResolvedAr
           types.has(version.version_type) && version.loaders.some((loader) => SERVER_LOADERS.has(loader)),
       ),
     )
-    if (plugin.version ? matches.some((version) => version.version_number === plugin.version) : matches.length > 0) {
-      break
-    }
     if (page.length < 100) break
   }
+  return matches
+}
 
-  const chosen = plugin.version
-    ? matches.find((version) => version.version_number === plugin.version)
-    : matches[0]
+export async function resolveModrinth(plugin: DesiredPlugin): Promise<ResolvedArtifact> {
+  const matches = await listServerVersions(plugin)
+
+  if (plugin.version) {
+    const chosen = matches.find((version) => version.version_number === plugin.version)
+    if (!chosen) throw new Error(`modrinth has no version ${plugin.version} for a server loader`)
+    return toResolved(plugin, chosen)
+  }
+
+  if (plugin.minecraftCeiling) {
+    const chosen = pickNewestFittingCeiling(matches, (version) => version.game_versions, plugin.minecraftCeiling)
+    if (!chosen) {
+      throw new Error(
+        `modrinth has no ${plugin.channel ?? "release"} server jar with a game version ≤ ${plugin.minecraftCeiling}`,
+      )
+    }
+    return toResolved(plugin, chosen)
+  }
+
+  const chosen = matches[0]
   if (!chosen) {
-    const wanted = plugin.version ? `version ${plugin.version}` : `${plugin.channel ?? "release"} version`
-    throw new Error(`modrinth has no ${wanted} for a server loader`)
+    throw new Error(`modrinth has no ${plugin.channel ?? "release"} version for a server loader`)
   }
-
-  const file = pickFile(chosen, plugin.asset)
-  return {
-    name: plugin.name,
-    source: "modrinth",
-    version: chosen.version_number,
-    filename: file.filename,
-    url: file.url,
-    sha256: file.hashes?.sha256,
-    sha512: file.hashes?.sha512,
-    sha1: file.hashes?.sha1,
-    minecraft: chosen.game_versions,
-  }
+  return toResolved(plugin, chosen)
 }

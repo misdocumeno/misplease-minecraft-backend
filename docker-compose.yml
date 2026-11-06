@@ -6,9 +6,13 @@ services:
     build:
       context: .
       dockerfile: docker/server.Dockerfile
-      # Shared plugin-lock jar cache (hash-keyed). Override: PLUGIN_CACHE_CONTEXT=.plugin-lock-cache
+      # Local LOCK_VARIANT=local downloads inside the image; optional disk cache:
+      # PLUGIN_CACHE_CONTEXT=.plugin-lock-cache
       additional_contexts:
         plugin-cache: ${PLUGIN_CACHE_CONTEXT:-docker/empty-plugin-cache}
+        # CI-only contexts (ignored when LOCK_VARIANT=local); stubs keep BuildKit happy if referenced.
+        lock-jars: docker/empty-plugin-cache
+        lock-server: docker/empty-plugin-cache
       args:
         LOCK: infra/velocity/plugins-lock.yml
         PLUGIN_PREFIX: velocity-
@@ -42,6 +46,8 @@ services:
       dockerfile: docker/server.Dockerfile
       additional_contexts:
         plugin-cache: ${PLUGIN_CACHE_CONTEXT:-docker/empty-plugin-cache}
+        lock-jars: docker/empty-plugin-cache
+        lock-server: docker/empty-plugin-cache
       args:
         LOCK: infra/minecraft/main/plugins-lock.yml
         PLUGIN_PREFIX: backend-
@@ -81,6 +87,8 @@ services:
       dockerfile: docker/server.Dockerfile
       additional_contexts:
         plugin-cache: ${PLUGIN_CACHE_CONTEXT:-docker/empty-plugin-cache}
+        lock-jars: docker/empty-plugin-cache
+        lock-server: docker/empty-plugin-cache
       args:
         LOCK: infra/minecraft/tech/plugins-lock.yml
         PLUGIN_PREFIX: backend-

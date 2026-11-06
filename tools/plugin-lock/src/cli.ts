@@ -14,17 +14,22 @@ const { positionals, values } = parseArgs({
     out: { type: "string" },
     "server-out": { type: "string" },
     only: { type: "string", multiple: true },
+    minecraft: { type: "string" },
   },
   allowPositionals: true,
 })
 
+/** Sources that expose per-jar game versions so --minecraft can cap selection. */
+const MINECRAFT_CEILING_SOURCES = new Set(["modrinth", "hangar", "papermc", "purpur"])
+
 function usage(): never {
-  console.error(`plugin-lock update --desired desired.yml --lock lock.yml [--only name ...]
+  console.error(`plugin-lock update --desired desired.yml --lock lock.yml [--only name ...] [--minecraft <serverVer>]
 plugin-lock download --lock lock.yml --out directory [--server-out directory]
 
 --only resolves and rewrites just those plugin/server names; the rest of the lock is kept.
-Use after releasing one of our plugins so prod picks up the new GitHub asset without
-refreshing every third-party pin.`)
+--minecraft <serverVer> requires --only. Cap: newest jar whose declared game versions include
+something ≤ that server version (e.g. server 1.21 → keep a 1.20-only plugin; skip a 26.3-only
+build). Supported sources: modrinth, hangar, papermc, purpur.`)
   process.exit(2)
 }
 
@@ -98,7 +103,12 @@ function mergeOnly(previous: LockFile, refreshed: LockedArtifact[], serverName: 
   }
 }
 
-async function update(desiredPath: string, lockPath: string, onlyNames: string[]): Promise<number> {
+async function update(
+  desiredPath: string,
+  lockPath: string,
+  onlyNames: string[],
+  minecraftCeiling: string | undefined,
+): Promise<number> {
   const desired = await readDesired(desiredPath)
   const server = desired.server
     ? { ...desired.server, name: desired.server.name || desired.server.id || desired.server.source }
@@ -114,6 +124,11 @@ async function update(desiredPath: string, lockPath: string, onlyNames: string[]
   }
 
   const only = onlyNames.map((name) => name.trim()).filter(Boolean)
+  const ceiling = minecraftCeiling?.trim() || undefined
+  if (ceiling && only.length === 0) {
+    console.error("--minecraft requires --only (pass the server version as the ceiling, e.g. --minecraft 1.20.1)")
+    return 1
+  }
   if (only.length > 0) {
     const missing = only.filter((name) => !allEntries.some((entry) => entry.name === name))
     if (missing.length > 0) {
@@ -129,13 +144,27 @@ async function update(desiredPath: string, lockPath: string, onlyNames: string[]
   const entries =
     only.length > 0 ? allEntries.filter((entry) => only.includes(entry.name)) : allEntries
 
+  if (ceiling) {
+    const unsupported = entries.filter((entry) => !MINECRAFT_CEILING_SOURCES.has(entry.source))
+    if (unsupported.length > 0) {
+      for (const entry of unsupported) {
+        console.error(
+          `--minecraft ${ceiling}: ${entry.name} source ${entry.source} has no per-jar Minecraft versions (use modrinth/hangar/papermc/purpur)`,
+        )
+      }
+      return 1
+    }
+  }
+
+  const toResolve = entries.map((entry) => (ceiling ? { ...entry, minecraftCeiling: ceiling } : entry))
+
   // With --only, always re-resolve those names (even if desired pins a version).
   const pending =
-    only.length > 0 ? entries : entries.filter((entry) => !reusePinned(entry, previous))
+    only.length > 0 ? toResolve : toResolve.filter((entry) => !reusePinned(entry, previous))
   const reused =
     only.length > 0
       ? []
-      : entries.flatMap((entry) => {
+      : toResolve.flatMap((entry) => {
           const artifact = reusePinned(entry, previous)
           if (artifact) console.log(`reused ${artifact.name} ${artifact.version}`)
           return artifact ? [artifact] : []
@@ -165,7 +194,9 @@ async function update(desiredPath: string, lockPath: string, onlyNames: string[]
   for (const name of result.skipped) console.log(`skipped local ${name}`)
   for (const message of result.errors) console.error(message)
   const pluginCount = lock.plugins.length
-  console.log(`wrote ${lockPath}: ${pluginCount} plugins${lock.server ? " and server" : ""}${only.length ? ` (only ${only.join(", ")})` : ""}`)
+  const onlyNote = only.length ? ` (only ${only.join(", ")})` : ""
+  const mcNote = ceiling ? ` [minecraft ≤ ${ceiling}]` : ""
+  console.log(`wrote ${lockPath}: ${pluginCount} plugins${lock.server ? " and server" : ""}${onlyNote}${mcNote}`)
   return result.errors.length === 0 ? 0 : 1
 }
 
@@ -213,7 +244,7 @@ async function download(lockPath: string, outDir: string, serverOut?: string): P
 const command = positionals[0]
 if (command === "update") {
   if (!values.desired || !values.lock) usage()
-  process.exit(await update(values.desired, values.lock, values.only ?? []))
+  process.exit(await update(values.desired, values.lock, values.only ?? [], values.minecraft))
 }
 if (command === "download") {
   if (!values.lock || !values.out) usage()

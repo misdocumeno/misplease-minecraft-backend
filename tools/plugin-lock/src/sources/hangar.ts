@@ -1,14 +1,18 @@
 import { getJson } from "../http.ts"
+import { pickNewestFittingCeiling } from "../minecraft-version.ts"
 import type { DesiredPlugin, ResolvedArtifact } from "../model.ts"
 
 interface HangarVersion {
   name: string
   channel?: { name?: string }
-  downloads: Record<string, {
-    downloadUrl?: string
-    externalUrl?: string | null
-    fileInfo?: { name?: string; sha256Hash?: string }
-  }>
+  downloads: Record<
+    string,
+    {
+      downloadUrl?: string
+      externalUrl?: string | null
+      fileInfo?: { name?: string; sha256Hash?: string }
+    }
+  >
   platformDependencies?: Record<string, string[]>
 }
 
@@ -30,6 +34,10 @@ function projectPath(id: string): string {
     throw new Error("hangar plugin needs author/slug")
   }
   return `${encodeURIComponent(author)}/${encodeURIComponent(slug)}`
+}
+
+function paperGameVersions(version: HangarVersion): string[] | undefined {
+  return version.platformDependencies?.PAPER ?? version.platformDependencies?.PURPUR
 }
 
 function toResolved(plugin: DesiredPlugin, version: HangarVersion): ResolvedArtifact {
@@ -55,6 +63,21 @@ function toResolved(plugin: DesiredPlugin, version: HangarVersion): ResolvedArti
   }
 }
 
+async function listChannelVersions(plugin: DesiredPlugin): Promise<HangarVersion[]> {
+  if (!plugin.id) throw new Error("hangar plugin needs an id")
+  const project = projectPath(plugin.id)
+  const wanted = channelName(plugin.channel)
+  const matches: HangarVersion[] = []
+  for (let offset = 0; offset < 500; offset += 25) {
+    const page = await getJson<HangarPage>(
+      `https://hangar.papermc.io/api/v1/projects/${project}/versions?limit=25&offset=${offset}`,
+    )
+    matches.push(...page.result.filter((version) => version.channel?.name === wanted))
+    if (page.result.length < 25) break
+  }
+  return matches
+}
+
 export async function resolveHangar(plugin: DesiredPlugin): Promise<ResolvedArtifact> {
   if (!plugin.id) throw new Error("hangar plugin needs an id")
   const project = projectPath(plugin.id)
@@ -65,14 +88,18 @@ export async function resolveHangar(plugin: DesiredPlugin): Promise<ResolvedArti
     return toResolved(plugin, version)
   }
 
-  const wanted = channelName(plugin.channel)
-  for (let offset = 0; offset < 500; offset += 25) {
-    const page = await getJson<HangarPage>(
-      `https://hangar.papermc.io/api/v1/projects/${project}/versions?limit=25&offset=${offset}`,
-    )
-    const match = page.result.find((version) => version.channel?.name === wanted)
-    if (match) return toResolved(plugin, match)
-    if (page.result.length < 25) break
+  const matches = await listChannelVersions(plugin)
+  if (plugin.minecraftCeiling) {
+    const chosen = pickNewestFittingCeiling(matches, paperGameVersions, plugin.minecraftCeiling)
+    if (!chosen) {
+      throw new Error(
+        `hangar has no ${channelName(plugin.channel)} Paper/Purpur jar with a game version ≤ ${plugin.minecraftCeiling}`,
+      )
+    }
+    return toResolved(plugin, chosen)
   }
-  throw new Error(`hangar has no ${wanted} version`)
+
+  const match = matches[0]
+  if (!match) throw new Error(`hangar has no ${channelName(plugin.channel)} version`)
+  return toResolved(plugin, match)
 }

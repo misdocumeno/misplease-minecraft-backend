@@ -1,8 +1,13 @@
 # One image for main, tech, and the proxy. The lock decides the server jar and the third-party plugins.
 # Our Kotlin plugins are compiled here and copied in by PLUGIN_PREFIX (backend- or velocity-).
 #
+# Third-party jars: CI materializes them on the GHA runner (plugin-lock + @actions/cache per
+# lock entry) and passes lock-jars / lock-server build contexts (LOCK_VARIANT=ci).
+# Local compose keeps LOCK_VARIANT=local and downloads inside this image (disk cache only).
+#
 # FROM-substitution ARGs must be declared before the first FROM (BuildKit global scope).
 ARG RUNTIME_JAVA=21
+ARG LOCK_VARIANT=local
 
 FROM eclipse-temurin:21-jdk AS plugins
 
@@ -26,7 +31,8 @@ RUN set -eux; \
 
 FROM node:24-bookworm AS node
 
-FROM eclipse-temurin:21-jdk AS fetch
+# --- local: download lock jars inside the image (no Actions cache) ---
+FROM eclipse-temurin:21-jdk AS fetch-local
 
 COPY --from=node /usr/local/ /usr/local/
 
@@ -45,13 +51,9 @@ COPY tools/plugin-lock tools/plugin-lock
 ARG LOCK
 COPY ${LOCK} /lock.yml
 
-# Jar reuse is owned by tools/plugin-lock (.plugin-lock-cache, keyed by content hash).
-# CI seeds that directory via actions/cache + host prefetch, then passes it as the
-# `plugin-cache` build context. Local compose uses .plugin-lock-cache or docker/empty-plugin-cache.
-# Do not rely on BuildKit layer cache for jar bytes — cancelled/failed image builds must not wipe them.
+# Optional local disk cache (.plugin-lock-cache/<entryHash>.jar).
 COPY --from=plugin-cache . /plugin-lock-cache/
 
-# github_token: fine-grained PAT for private plugin releases (optional in local builds).
 RUN --mount=type=secret,id=github_token \
     set -eux; \
     export PLUGIN_LOCK_CACHE=/plugin-lock-cache; \
@@ -64,8 +66,19 @@ RUN --mount=type=secret,id=github_token \
     test -n "$(find /server -maxdepth 1 -name '*.jar' -print -quit)"; \
     test -n "$(find /jars -maxdepth 1 -name '*.jar' -print -quit)"
 
+# --- CI: jars already materialized on the runner ---
+FROM eclipse-temurin:21-jre AS fetch-ci
+
+COPY --from=lock-jars . /jars
+COPY --from=lock-server . /server
+
+RUN set -eux; \
+    test -n "$(find /server -maxdepth 1 -name '*.jar' -print -quit)"; \
+    test -n "$(find /jars -maxdepth 1 -name '*.jar' -print -quit)"
+
+FROM fetch-${LOCK_VARIANT} AS fetch
+
 # Runtime JRE only — main/proxy stay on 21; Paper 26.3 (tech) needs 25+.
-# Plugin compile + fetch stay on 21 (bytecode runs fine on a newer JRE).
 FROM eclipse-temurin:${RUNTIME_JAVA}-jre
 
 USER root

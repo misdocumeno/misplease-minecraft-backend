@@ -35,71 +35,6 @@ env:
   PUSH_IMAGES: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
 
 jobs:
-  # Warm .plugin-lock-cache for every infra/**/plugins-lock.yml before any image build.
-  # Shared Actions cache (not BuildKit): hash-keyed jars survive failed/cancelled image builds.
-  # New servers: add infra/**/plugins-lock.yml (+ matrix entry); prefetch picks them up via find.
-  jar-cache:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/cache/restore@v4
-        id: restore
-        with:
-          path: |
-            .plugin-lock-cache
-            ~/.cache/misplease
-          # hashFiles only works inside job steps, not workflow-level env.
-          key: plugin-lock-jars-${{ hashFiles('infra/**/plugins-lock.yml', 'tools/plugin-lock/src/**', 'tools/plugin-lock/package-lock.json') }}
-          restore-keys: |
-            plugin-lock-jars-
-
-      - uses: actions/setup-node@v4
-        if: steps.restore.outputs.cache-hit != 'true'
-        with:
-          node-version: "24"
-          cache: npm
-          cache-dependency-path: tools/plugin-lock/package-lock.json
-
-      # continue-on-error: Spiget may block a couple of jars; we still save whatever
-      # landed in .plugin-lock-cache so the next run (and matrix builds) reuse them.
-      - name: Prefetch all plugin locks
-        id: prefetch
-        if: steps.restore.outputs.cache-hit != 'true'
-        continue-on-error: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.PLUGIN_GITHUB_TOKEN }}
-          PLUGIN_LOCK_CACHE: ${{ github.workspace }}/.plugin-lock-cache
-        run: |
-          set -eux
-          cd tools/plugin-lock
-          npm ci --omit=dev --ignore-scripts
-          mkdir -p "$PLUGIN_LOCK_CACHE"
-          # Any new server under infra/** with a plugins-lock.yml is included automatically.
-          mapfile -t locks < <(find "${{ github.workspace }}/infra" -type f -name 'plugins-lock.yml' | sort)
-          if [ "${#locks[@]}" -eq 0 ]; then
-            echo "no plugins-lock.yml under infra/" >&2
-            exit 1
-          fi
-          status=0
-          for lock in "${locks[@]}"; do
-            rel="${lock#${{ github.workspace }}/}"
-            out="${{ github.workspace }}/.prefetch/$(echo "$rel" | tr '/' '_')"
-            mkdir -p "$out/jars" "$out/server"
-            echo "prefetch $rel"
-            node src/cli.ts download --lock "$lock" --out "$out/jars" --server-out "$out/server" || status=1
-          done
-          du -sh "$PLUGIN_LOCK_CACHE" ~/.cache/misplease 2>/dev/null || true
-          exit "$status"
-
-      - uses: actions/cache/save@v4
-        if: always() && steps.restore.outputs.cache-hit != 'true'
-        with:
-          path: |
-            .plugin-lock-cache
-            ~/.cache/misplease
-          key: plugin-lock-jars-${{ hashFiles('infra/**/plugins-lock.yml', 'tools/plugin-lock/src/**', 'tools/plugin-lock/package-lock.json') }}
-
   auth:
     runs-on: ubuntu-latest
     steps:
@@ -125,7 +60,6 @@ jobs:
           cache-to: type=gha,mode=max,scope=auth
 
   servers:
-    needs: jar-cache
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -155,17 +89,42 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: tools/plugin-lock/package-lock.json
+
+      # JDK/Maven used when a lock entry is source: git (self-provisioned by plugin-lock).
       - uses: actions/cache/restore@v4
         with:
-          path: |
-            .plugin-lock-cache
-            ~/.cache/misplease
-          key: plugin-lock-jars-${{ hashFiles('infra/**/plugins-lock.yml', 'tools/plugin-lock/src/**', 'tools/plugin-lock/package-lock.json') }}
+          path: ~/.cache/misplease
+          key: misplease-tools-${{ runner.os }}-${{ github.run_id }}-${{ matrix.name }}
           restore-keys: |
-            plugin-lock-jars-
+            misplease-tools-${{ runner.os }}-
 
-      - name: Ensure plugin-cache context
-        run: mkdir -p .plugin-lock-cache
+      # Materialize this server's lock on the runner. plugin-lock uses @actions/cache
+      # with one key per lock entry (plugin-jar-<sha256(entry)>); misses hit the network.
+      - name: Materialize lock jars
+        env:
+          GITHUB_TOKEN: ${{ secrets.PLUGIN_GITHUB_TOKEN }}
+          PLUGIN_LOCK_CACHE: ${{ github.workspace }}/.plugin-lock-cache
+        run: |
+          set -eux
+          mkdir -p "$PLUGIN_LOCK_CACHE"
+          cd tools/plugin-lock
+          npm ci --omit=dev --ignore-scripts
+          out="${{ github.workspace }}/.materialize/${{ matrix.name }}"
+          mkdir -p "$out/jars" "$out/server"
+          node src/cli.ts download --lock "${{ github.workspace }}/${{ matrix.lock }}" \
+            --out "$out/jars" --server-out "$out/server"
+          du -sh "$PLUGIN_LOCK_CACHE" "$out" ~/.cache/misplease 2>/dev/null || true
+
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: ~/.cache/misplease
+          key: misplease-tools-${{ runner.os }}-${{ github.run_id }}-${{ matrix.name }}
 
       - uses: docker/setup-buildx-action@v3
 
@@ -176,8 +135,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Load locally for smoke. Push is a separate docker push so load+push cannot
-      # race GHCR package creation (velocity hit write_package with both enabled).
+      # Image build only copies host-materialized jars + compiles our plugins.
+      # Dummy plugin-cache context satisfies the local Dockerfile branch's FROM name;
+      # LOCK_VARIANT=ci selects fetch-ci (lock-jars / lock-server) instead.
       - uses: docker/build-push-action@v6
         with:
           context: .
@@ -185,13 +145,14 @@ jobs:
           load: true
           push: false
           build-contexts: |
-            plugin-cache=.plugin-lock-cache
+            plugin-cache=docker/empty-plugin-cache
+            lock-jars=.materialize/${{ matrix.name }}/jars
+            lock-server=.materialize/${{ matrix.name }}/server
           build-args: |
             LOCK=${{ matrix.lock }}
             PLUGIN_PREFIX=${{ matrix.prefix }}
             RUNTIME_JAVA=${{ matrix.runtime_java }}
-          secrets: |
-            github_token=${{ secrets.PLUGIN_GITHUB_TOKEN }}
+            LOCK_VARIANT=ci
           cache-from: type=gha,scope=server-${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=server-${{ matrix.name }}
           tags: |
@@ -201,8 +162,6 @@ jobs:
         if: matrix.smoke
         run: |
           chmod +x docker/smoke-check.sh
-          # Standard GHA runners have ~7GiB RAM; keep the heap well under that
-          # (Docker + Postgres + Redis share the machine). Prod heaps stay in compose.prod.
           SMOKE_HEAP=1536M SMOKE_TIMEOUT_S=360 \
             ./docker/smoke-check.sh \
             "ghcr.io/${{ github.repository }}/${{ matrix.name }}:smoke" \

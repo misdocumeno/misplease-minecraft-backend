@@ -33,6 +33,11 @@ async function findVersion(resourceId: string, wanted: string): Promise<SpigetVe
 
 export async function resolveSpiget(plugin: DesiredPlugin): Promise<ResolvedArtifact> {
   if (!plugin.id || !/^\d+$/.test(plugin.id)) throw new Error("spiget plugin needs a numeric id")
+  if (plugin.minecraftCeiling) {
+    throw new Error(
+      "spiget has no per-jar Minecraft versions (only resource-level testedVersions); cannot apply --minecraft",
+    )
+  }
   const resource = await getJson<SpigetResource>(`https://api.spiget.org/v2/resources/${plugin.id}`)
   if (resource.external) {
     throw new Error("spiget resource is an external link and has no direct jar")

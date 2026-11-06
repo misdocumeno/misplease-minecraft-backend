@@ -1,6 +1,8 @@
+import { createHash } from "node:crypto"
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import { existsSync } from "node:fs"
 import path from "node:path"
+import { restoreActionsCache, saveActionsCache } from "./actions-cache.ts"
 import { digest, downloadBytes, type HashAlgorithm } from "./http.ts"
 import { basename } from "./desired.ts"
 import type { LockedArtifact } from "./model.ts"
@@ -30,8 +32,10 @@ function repoRoot(from = process.cwd()): string {
 }
 
 /**
- * Durable jar cache: defaults to `<repo>/.plugin-lock-cache`.
- * Set PLUGIN_LOCK_CACHE to an absolute/relative path to override, or to empty to disable.
+ * Local jar cache: defaults to `<repo>/.plugin-lock-cache`.
+ * Flat layout: `<entryHash>.jar` (sha256 of the lock entry object).
+ * On GitHub Actions, each file is also backed by `@actions/cache` key `plugin-jar-<entryHash>`.
+ * Set PLUGIN_LOCK_CACHE to override the directory, or empty to disable disk+Actions caching.
  */
 function cacheRoot(): string | undefined {
   if (process.env.PLUGIN_LOCK_CACHE !== undefined) {
@@ -41,49 +45,73 @@ function cacheRoot(): string | undefined {
   return path.join(repoRoot(), ".plugin-lock-cache")
 }
 
-function cachePath(algorithm: HashAlgorithm, value: string, filename: string): string {
-  const safe = basename(filename).replace(/[^A-Za-z0-9._-]+/g, "_")
-  return path.join(cacheRoot()!, algorithm, value, safe)
+/** Stable identity of a locked plugin/server row — not the jar content hash. */
+export function lockEntryHash(artifact: LockedArtifact): string {
+  const keys = Object.keys(artifact).sort() as (keyof LockedArtifact)[]
+  const canonical: Record<string, unknown> = {}
+  for (const key of keys) {
+    const value = artifact[key]
+    if (value !== undefined) canonical[key] = value
+  }
+  return createHash("sha256").update(JSON.stringify(canonical)).digest("hex")
 }
 
-async function readCache(algorithm: HashAlgorithm, value: string, filename: string): Promise<Buffer | undefined> {
+function cacheFile(entryHash: string): string {
+  return path.join(cacheRoot()!, `${entryHash}.jar`)
+}
+
+async function readDisk(entryHash: string): Promise<Buffer | undefined> {
   const root = cacheRoot()
   if (!root) return undefined
   try {
-    const bytes = await readFile(cachePath(algorithm, value, filename))
-    if (digest(algorithm, bytes) !== value) return undefined
-    return bytes
+    return await readFile(cacheFile(entryHash))
   } catch {
     return undefined
   }
 }
 
-async function writeCache(algorithm: HashAlgorithm, value: string, filename: string, bytes: Buffer): Promise<void> {
+async function writeDisk(entryHash: string, bytes: Buffer): Promise<void> {
   const root = cacheRoot()
   if (!root) return
-  const file = cachePath(algorithm, value, filename)
-  await mkdir(path.dirname(file), { recursive: true })
-  await writeFile(file, bytes)
+  await mkdir(root, { recursive: true })
+  await writeFile(cacheFile(entryHash), bytes)
 }
 
 export async function downloadArtifact(artifact: LockedArtifact, outDir: string): Promise<void> {
   const filename = basename(artifact.filename)
   const expected = pin(artifact)
-  let fromCache = false
-  let bytes = await readCache(expected.algorithm, expected.value, filename)
+  const entryHash = lockEntryHash(artifact)
+  const root = cacheRoot()
+  const absolute = root ? cacheFile(entryHash) : undefined
+
+  let source: "disk" | "actions" | "network" = "network"
+  let bytes = await readDisk(entryHash)
   if (bytes) {
-    fromCache = true
-  } else {
-    bytes = artifact.source === "git" ? await gitBytes(artifact) : await downloadBytes(artifact.url)
+    source = "disk"
+  } else if (absolute && (await restoreActionsCache(absolute, entryHash))) {
+    bytes = await readDisk(entryHash)
+    if (bytes) source = "actions"
   }
+
+  if (!bytes) {
+    bytes = artifact.source === "git" ? await gitBytes(artifact) : await downloadBytes(artifact.url)
+    source = "network"
+  }
+
   const hash = digest(expected.algorithm, bytes)
   if (hash !== expected.value) {
     throw new Error(`${expected.algorithm} ${hash} does not match the lock ${expected.value}`)
   }
-  if (!fromCache) await writeCache(expected.algorithm, expected.value, filename, bytes)
+
+  if (source === "network" && absolute) {
+    await writeDisk(entryHash, bytes)
+    await saveActionsCache(absolute, entryHash)
+  }
+
   await mkdir(outDir, { recursive: true })
   await writeFile(path.join(outDir, filename), bytes)
-  console.log(`${filename} ${artifact.version} ${hash}${fromCache ? " (cache)" : ""}`)
+  const tag = source === "network" ? "" : source === "actions" ? " (actions-cache)" : " (cache)"
+  console.log(`${filename} ${artifact.version} ${entryHash.slice(0, 12)}${tag}`)
 }
 
 async function gitBytes(artifact: LockedArtifact): Promise<Buffer> {

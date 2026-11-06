@@ -14,6 +14,8 @@ export interface DesiredPlugin {
   java?: string
   release?: string
   serverMinecraft?: string
+  /** When set (via update --minecraft), resolvers pick the newest jar that still fits this server version. */
+  minecraftCeiling?: string
 }
 
 export interface DesiredFile {
