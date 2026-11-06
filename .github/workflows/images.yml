@@ -103,22 +103,22 @@ jobs:
           restore-keys: |
             misplease-tools-${{ runner.os }}-
 
-      # Materialize this server's lock on the runner. plugin-lock uses @actions/cache
-      # with one key per lock entry (plugin-jar-<sha256(entry)>); misses hit the network.
+      # npm deps for the local JS action + CLI (ACTION gets ACTIONS_RUNTIME_TOKEN;
+      # a plain `run:` step does not, so @actions/cache cannot run from shell alone).
+      - name: Install plugin-lock
+        working-directory: tools/plugin-lock
+        run: npm ci --omit=dev --ignore-scripts
+
+      # Materialize this server's lock. Per-entry keys: plugin-jar-<sha256(entry)>.
       - name: Materialize lock jars
+        uses: ./tools/plugin-lock
         env:
           GITHUB_TOKEN: ${{ secrets.PLUGIN_GITHUB_TOKEN }}
-          PLUGIN_LOCK_CACHE: ${{ github.workspace }}/.plugin-lock-cache
-        run: |
-          set -eux
-          mkdir -p "$PLUGIN_LOCK_CACHE"
-          cd tools/plugin-lock
-          npm ci --omit=dev --ignore-scripts
-          out="${{ github.workspace }}/.materialize/${{ matrix.name }}"
-          mkdir -p "$out/jars" "$out/server"
-          node src/cli.ts download --lock "${{ github.workspace }}/${{ matrix.lock }}" \
-            --out "$out/jars" --server-out "$out/server"
-          du -sh "$PLUGIN_LOCK_CACHE" "$out" ~/.cache/misplease 2>/dev/null || true
+        with:
+          lock: ${{ github.workspace }}/${{ matrix.lock }}
+          out: ${{ github.workspace }}/.materialize/${{ matrix.name }}/jars
+          server-out: ${{ github.workspace }}/.materialize/${{ matrix.name }}/server
+          cache-dir: ${{ github.workspace }}/.plugin-lock-cache
 
       - uses: actions/cache/save@v4
         if: always()

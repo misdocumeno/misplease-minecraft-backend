@@ -1,0 +1,19 @@
+name: plugin-lock-download
+description: Download a plugins-lock.yml using per-entry Actions cache (plugin-jar-*)
+inputs:
+  lock:
+    description: Path to plugins-lock.yml
+    required: true
+  out:
+    description: Directory for plugin jars
+    required: true
+  server-out:
+    description: Directory for the server jar
+    required: false
+  cache-dir:
+    description: PLUGIN_LOCK_CACHE directory (flat entryHash.jar files)
+    required: false
+    default: .plugin-lock-cache
+runs:
+  using: node20
+  main: action.mjs
