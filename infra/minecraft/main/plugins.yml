@@ -215,6 +215,8 @@ plugins:
   - name: Slimefun
     source: github
     repo: misdocumeno/Slimefun4
+  # Release uploads a thin *-SNAPSHOT.jar and a shaded QuickShop.jar (needs MineDown etc.).
   - name: QuickShop
     source: github
     repo: misdocumeno/QuickShop-Reremake
+    jar: /^QuickShop\.jar$/

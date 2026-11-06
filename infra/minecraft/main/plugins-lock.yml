@@ -837,9 +837,9 @@ plugins:
   - name: QuickShop
     source: github
     version: v5.1.2.5-shulker
-    filename: QuickShop-5.1.2.5-SNAPSHOT.jar
-    url: https://api.github.com/repos/misdocumeno/QuickShop-Reremake/releases/assets/711214692
-    sha256: e2a9042c7352161c3870c364fb48d46dbe5fe9004131d1379579fe57c0ef95c0
+    filename: QuickShop.jar
+    url: https://api.github.com/repos/misdocumeno/QuickShop-Reremake/releases/assets/711214691
+    sha256: b5903eb3950c2e27b0339fb53a49f90ae6b2c17559d98349d992dd01cd631d2b
   - name: Jobs
     source: spiget
     version: "511697"
