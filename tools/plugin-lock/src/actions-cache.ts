@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs"
 import path from "node:path"
 
 /**
@@ -7,6 +8,18 @@ import path from "node:path"
 export function actionsCacheEnabled(): boolean {
   if (!process.env.ACTIONS_RUNTIME_TOKEN) return false
   return Boolean(process.env.ACTIONS_CACHE_URL || process.env.ACTIONS_RESULTS_URL)
+}
+
+function withWorkspaceCwd<T>(fn: () => Promise<T>): Promise<T> {
+  const workspace = process.env.GITHUB_WORKSPACE
+  if (!workspace) return fn()
+  const previous = process.cwd()
+  try {
+    process.chdir(workspace)
+    return fn()
+  } finally {
+    process.chdir(previous)
+  }
 }
 
 export function actionsCacheKey(entryHash: string): string {
@@ -31,7 +44,7 @@ export async function restoreActionsCache(absoluteFile: string, entryHash: strin
   const key = actionsCacheKey(entryHash)
   const paths = [actionsCachePath(absoluteFile)]
   try {
-    const hit = await cache.restoreCache(paths, key)
+    const hit = await withWorkspaceCwd(() => cache.restoreCache(paths, key))
     return Boolean(hit)
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
@@ -42,11 +55,15 @@ export async function restoreActionsCache(absoluteFile: string, entryHash: strin
 
 export async function saveActionsCache(absoluteFile: string, entryHash: string): Promise<void> {
   if (!actionsCacheEnabled()) return
+  if (!existsSync(absoluteFile)) {
+    console.warn(`actions-cache save ${actionsCacheKey(entryHash)}: missing file ${absoluteFile}`)
+    return
+  }
   const cache = await import("@actions/cache")
   const key = actionsCacheKey(entryHash)
   const paths = [actionsCachePath(absoluteFile)]
   try {
-    const id = await cache.saveCache(paths, key)
+    const id = await withWorkspaceCwd(() => cache.saveCache(paths, key))
     if (id === -1) {
       console.warn(`actions-cache save ${key}: returned -1 (not saved)`)
       return

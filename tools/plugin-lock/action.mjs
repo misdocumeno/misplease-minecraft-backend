@@ -6,9 +6,9 @@ import * as core from "@actions/core"
 
 const root = path.dirname(fileURLToPath(import.meta.url))
 
-function run(command, args, env) {
+function run(command, args, env, cwd) {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, { cwd: root, env, stdio: "inherit" })
+    const child = spawn(command, args, { cwd, env, stdio: "inherit" })
     child.on("error", reject)
     child.on("exit", (code) => {
       if (code === 0) resolve()
@@ -37,5 +37,17 @@ const env = {
 }
 
 // Prefer job PATH node (setup-node 24+) over the action runtime binary.
-const args = ["--experimental-strip-types", "src/cli.ts", "download", "--lock", lock, "--out", out, "--server-out", serverOut]
-await run("node", args, env)
+// cwd must be GITHUB_WORKSPACE: @actions/cache globs paths relative to cwd.
+const workspace = process.env.GITHUB_WORKSPACE || process.cwd()
+const args = [
+  "--experimental-strip-types",
+  path.join(root, "src/cli.ts"),
+  "download",
+  "--lock",
+  lock,
+  "--out",
+  out,
+  "--server-out",
+  serverOut,
+]
+await run("node", args, env, workspace)
