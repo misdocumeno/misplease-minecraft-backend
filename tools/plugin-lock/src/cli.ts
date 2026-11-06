@@ -201,6 +201,12 @@ async function update(
 }
 
 async function download(lockPath: string, outDir: string, serverOut?: string): Promise<number> {
+  const { actionsCacheEnabled } = await import("./actions-cache.ts")
+  console.log(
+    actionsCacheEnabled()
+      ? "actions-cache: enabled (per-entry plugin-jar-* keys)"
+      : "actions-cache: disabled (no ACTIONS_RUNTIME_TOKEN / CACHE_URL / RESULTS_URL)",
+  )
   const lock = parse(await readFile(lockPath, "utf8")) as LockFile
   const errors: string[] = []
   const jobs: { artifact: LockedArtifact; directory: string }[] = []
@@ -208,7 +214,9 @@ async function download(lockPath: string, outDir: string, serverOut?: string): P
   if (lock.server) jobs.push({ artifact: lock.server, directory: serverOut ?? outDir })
   const remote = jobs.filter(({ artifact }) => artifact.source !== "git")
   const built = jobs.filter(({ artifact }) => artifact.source === "git")
-  // Spiget rate-limits parallel CI downloads; keep those serial, parallelize the rest.
+  // Non-Spiget first (parallel), then git builds, then Spiget serial — so a Spiget
+  // Cloudflare block does not start after wasting a PlotSquared compile, and warm
+  // Actions hits for Spiget jars skip the network entirely.
   const spiget = remote.filter(({ artifact }) => artifact.source === "spiget")
   const otherRemote = remote.filter(({ artifact }) => artifact.source !== "spiget")
   await Promise.all(
@@ -221,7 +229,7 @@ async function download(lockPath: string, outDir: string, serverOut?: string): P
       }
     }),
   )
-  for (const { artifact, directory } of spiget) {
+  for (const { artifact, directory } of built) {
     try {
       await downloadArtifact(artifact, directory)
     } catch (error) {
@@ -229,7 +237,7 @@ async function download(lockPath: string, outDir: string, serverOut?: string): P
       errors.push(`${artifact.name}: ${message}`)
     }
   }
-  for (const { artifact, directory } of built) {
+  for (const { artifact, directory } of spiget) {
     try {
       await downloadArtifact(artifact, directory)
     } catch (error) {
