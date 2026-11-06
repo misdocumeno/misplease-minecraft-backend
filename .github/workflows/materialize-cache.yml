@@ -8,9 +8,6 @@ on:
 permissions:
   contents: read
 
-env:
-  PLUGIN_LOCK_CACHE_KEY: plugin-lock-jars-${{ hashFiles('infra/**/plugins-lock.yml', 'tools/plugin-lock/src/**', 'tools/plugin-lock/package-lock.json') }}
-
 jobs:
   materialize:
     runs-on: ubuntu-latest
@@ -23,7 +20,7 @@ jobs:
           path: |
             .plugin-lock-cache
             ~/.cache/misplease
-          key: ${{ env.PLUGIN_LOCK_CACHE_KEY }}
+          key: plugin-lock-jars-${{ hashFiles('infra/**/plugins-lock.yml', 'tools/plugin-lock/src/**', 'tools/plugin-lock/package-lock.json') }}
           restore-keys: |
             plugin-lock-jars-
 
@@ -58,4 +55,4 @@ jobs:
           path: |
             .plugin-lock-cache
             ~/.cache/misplease
-          key: ${{ env.PLUGIN_LOCK_CACHE_KEY }}
+          key: plugin-lock-jars-${{ hashFiles('infra/**/plugins-lock.yml', 'tools/plugin-lock/src/**', 'tools/plugin-lock/package-lock.json') }}

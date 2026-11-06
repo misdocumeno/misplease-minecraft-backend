@@ -33,12 +33,11 @@ permissions:
 env:
   # Push images on main builds and manual runs; PRs only load+smoke locally on the runner.
   PUSH_IMAGES: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
-  # Content-addressed jar/JDK cache for every server lock (main, tech, velocity, future).
-  # Owned by tools/plugin-lock — not BuildKit. Survives failed/cancelled image builds.
-  PLUGIN_LOCK_CACHE_KEY: plugin-lock-jars-${{ hashFiles('infra/**/plugins-lock.yml', 'tools/plugin-lock/src/**', 'tools/plugin-lock/package-lock.json') }}
 
 jobs:
   # Warm .plugin-lock-cache for every infra/**/plugins-lock.yml before any image build.
+  # Shared Actions cache (not BuildKit): hash-keyed jars survive failed/cancelled image builds.
+  # New servers: add infra/**/plugins-lock.yml (+ matrix entry); prefetch picks them up via find.
   jar-cache:
     runs-on: ubuntu-latest
     steps:
@@ -50,7 +49,8 @@ jobs:
           path: |
             .plugin-lock-cache
             ~/.cache/misplease
-          key: ${{ env.PLUGIN_LOCK_CACHE_KEY }}
+          # hashFiles only works inside job steps, not workflow-level env.
+          key: plugin-lock-jars-${{ hashFiles('infra/**/plugins-lock.yml', 'tools/plugin-lock/src/**', 'tools/plugin-lock/package-lock.json') }}
           restore-keys: |
             plugin-lock-jars-
 
@@ -92,7 +92,7 @@ jobs:
           path: |
             .plugin-lock-cache
             ~/.cache/misplease
-          key: ${{ env.PLUGIN_LOCK_CACHE_KEY }}
+          key: plugin-lock-jars-${{ hashFiles('infra/**/plugins-lock.yml', 'tools/plugin-lock/src/**', 'tools/plugin-lock/package-lock.json') }}
 
   auth:
     runs-on: ubuntu-latest
@@ -154,10 +154,9 @@ jobs:
           path: |
             .plugin-lock-cache
             ~/.cache/misplease
-          key: ${{ env.PLUGIN_LOCK_CACHE_KEY }}
+          key: plugin-lock-jars-${{ hashFiles('infra/**/plugins-lock.yml', 'tools/plugin-lock/src/**', 'tools/plugin-lock/package-lock.json') }}
           restore-keys: |
             plugin-lock-jars-
-          fail-on-cache-miss: false
 
       - name: Ensure plugin-cache context
         run: mkdir -p .plugin-lock-cache
