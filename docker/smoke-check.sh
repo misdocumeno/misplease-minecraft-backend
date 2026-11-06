@@ -54,6 +54,7 @@ run_args=(
   --device /dev/fuse
   -e "KIND=$KIND"
   -e SERVER_ID=smoke
+  -e SMOKE_PLAIN=1
   -e "REDIS_URL=redis://redis:6379/0"
   -e "DATABASE_URL=postgres://misplease:smoke@db:5432/misplease"
   -e "JVM_OPTS=-Xms256M -Xmx${HEAP_MX} -XX:+UseG1GC -Dpaper.preferSparkPlugin=true"
@@ -88,6 +89,14 @@ fi
 if grep -E 'Error occurred while enabling |Unsupported server version detected:|Could not load [^\n]* plugin' "$LOG" >/tmp/smoke-errors.txt; then
   echo "smoke failed: plugin enable errors" >&2
   cat /tmp/smoke-errors.txt >&2
+  echo "---- stack context ----" >&2
+  # Print each enable-error line plus the following stack (until a blank/"Done"/next plugin line).
+  awk '
+    /Error occurred while enabling |Unsupported server version detected:|Could not load .* plugin/ { show=40; print; next }
+    show > 0 { print; show--; if ($0 ~ /^[[:space:]]*$/) show=0 }
+  ' "$LOG" >&2
+  echo "---- last 60 log lines ----" >&2
+  tail -n 60 "$LOG" >&2
   exit 1
 fi
 

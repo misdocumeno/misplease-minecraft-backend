@@ -55,19 +55,28 @@ if [ -z "$(find "$LOWER/plugins" -mindepth 1 -maxdepth 1 -name '*.jar' -print -q
   exit 1
 fi
 
-echo "mounting server overlay (upper=$STATE)"
-if ! mount -t overlay overlay -o "lowerdir=$LOWER,upperdir=$STATE,workdir=$WORK" "$MERGED"; then
-  echo "kernel overlay failed, trying fuse-overlayfs" >&2
-  rm -rf "$WORK"
-  mkdir -p "$WORK"
-  chown 1000:1000 "$WORK" 2>/dev/null || true
-  if ! fuse-overlayfs -o "lowerdir=$LOWER,upperdir=$STATE,workdir=$WORK" "$MERGED"; then
-    echo "could not mount the server directory" >&2
-    exit 1
-  fi
-  echo "mounted fuse-overlayfs on $MERGED"
+# SMOKE_PLAIN=1: copy lower→state and run from /data/state (no overlay).
+# GitHub Actions runners often lack usable kernel overlay; fuse-overlayfs then
+# breaks plugin data dirs. Prod/preprod keep the real overlay path.
+if [ "${SMOKE_PLAIN:-}" = "1" ]; then
+  echo "smoke plain mode: copying server tree into $STATE"
+  cp -a "$LOWER"/. "$STATE"/
+  MERGED="$STATE"
 else
-  echo "mounted kernel overlay on $MERGED"
+  echo "mounting server overlay (upper=$STATE)"
+  if ! mount -t overlay overlay -o "lowerdir=$LOWER,upperdir=$STATE,workdir=$WORK" "$MERGED"; then
+    echo "kernel overlay failed, trying fuse-overlayfs" >&2
+    rm -rf "$WORK"
+    mkdir -p "$WORK"
+    chown 1000:1000 "$WORK" 2>/dev/null || true
+    if ! fuse-overlayfs -o "lowerdir=$LOWER,upperdir=$STATE,workdir=$WORK" "$MERGED"; then
+      echo "could not mount the server directory" >&2
+      exit 1
+    fi
+    echo "mounted fuse-overlayfs on $MERGED"
+  else
+    echo "mounted kernel overlay on $MERGED"
+  fi
 fi
 
 server_jar="$(find /opt/misplease/server -maxdepth 1 -type f -name '*.jar' -print -quit)"
