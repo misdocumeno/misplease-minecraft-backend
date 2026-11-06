@@ -61,8 +61,12 @@ jobs:
           cache: npm
           cache-dependency-path: tools/plugin-lock/package-lock.json
 
+      # continue-on-error: Spiget may block a couple of jars; we still save whatever
+      # landed in .plugin-lock-cache so the next run (and matrix builds) reuse them.
       - name: Prefetch all plugin locks
+        id: prefetch
         if: steps.restore.outputs.cache-hit != 'true'
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.PLUGIN_GITHUB_TOKEN }}
           PLUGIN_LOCK_CACHE: ${{ github.workspace }}/.plugin-lock-cache
@@ -77,14 +81,16 @@ jobs:
             echo "no plugins-lock.yml under infra/" >&2
             exit 1
           fi
+          status=0
           for lock in "${locks[@]}"; do
             rel="${lock#${{ github.workspace }}/}"
             out="${{ github.workspace }}/.prefetch/$(echo "$rel" | tr '/' '_')"
             mkdir -p "$out/jars" "$out/server"
             echo "prefetch $rel"
-            node src/cli.ts download --lock "$lock" --out "$out/jars" --server-out "$out/server"
+            node src/cli.ts download --lock "$lock" --out "$out/jars" --server-out "$out/server" || status=1
           done
           du -sh "$PLUGIN_LOCK_CACHE" ~/.cache/misplease 2>/dev/null || true
+          exit "$status"
 
       - uses: actions/cache/save@v4
         if: always() && steps.restore.outputs.cache-hit != 'true'
