@@ -19,6 +19,7 @@ interface RawEntry {
   builder?: string
   task?: string
   jar?: string
+  jarPath?: string
   job?: string
   server?: string
   java?: string | number
@@ -54,13 +55,14 @@ function toPlugin(raw: RawEntry): DesiredPlugin {
     id: asString(id),
     version: asString(raw.version),
     build: asString(raw.build),
-    // `jar` selects which file (github/modrinth/…). `asset` remains a legacy alias.
+    // `jar` = filename or `/regex/`. `jarPath` = git repo-relative path. `asset` → `jar` legacy alias.
     asset: raw.asset,
     channel: raw.channel ?? raw.channe,
     commit: raw.commit,
     builder: raw.builder,
     task: raw.task,
     jar: raw.jar ?? raw.asset,
+    jarPath: asString(raw.jarPath),
     server: raw.server,
     java: asString(raw.java),
   }

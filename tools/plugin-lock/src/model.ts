@@ -9,7 +9,10 @@ export interface DesiredPlugin {
   commit?: string
   builder?: string
   task?: string
+  /** Select a jar by exact filename or `/regex/` (GitHub, Jenkins, Modrinth, and git build outputs). */
   jar?: string
+  /** Git only: relative path inside the repo to the built jar (preferred over guessing). */
+  jarPath?: string
   server?: string
   java?: string
   release?: string
@@ -35,6 +38,9 @@ export interface LockedArtifact {
   sha1?: string
   minecraft?: string[]
   task?: string
+  /** Git: relative path of the jar that was built (lock field `jarPath`). */
+  jarPath?: string
+  /** Legacy git path field; prefer `jarPath`. */
   jar?: string
   builder?: string
   java?: string
@@ -58,6 +64,7 @@ export interface ResolvedArtifact {
   sha1?: string
   task?: string
   jar?: string
+  jarPath?: string
   builder?: string
   java?: string
   release?: string

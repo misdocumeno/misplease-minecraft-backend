@@ -19,9 +19,11 @@ plugins:
   - name: LuckPerms
     source: modrinth
     slug: luckperms
+  # 7.0.21+ needs WorldEdit YAMLProcessor(Path) that FAWE 2.16.2 does not ship; 7.0.18 supports 26.3.
   - name: WorldGuard
     source: modrinth
     slug: worldguard
+    version: "7.0.18"
   - name: GriefPrevention
     source: modrinth
     slug: griefprevention

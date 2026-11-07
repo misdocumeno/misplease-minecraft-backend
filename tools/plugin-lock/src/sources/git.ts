@@ -5,6 +5,7 @@ import path from "node:path"
 import { writeFile } from "node:fs/promises"
 import { basename } from "../desired.ts"
 import { digest } from "../http.ts"
+import { matchJar } from "../jar-match.ts"
 import { chooseJava, declaredJava, ensureJdk, ensureMaven, gradleJavaRange, minecraftJava } from "../jdk.ts"
 import type { DesiredPlugin, ResolvedArtifact } from "../model.ts"
 import { normalizeJar, zipEntryNames } from "../zip.ts"
@@ -146,10 +147,14 @@ async function findJars(directory: string): Promise<string[]> {
 }
 
 async function chooseJar(plugin: DesiredPlugin, directory: string): Promise<string> {
-  if (plugin.jar) {
-    const relative = plugin.jar.replace(/\\/g, "/")
+  // Prefer jarPath (repo-relative). Legacy: jar values that look like paths (contain / but not /regex/).
+  const pathHint =
+    plugin.jarPath ??
+    (plugin.jar && plugin.jar.includes("/") && !plugin.jar.startsWith("/") ? plugin.jar : undefined)
+  if (pathHint) {
+    const relative = pathHint.replace(/\\/g, "/")
     if (relative.startsWith("/") || relative.split("/").includes("..")) {
-      throw new Error(`${plugin.name} jar path must stay inside the repository`)
+      throw new Error(`${plugin.name} jarPath must stay inside the repository`)
     }
     return path.join(directory, relative)
   }
@@ -159,10 +164,10 @@ async function chooseJar(plugin: DesiredPlugin, directory: string): Promise<stri
     const names = zipEntryNames(await readFile(jar))
     if (isPluginJar(names)) plugins.push(jar)
   }
-  const named = plugin.asset ? plugins.filter((jar) => path.basename(jar) === basename(plugin.asset ?? "")) : plugins
-  if (named.length === 1) return named[0]
-  const listed = (named.length > 0 ? named : jars).map((jar) => path.relative(directory, jar)).join(", ")
-  throw new Error(`${plugin.name} produced ${named.length} plugin jars${listed ? `: ${listed}` : ""}`)
+  const names = plugins.map((jar) => path.basename(jar))
+  // jar: exact basename or /regex/ among plugin jars (versioned filenames OK).
+  const selected = matchJar(names, plugin.jar, plugin.name)
+  return plugins.find((jar) => path.basename(jar) === selected)!
 }
 
 async function resolveCommit(repo: string, commit: string | undefined): Promise<string> {
@@ -196,7 +201,7 @@ async function resolveCommit(repo: string, commit: string | undefined): Promise<
 
 export async function buildNormalizedJar(plugin: DesiredPlugin): Promise<{
   filename: string
-  jar: string
+  jarPath: string
   bytes: Buffer
   builder?: string
   java: string
@@ -288,10 +293,10 @@ export async function buildNormalizedJar(plugin: DesiredPlugin): Promise<{
     }
     const chosen = await chooseJar(plugin, directory)
     const bytes = normalizeJar(await readFile(chosen))
-    const filename = plugin.asset ? basename(plugin.asset) : path.basename(chosen)
+    const filename = path.basename(chosen)
     return {
       filename,
-      jar: path.relative(directory, chosen).replace(/\\/g, "/"),
+      jarPath: path.relative(directory, chosen).replace(/\\/g, "/"),
       bytes,
       builder: ambiguous ? builder : undefined,
       // Major only — full Temurin builds (25.0.5+8) are not portable across OS in the lock.
@@ -314,7 +319,7 @@ export async function resolveGit(plugin: DesiredPlugin): Promise<ResolvedArtifac
     url: plugin.id ?? "",
     sha256: digest("sha256", built.bytes),
     task: plugin.task,
-    jar: built.jar,
+    jarPath: built.jarPath,
     builder: built.builder,
     java: built.java,
     release: built.release,

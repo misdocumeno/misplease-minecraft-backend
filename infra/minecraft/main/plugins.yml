@@ -2,7 +2,8 @@
 # `name` is the stable label (used by update --only). Required when several
 # plugins share one repo (EssentialsX*) or when the slug/repo label would differ
 # from the lock name.
-# GitHub multi-jar releases: jar: exact filename, or /regex/ (YAML has no regex type).
+# jar: exact filename or /regex/ (YAML has no regex type) — GitHub, Jenkins, Modrinth, git outputs.
+# jarPath: git only — optional repo-relative path to the built jar if you must pin the path.
 minecraft: "26.3"
 server:
   source: papermc
@@ -71,6 +72,7 @@ plugins:
   - name: PlotSquared
     source: git
     repo: https://github.com/IntellectualSites/PlotSquared.git
+    jar: /^plotsquared-bukkit-/
     java: "25"
   - name: DecentHolograms
     source: modrinth
@@ -100,9 +102,11 @@ plugins:
   - name: VoidGen
     source: modrinth
     slug: voidgen
+  # 7.0.21+ needs WorldEdit YAMLProcessor(Path) that FAWE 2.16.2 does not ship; 7.0.18 supports 26.3.
   - name: WorldGuard
     source: modrinth
     slug: worldguard
+    version: "7.0.18"
   - name: Vault
     source: github
     repo: MilkBowl/Vault

@@ -54,6 +54,7 @@ export async function lockArtifact(plugin: DesiredPlugin): Promise<LockedArtifac
     minecraft: resolved.minecraft && resolved.minecraft.length > 0 ? resolved.minecraft : undefined,
     task: resolved.task,
     jar: resolved.jar,
+    jarPath: resolved.jarPath,
     builder: resolved.builder,
     java: resolved.java,
     release: resolved.release,
