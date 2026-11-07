@@ -26,6 +26,8 @@ plugins-main/
 plugins-tech/
 plugins-velocity/
 .plugin-lock-cache/
+.gradle-ci/
+scratch/
 .cursor/materialized*/
 
 # Runtime data (lives on prod /data only — never in git or Windows dev)

@@ -21,9 +21,10 @@ WORKDIR /src/plugins
 
 COPY plugins/ ./
 
-# Persist Gradle caches across builds (GHA exports these with cache-to mode=max).
-# Layer cache still skips this RUN when plugins/ is unchanged; on a partial change,
-# deps + Gradle build-cache avoid a full cold compile.
+# Cache mounts keep Gradle deps/wrapper warm when this RUN re-executes.
+# BuildKit does NOT export mounts via cache-to type=gha — CI injects them with
+# buildkit-cache-dance + actions/cache (see images.yml). Local builds reuse the
+# builder's on-disk mounts automatically.
 RUN --mount=type=cache,target=/root/.gradle/caches,id=misplease-gradle-caches \
     --mount=type=cache,target=/root/.gradle/wrapper,id=misplease-gradle-wrapper \
     set -eux; \

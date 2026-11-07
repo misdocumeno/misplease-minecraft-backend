@@ -4,6 +4,7 @@ WORKDIR /src/plugins
 
 COPY plugins/ ./
 
+# Same mounts as server.Dockerfile; CI persists them via buildkit-cache-dance.
 RUN --mount=type=cache,target=/root/.gradle/caches,id=misplease-gradle-caches \
     --mount=type=cache,target=/root/.gradle/wrapper,id=misplease-gradle-wrapper \
     set -eux; \

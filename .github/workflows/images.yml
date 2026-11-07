@@ -136,10 +136,41 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # BuildKit cache mounts are NOT stored in cache-to type=gha. Persist via
+      # actions/cache + cache-dance (inject → build → extract → save). Extract is
+      # explicit so it still runs when smoke fails afterward.
+      - name: Restore Gradle BuildKit mounts
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            .gradle-ci/caches
+            .gradle-ci/wrapper
+          key: gradle-mount-${{ runner.os }}-${{ matrix.name }}-${{ hashFiles('plugins/gradle/wrapper/gradle-wrapper.properties', 'plugins/gradle/libs.versions.toml') }}-${{ github.run_id }}
+          restore-keys: |
+            gradle-mount-${{ runner.os }}-${{ matrix.name }}-${{ hashFiles('plugins/gradle/wrapper/gradle-wrapper.properties', 'plugins/gradle/libs.versions.toml') }}-
+            gradle-mount-${{ runner.os }}-${{ matrix.name }}-
+
+      - name: Inject Gradle mounts into BuildKit
+        uses: reproducible-containers/buildkit-cache-dance@v3.1.2
+        with:
+          skip-extraction: true
+          cache-map: |
+            {
+              ".gradle-ci/caches": {
+                "target": "/root/.gradle/caches",
+                "id": "misplease-gradle-caches"
+              },
+              ".gradle-ci/wrapper": {
+                "target": "/root/.gradle/wrapper",
+                "id": "misplease-gradle-wrapper"
+              }
+            }
+
       # Image build only copies host-materialized jars + compiles our plugins.
       # Dummy plugin-cache context satisfies the local Dockerfile branch's FROM name;
       # LOCK_VARIANT=ci selects fetch-ci (lock-jars / lock-server) instead.
       - uses: docker/build-push-action@v6
+        id: server-image
         with:
           context: .
           file: docker/server.Dockerfile
@@ -158,6 +189,35 @@ jobs:
           cache-to: type=gha,mode=max,scope=server-${{ matrix.name }}
           tags: |
             ghcr.io/${{ github.repository }}/${{ matrix.name }}:smoke
+
+      # STATE_POST makes the action's main entrypoint run extract (see cache-dance opts).
+      - name: Extract Gradle mounts from BuildKit
+        if: always() && steps.server-image.outcome == 'success'
+        uses: reproducible-containers/buildkit-cache-dance@v3.1.2
+        env:
+          STATE_POST: "true"
+        with:
+          skip-extraction: true
+          cache-map: |
+            {
+              ".gradle-ci/caches": {
+                "target": "/root/.gradle/caches",
+                "id": "misplease-gradle-caches"
+              },
+              ".gradle-ci/wrapper": {
+                "target": "/root/.gradle/wrapper",
+                "id": "misplease-gradle-wrapper"
+              }
+            }
+
+      - name: Save Gradle BuildKit mounts
+        if: always() && steps.server-image.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            .gradle-ci/caches
+            .gradle-ci/wrapper
+          key: gradle-mount-${{ runner.os }}-${{ matrix.name }}-${{ hashFiles('plugins/gradle/wrapper/gradle-wrapper.properties', 'plugins/gradle/libs.versions.toml') }}-${{ github.run_id }}
 
       - name: Smoke boot
         if: matrix.smoke
