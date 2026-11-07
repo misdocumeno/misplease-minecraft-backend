@@ -1316,10 +1316,10 @@ plugins:
     sha256: befd0bdf871717efe95456669d2ac73d7c4aa2f28f165db7d9cd8ac772ff03f7
   - name: Slimefun
     source: github
-    version: v0.1.1
+    version: v0.1.2
     filename: Slimefun.v4.9-UNOFFICIAL.jar
-    url: https://api.github.com/repos/misdocumeno/Slimefun4/releases/assets/719596750
-    sha256: 2d73a28f68dc8e47f12a63b9d622e3bdadec54da2745f8e53e0c048ef67c92f0
+    url: https://api.github.com/repos/misdocumeno/Slimefun4/releases/assets/720062459
+    sha256: b6b8b3b01f8e82060f4b9f466e43b2df18e6eb7d3cf99e22561fd3764bfad1ce
   - name: QuickShop
     source: github
     version: v5.1.2.5-shulker
