@@ -139,6 +139,9 @@ jobs:
       # BuildKit cache mounts are NOT stored in cache-to type=gha. Persist via
       # actions/cache + cache-dance (inject → build → extract → save). Extract is
       # explicit so it still runs when smoke fails afterward.
+      - name: Prepare Gradle mount dirs
+        run: mkdir -p .gradle-ci/caches .gradle-ci/wrapper
+
       - name: Restore Gradle BuildKit mounts
         uses: actions/cache/restore@v4
         with:
