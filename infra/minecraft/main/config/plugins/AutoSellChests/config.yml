@@ -1,5 +1,5 @@
 # Do not change this value as it might end up in a plugin that does not work
-config-version: 1.0.2
+config-version: 1.4.0
 
 # This is the interval for when a sell chest should sell its contents
 # For example, you can use '1d 2h 3m 4s' where the interval then would be 1 day, 2 hours, 3 minutes and 4 seconds
