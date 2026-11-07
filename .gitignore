@@ -32,6 +32,7 @@ scratch/
 
 # Runtime data (lives on prod /data only — never in git or Windows dev)
 infra/minecraft/**/data/
+infra/velocity/data/
 **/*.db
 **/playtime.yml
 **/blockOwnerShips.yml
@@ -39,11 +40,25 @@ infra/minecraft/**/data/
 **/AdvancedRegionMarket/regions.yml
 **/AdvancedRegionMarket/analytics.yml
 **/Essentials/warps/
+**/Essentials/userdata/
+**/Essentials/userdata-npc-backup/
+**/Essentials/usermap.bin
+**/Essentials/uuids.bin
+**/Essentials/items.json
 **/DecentHolograms/holograms/
 **/GSit/data/
 **/WorldGuard/worlds/
 **/WorldGuard/world2/
 **/WorldGuard/recursos3/
+**/WorldGuard/cache/
+**/GriefPreventionData/ClaimData/
+**/GriefPreventionData/PlayerData/
+**/FastAsyncWorldEdit/history/
+**/FastAsyncWorldEdit/clipboard/
+**/LuckPerms/libs/
+**/LuckPerms/translations/
+**/bStats/
+**/spark/
 
 # OS
 Thumbs.db
