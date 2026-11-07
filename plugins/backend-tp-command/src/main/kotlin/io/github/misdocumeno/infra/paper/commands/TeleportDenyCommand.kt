@@ -2,6 +2,7 @@ package io.github.misdocumeno.infra.paper.commands
 
 import io.github.misdocumeno.application.UsernameRepository
 import io.github.misdocumeno.domain.model.TeleportAskType
+import io.github.misdocumeno.infra.paper.TeleportMessages
 import io.lettuce.core.api.sync.RedisCommands
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
@@ -12,11 +13,12 @@ import org.bukkit.entity.Player
 class TeleportDenyCommand(
     private val usernames: UsernameRepository,
     private val redis: RedisCommands<String, String>,
+    private val messages: TeleportMessages,
 ) : CommandExecutor, TabCompleter {
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
         if (sender !is Player) {
-            sender.sendMessage("Only players can use this command.")
+            messages.playerOnly(sender)
             return true
         }
 
@@ -25,24 +27,24 @@ class TeleportDenyCommand(
         val requests = getPendingRequests(sender.name)
 
         if (requests.isEmpty()) {
-            sender.sendMessage("No requests to reject.")
+            messages.noRequestsDeny(sender)
             return true
         }
 
         if (args.isEmpty()) {
             if (requests.size > 1) {
-                sender.sendMessage("Specify who to reject, or use \"*\" to reject all.")
+                messages.specifyDeny(sender)
                 return true
             }
 
             val (requester) = requests.first()
             clearRequest(requester, sender.name)
-            sender.sendMessage("$requester request rejected.")
+            messages.denied(sender, requester)
             return true
         }
 
         if (args.first() == "*") {
-            sender.sendMessage("Rejecting all requests.")
+            messages.deniedAll(sender)
             requests.forEach { (requester) -> clearRequest(requester, sender.name) }
             return true
         }
@@ -51,12 +53,12 @@ class TeleportDenyCommand(
             usernames.findCaseInsensitive(args.first()) ?: usernames.findPartial(args.first()) ?: args.first()
 
         if (!requests.any { (it) -> it == requester }) {
-            sender.sendMessage("No requests from $requester.")
+            messages.noRequestFrom(sender, requester)
             return true
         }
 
         clearRequest(requester, sender.name)
-        sender.sendMessage("$requester request rejected.")
+        messages.denied(sender, requester)
         return true
     }
 
@@ -75,7 +77,6 @@ class TeleportDenyCommand(
             redis.get("tpa:request:$requester:$player")?.let {
                 requester to TeleportAskType.valueOf(it)
             } ?: run {
-                // delete expired requests
                 redis.srem("tpa:requests:$player", requester)
                 redis.srem("tpa:outgoing_requests:$requester", player)
                 null

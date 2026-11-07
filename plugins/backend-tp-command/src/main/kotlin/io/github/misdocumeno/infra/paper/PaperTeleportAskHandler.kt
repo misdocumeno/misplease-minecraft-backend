@@ -5,14 +5,16 @@ import io.github.misdocumeno.domain.model.TeleportAskNotification
 import io.github.misdocumeno.domain.model.TeleportAskType
 import org.bukkit.Bukkit
 
-class PaperTeleportAskHandler : TeleportAskHandler {
+class PaperTeleportAskHandler(
+    private val messages: TeleportMessages,
+) : TeleportAskHandler {
 
     override fun handle(notification: TeleportAskNotification) {
-        Bukkit.getPlayer(notification.to)?.sendMessage(
-            when (notification.type) {
-                TeleportAskType.TPA -> "${notification.from} wants to teleport to you. Accept with /tpaccept."
-                TeleportAskType.TPA_HERE -> "${notification.from} wants you to teleport to them. Accept with /tpaccept."
-            }
+        val player = Bukkit.getPlayer(notification.to) ?: return
+        messages.tpaIncoming(
+            player,
+            notification.from,
+            here = notification.type == TeleportAskType.TPA_HERE,
         )
     }
 }

@@ -1,0 +1,38 @@
+prefix: "<dark_purple><bold>MisPlease</bold></dark_purple><dark_gray><bold> » </bold></dark_gray>"
+
+player-only: "<prefix><gray>Solo jugadores pueden usar este comando.</gray>"
+player-only-with-target: "<prefix><gray>Solo jugadores pueden usarlo sin indicar un destino.</gray>"
+player-not-found: "<prefix><gray>No se encontró a <white><player></white>.</gray>"
+cannot-self: "<prefix><gray>No puedes teletransportarte a ti mismo.</gray>"
+cannot-self-other: "<prefix><gray>No puedes teletransportar a un jugador hacia sí mismo.</gray>"
+busy: "<prefix><gray>No se pudo teletransportar ahora. Probá de nuevo en un momento.</gray>"
+
+teleporting-player: "<prefix><gray>Teletransportando a <white><player></white>…</gray>"
+teleporting-to-you: "<prefix><gray>Teletransportando a <white><player></white> hacia ti…</gray>"
+teleporting-everyone-you: "<prefix><gray>Teletransportando a todos hacia ti…</gray>"
+teleporting-everyone-to: "<prefix><gray>Teletransportando a todos hacia <white><player></white>…</gray>"
+
+# Shown to the teleported player on arrival (via global teleporter, MiniMessage).
+feedback-arrived: "<prefix><gray>Llegaste a tu destino.</gray>"
+
+tpa-sent: "<prefix><gray>Solicitud enviada a <white><player></white>.</gray>"
+tpa-already: "<prefix><gray>Ya le pediste teletransporte a <white><player></white>.</gray>"
+tpa-incoming: "<prefix><white><player></white> <gray>quiere teletransportarse a ti.</gray>"
+tpahere-incoming: "<prefix><white><player></white> <gray>quiere que te teletransportes a él.</gray>"
+tpa-hint: "<prefix><gray>Usá <white><click:run_command:'/tpaccept <player>'><hover:show_text:'<gray>Aceptar solicitud</gray>'>/tpaccept</hover></click></white> o <white><click:run_command:'/tpdeny <player>'><hover:show_text:'<gray>Rechazar solicitud</gray>'>/tpdeny</hover></click></white>.</gray>"
+
+no-requests-accept: "<prefix><gray>No tenés solicitudes para aceptar.</gray>"
+no-requests-deny: "<prefix><gray>No tenés solicitudes para rechazar.</gray>"
+no-requests-cancel: "<prefix><gray>No tenés solicitudes para cancelar.</gray>"
+specify-accept: "<prefix><gray>Indicá a quién aceptar, o usá <white>*</white> para todas.</gray>"
+specify-deny: "<prefix><gray>Indicá a quién rechazar, o usá <white>*</white> para todas.</gray>"
+specify-cancel: "<prefix><gray>Indicá qué solicitud cancelar, o usá <white>*</white> para todas.</gray>"
+no-request-from: "<prefix><gray>No hay solicitudes de <white><player></white>.</gray>"
+no-request-to: "<prefix><gray>No hay solicitudes hacia <white><player></white>.</gray>"
+
+accepted: "<prefix><gray>Aceptaste la solicitud de <white><player></white>.</gray>"
+accepted-all: "<prefix><gray>Aceptando todas las solicitudes…</gray>"
+denied: "<prefix><gray>Rechazaste la solicitud de <white><player></white>.</gray>"
+denied-all: "<prefix><gray>Rechazando todas las solicitudes…</gray>"
+cancelled: "<prefix><gray>Cancelaste la solicitud a <white><player></white>.</gray>"
+cancelled-all: "<prefix><gray>Cancelando todas las solicitudes…</gray>"

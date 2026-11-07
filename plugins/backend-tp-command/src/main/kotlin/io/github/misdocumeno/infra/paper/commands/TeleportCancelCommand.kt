@@ -2,6 +2,7 @@ package io.github.misdocumeno.infra.paper.commands
 
 import io.github.misdocumeno.application.UsernameRepository
 import io.github.misdocumeno.domain.model.TeleportAskType
+import io.github.misdocumeno.infra.paper.TeleportMessages
 import io.lettuce.core.api.sync.RedisCommands
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
@@ -12,11 +13,12 @@ import org.bukkit.entity.Player
 class TeleportCancelCommand(
     private val usernames: UsernameRepository,
     private val redis: RedisCommands<String, String>,
+    private val messages: TeleportMessages,
 ) : CommandExecutor, TabCompleter {
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
         if (sender !is Player) {
-            sender.sendMessage("Only players can use this command.")
+            messages.playerOnly(sender)
             return true
         }
 
@@ -25,24 +27,24 @@ class TeleportCancelCommand(
         val outgoing = getPendingOutgoingRequests(sender.name)
 
         if (outgoing.isEmpty()) {
-            sender.sendMessage("No requests to cancel.")
+            messages.noRequestsCancel(sender)
             return true
         }
 
         if (args.isEmpty()) {
             if (outgoing.size > 1) {
-                sender.sendMessage("Specify which request to cancel, or use \"*\" to cancel all.")
+                messages.specifyCancel(sender)
                 return true
             }
 
             val (target) = outgoing.first()
             clearRequest(sender.name, target)
-            sender.sendMessage("$target request cancelled.")
+            messages.cancelled(sender, target)
             return true
         }
 
         if (args.first() == "*") {
-            sender.sendMessage("Rejecting all requests.")
+            messages.cancelledAll(sender)
             outgoing.forEach { (target) -> clearRequest(sender.name, target) }
             return true
         }
@@ -51,12 +53,12 @@ class TeleportCancelCommand(
             usernames.findCaseInsensitive(args.first()) ?: usernames.findPartial(args.first()) ?: args.first()
 
         if (!outgoing.any { (it) -> it == target }) {
-            sender.sendMessage("No requests to $target.")
+            messages.noRequestTo(sender, target)
             return true
         }
 
         clearRequest(sender.name, target)
-        sender.sendMessage("$target request cancelled.")
+        messages.cancelled(sender, target)
         return true
     }
 
@@ -75,7 +77,6 @@ class TeleportCancelCommand(
             redis.get("tpa:request:$requester:$target")?.let {
                 target to TeleportAskType.valueOf(it)
             } ?: run {
-                // delete expired requests
                 redis.srem("tpa:requests:$target", requester)
                 redis.srem("tpa:outgoing_requests:$requester", target)
                 null

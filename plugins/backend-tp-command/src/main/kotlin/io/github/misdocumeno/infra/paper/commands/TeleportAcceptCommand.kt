@@ -4,6 +4,7 @@ import io.github.misdocumeno.application.GlobalLocationResolver
 import io.github.misdocumeno.application.Teleporter
 import io.github.misdocumeno.application.UsernameRepository
 import io.github.misdocumeno.domain.model.TeleportAskType
+import io.github.misdocumeno.infra.paper.TeleportMessages
 import io.github.misdocumeno.infra.paper.globalLocation
 import io.lettuce.core.api.sync.RedisCommands
 import kotlinx.coroutines.CoroutineScope
@@ -21,11 +22,12 @@ class TeleportAcceptCommand(
     private val teleporter: Teleporter,
     private val redis: RedisCommands<String, String>,
     private val scope: CoroutineScope,
+    private val messages: TeleportMessages,
 ) : CommandExecutor, TabCompleter {
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
         if (sender !is Player) {
-            sender.sendMessage("Only players can use this command.")
+            messages.playerOnly(sender)
             return true
         }
 
@@ -34,25 +36,25 @@ class TeleportAcceptCommand(
         val requests = getPendingRequests(sender.name)
 
         if (requests.isEmpty()) {
-            sender.sendMessage("No requests to accept.")
+            messages.noRequestsAccept(sender)
             return true
         }
 
         if (args.isEmpty()) {
             if (requests.size > 1) {
-                sender.sendMessage("Specify who to reject, or use \"*\" to reject all.")
+                messages.specifyAccept(sender)
                 return true
             }
 
             val (requester, type) = requests.first()
             performTeleport(requester, sender, type)
             clearRequest(requester, sender.name)
-            sender.sendMessage("$requester teleport accepted.")
+            messages.accepted(sender, requester)
             return true
         }
 
         if (args.first() == "*") {
-            sender.sendMessage("Accepting all requests.")
+            messages.acceptedAll(sender)
             requests.forEach { (requester, type) ->
                 performTeleport(requester, sender, type)
                 clearRequest(requester, sender.name)
@@ -66,13 +68,13 @@ class TeleportAcceptCommand(
         val request = requests.find { (it) -> it == requester }
 
         if (request == null) {
-            sender.sendMessage("No requests from $requester.")
+            messages.noRequestFrom(sender, requester)
             return true
         }
 
         performTeleport(request.first, sender, request.second)
         clearRequest(requester, sender.name)
-        sender.sendMessage("$requester request accepted.")
+        messages.accepted(sender, requester)
         return true
     }
 
@@ -87,9 +89,10 @@ class TeleportAcceptCommand(
     }
 
     private fun performTeleport(requester: String, receiver: Player, type: TeleportAskType) {
+        val feedback = messages.arrivalFeedback(receiver)
         when (type) {
             TeleportAskType.TPA -> {
-                teleporter.teleport(requester, receiver.globalLocation)
+                teleporter.teleport(requester, receiver.globalLocation, feedback)
             }
 
             TeleportAskType.TPA_HERE -> {
@@ -97,12 +100,12 @@ class TeleportAcceptCommand(
                     try {
                         locations.getPlayerLocation(requester)
                     } catch (_: TimeoutCancellationException) {
-                        receiver.sendMessage("Cannot teleport right now, try again in a sec.")
+                        messages.busy(receiver)
                         return@launch
                     }?.let {
-                        teleporter.teleport(receiver.name, it)
+                        teleporter.teleport(receiver.name, it, feedback)
                     } ?: run {
-                        receiver.sendMessage("Player '$requester' not found.")
+                        messages.playerNotFound(receiver, requester)
                     }
                 }
             }
@@ -114,7 +117,6 @@ class TeleportAcceptCommand(
             redis.get("tpa:request:$requester:$target")?.let {
                 requester to TeleportAskType.valueOf(it)
             } ?: run {
-                // delete expired requests
                 redis.srem("tpa:requests:$target", requester)
                 redis.srem("tpa:outgoing_requests:$requester", target)
                 null

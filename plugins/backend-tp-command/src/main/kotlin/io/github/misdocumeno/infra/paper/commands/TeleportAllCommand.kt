@@ -3,6 +3,7 @@ package io.github.misdocumeno.infra.paper.commands
 import io.github.misdocumeno.application.GlobalLocationResolver
 import io.github.misdocumeno.application.Teleporter
 import io.github.misdocumeno.application.UsernameRepository
+import io.github.misdocumeno.infra.paper.TeleportMessages
 import io.github.misdocumeno.infra.paper.globalLocation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.TimeoutCancellationException
@@ -18,6 +19,7 @@ class TeleportAllCommand(
     private val locations: GlobalLocationResolver,
     private val teleporter: Teleporter,
     private val scope: CoroutineScope,
+    private val messages: TeleportMessages,
 ) : CommandExecutor, TabCompleter {
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
@@ -25,13 +27,14 @@ class TeleportAllCommand(
 
         if (args.isEmpty()) {
             if (sender !is Player) {
-                sender.sendMessage("Only players can use this command without specifying a target.")
+                messages.playerOnlyWithTarget(sender)
                 return true
             }
 
-            sender.sendMessage("Teleporting everyone to you")
+            messages.teleportingEveryoneYou(sender)
+            val feedback = messages.arrivalFeedback(sender)
             usernames.getAllNames().forEach {
-                teleporter.teleport(it, sender.globalLocation)
+                teleporter.teleport(it, sender.globalLocation, feedback)
             }
 
             return true
@@ -40,27 +43,28 @@ class TeleportAllCommand(
         val targetName = usernames.findCaseInsensitive(args.first()) ?: usernames.findPartial(args.first())
 
         if (targetName == null) {
-            sender.sendMessage("Player '${args.first()}' not found.")
+            messages.playerNotFound(sender, args.first())
             return true
         }
 
-        sender.sendMessage("Teleporting everyone to $targetName")
+        messages.teleportingEveryoneTo(sender, targetName)
 
         scope.launch {
             val destination = try {
                 locations.getPlayerLocation(targetName)
-            } catch (e: TimeoutCancellationException) {
-                sender.sendMessage("Cannot teleport right now, try again in a sec.")
+            } catch (_: TimeoutCancellationException) {
+                messages.busy(sender)
                 return@launch
             }
 
             if (destination == null) {
-                sender.sendMessage("Player '$targetName' not found.")
+                messages.playerNotFound(sender, targetName)
                 return@launch
             }
 
+            val feedback = messages.arrivalFeedback(sender)
             usernames.getAllNames().forEach {
-                teleporter.teleport(it, destination)
+                teleporter.teleport(it, destination, feedback)
             }
         }
 

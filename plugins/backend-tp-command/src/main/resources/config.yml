@@ -1,0 +1,3 @@
+# Locale used for console and when a player's client language has no lang file.
+# Ship more under lang/<code>.yml (es, en, …); picked from the player's client locale.
+default-locale: es

@@ -7,6 +7,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.title.Title
 import org.bukkit.Bukkit
 import org.bukkit.Location
+import org.bukkit.Sound
 import org.bukkit.plugin.Plugin
 import java.time.Duration
 import java.util.concurrent.ConcurrentMap
@@ -49,8 +50,9 @@ class PaperTeleportHandler(
             if (event.feedback == null) return@thenRun
             Bukkit.getScheduler().runTask(plugin) { ->
                 val player = Bukkit.getPlayer(event.username) ?: return@runTask
-                event.feedback.chat?.let { player.sendMessage(mm.deserialize(it)) }
-                event.feedback.title?.let {
+                val feedback = event.feedback
+                feedback.chat?.let { player.sendMessage(mm.deserialize(it)) }
+                feedback.title?.let {
                     val title = mm.deserialize(it.title)
                     val subtitle = it.subtitle?.let { sub -> mm.deserialize(sub) }
                     player.showTitle(
@@ -64,6 +66,11 @@ class PaperTeleportHandler(
                             )
                         )
                     )
+                }
+                feedback.sound?.let { soundFeedback ->
+                    runCatching { Sound.valueOf(soundFeedback.sound) }.getOrNull()?.let { sound ->
+                        player.playSound(player.location, sound, soundFeedback.volume, soundFeedback.pitch)
+                    }
                 }
             }
         }

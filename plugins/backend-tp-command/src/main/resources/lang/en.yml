@@ -1,0 +1,37 @@
+prefix: "<dark_purple><bold>MisPlease</bold></dark_purple><dark_gray><bold> » </bold></dark_gray>"
+
+player-only: "<prefix><gray>Only players can use this command.</gray>"
+player-only-with-target: "<prefix><gray>Only players can use this without a target.</gray>"
+player-not-found: "<prefix><gray>Player <white><player></white> was not found.</gray>"
+cannot-self: "<prefix><gray>You cannot teleport to yourself.</gray>"
+cannot-self-other: "<prefix><gray>You cannot teleport a player to themselves.</gray>"
+busy: "<prefix><gray>Cannot teleport right now — try again in a moment.</gray>"
+
+teleporting-player: "<prefix><gray>Teleporting <white><player></white>…</gray>"
+teleporting-to-you: "<prefix><gray>Teleporting <white><player></white> to you…</gray>"
+teleporting-everyone-you: "<prefix><gray>Teleporting everyone to you…</gray>"
+teleporting-everyone-to: "<prefix><gray>Teleporting everyone to <white><player></white>…</gray>"
+
+feedback-arrived: "<prefix><gray>You have arrived.</gray>"
+
+tpa-sent: "<prefix><gray>Request sent to <white><player></white>.</gray>"
+tpa-already: "<prefix><gray>You already asked <white><player></white>.</gray>"
+tpa-incoming: "<prefix><white><player></white> <gray>wants to teleport to you.</gray>"
+tpahere-incoming: "<prefix><white><player></white> <gray>wants you to teleport to them.</gray>"
+tpa-hint: "<prefix><gray>Use <white><click:run_command:'/tpaccept <player>'><hover:show_text:'<gray>Accept request</gray>'>/tpaccept</hover></click></white> or <white><click:run_command:'/tpdeny <player>'><hover:show_text:'<gray>Deny request</gray>'>/tpdeny</hover></click></white>.</gray>"
+
+no-requests-accept: "<prefix><gray>You have no requests to accept.</gray>"
+no-requests-deny: "<prefix><gray>You have no requests to deny.</gray>"
+no-requests-cancel: "<prefix><gray>You have no requests to cancel.</gray>"
+specify-accept: "<prefix><gray>Specify who to accept, or use <white>*</white> for all.</gray>"
+specify-deny: "<prefix><gray>Specify who to deny, or use <white>*</white> for all.</gray>"
+specify-cancel: "<prefix><gray>Specify which request to cancel, or use <white>*</white> for all.</gray>"
+no-request-from: "<prefix><gray>No requests from <white><player></white>.</gray>"
+no-request-to: "<prefix><gray>No outgoing requests to <white><player></white>.</gray>"
+
+accepted: "<prefix><gray>Accepted <white><player></white>'s request.</gray>"
+accepted-all: "<prefix><gray>Accepting all requests…</gray>"
+denied: "<prefix><gray>Denied <white><player></white>'s request.</gray>"
+denied-all: "<prefix><gray>Denying all requests…</gray>"
+cancelled: "<prefix><gray>Cancelled your request to <white><player></white>.</gray>"
+cancelled-all: "<prefix><gray>Cancelling all requests…</gray>"

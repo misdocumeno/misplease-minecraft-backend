@@ -3,7 +3,7 @@ package io.github.misdocumeno.infra.paper.commands
 import io.github.misdocumeno.application.GlobalLocationResolver
 import io.github.misdocumeno.application.Teleporter
 import io.github.misdocumeno.application.UsernameRepository
-import io.github.misdocumeno.infra.redis.RedisUsernameRepository
+import io.github.misdocumeno.infra.paper.TeleportMessages
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
@@ -18,6 +18,7 @@ class TeleportCommand(
     private val locations: GlobalLocationResolver,
     private val teleporter: Teleporter,
     private val scope: CoroutineScope,
+    private val messages: TeleportMessages,
 ) : CommandExecutor, TabCompleter {
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
@@ -32,18 +33,17 @@ class TeleportCommand(
 
         when {
             toMoveName == null -> {
-                // TODO: component message, via config.yml
-                sender.sendMessage("Player '$toMove' not found.")
+                messages.playerNotFound(sender, toMove)
                 return true
             }
 
             targetName == null -> {
-                sender.sendMessage("Player '$target' not found.")
+                messages.playerNotFound(sender, target)
                 return true
             }
 
             toMoveName == targetName -> {
-                sender.sendMessage("Cannot teleport a player to themselves.")
+                messages.cannotSelfOther(sender)
                 return true
             }
         }
@@ -51,18 +51,18 @@ class TeleportCommand(
         scope.launch {
             val destination = try {
                 locations.getPlayerLocation(targetName)
-            } catch (e: TimeoutCancellationException) {
-                sender.sendMessage("Cannot teleport right now, try again in a sec.")
+            } catch (_: TimeoutCancellationException) {
+                messages.busy(sender)
                 return@launch
             }
 
             if (destination == null) {
-                sender.sendMessage("Player '$targetName' not found.")
+                messages.playerNotFound(sender, targetName)
                 return@launch
             }
 
-            sender.sendMessage("Teleporting $toMoveName")
-            teleporter.teleport(toMoveName, destination)
+            messages.teleportingPlayer(sender, toMoveName)
+            teleporter.teleport(toMoveName, destination, messages.arrivalFeedback(sender))
         }
 
         return true
