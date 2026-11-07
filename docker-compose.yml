@@ -121,7 +121,7 @@ services:
 
   auth:
     build: ./services/auth
-    image: misplease/auth:latest
+    image: misplease/auth:dev
     container_name: misplease-auth
     restart: unless-stopped
     environment:
@@ -135,7 +135,7 @@ services:
 
   auth-db-migrate:
     build: ./services/auth
-    image: misplease/auth:latest
+    image: misplease/auth:dev
     container_name: misplease-auth-migrate
     environment:
       - DATABASE_URL=postgres://misplease:${DB_PASSWORD}@db:5432/misplease

@@ -145,7 +145,7 @@ rsync -a --partial --info=progress2 USER@HOST:REMOTE_STAGE/ /dest/
     -v "${khAbs}:/ssh/known_hosts:ro" `
     -v "${destAbs}:/dest" `
     -v "${pull}:/pull.sh:ro" `
-    instrumentisto/rsync-ssh:latest `
+    instrumentisto/rsync-ssh:alpine3.23 `
     sh -c "tr -d '\r' < /pull.sh > /tmp/pull.sh && sh /tmp/pull.sh"
   if ($LASTEXITCODE -ne 0) { throw "rsync pull failed ($LASTEXITCODE)" }
 

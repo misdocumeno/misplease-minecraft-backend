@@ -36,7 +36,8 @@ env:
 
 jobs:
   auth:
-    runs-on: ubuntu-latest
+    # Pin major runner image (not ubuntu-latest — that already jumped to 26.04).
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
@@ -60,7 +61,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=auth
 
   servers:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
