@@ -194,13 +194,14 @@ jobs:
             ghcr.io/${{ github.repository }}/${{ matrix.name }}:smoke
 
       # STATE_POST makes the action's main entrypoint run extract (see cache-dance opts).
+      # skip-extraction must be false here or extractCaches() no-ops.
       - name: Extract Gradle mounts from BuildKit
         if: always() && steps.server-image.outcome == 'success'
         uses: reproducible-containers/buildkit-cache-dance@v3.1.2
         env:
           STATE_POST: "true"
         with:
-          skip-extraction: true
+          skip-extraction: false
           cache-map: |
             {
               ".gradle-ci/caches": {
