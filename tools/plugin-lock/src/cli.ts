@@ -89,18 +89,19 @@ function reusePinned(entry: DesiredPlugin, previous: LockFile): LockedArtifact |
 }
 
 function mergeOnly(previous: LockFile, refreshed: LockedArtifact[], serverName: string | undefined): LockFile {
-  const byKey = new Map(refreshed.map((artifact) => [`${artifact.source}:${artifact.name}`, artifact]))
+  // Match by name so --only can migrate sources (e.g. modrinth → git) without duplicating rows.
+  const byName = new Map(refreshed.map((artifact) => [artifact.name, artifact]))
   const replace = (artifact: LockedArtifact | undefined): LockedArtifact | undefined => {
     if (!artifact) return undefined
-    return byKey.get(`${artifact.source}:${artifact.name}`) ?? artifact
+    return byName.get(artifact.name) ?? artifact
   }
   const plugins = (previous.plugins ?? []).map((artifact) => replace(artifact)!)
   // New names from --only that were not in the lock yet (first pin).
   for (const artifact of refreshed) {
-    if (serverName && artifact.name === serverName && artifact.source === (previous.server?.source ?? artifact.source)) {
+    if (serverName && artifact.name === serverName) {
       continue
     }
-    const exists = plugins.some((row) => row.name === artifact.name && row.source === artifact.source)
+    const exists = plugins.some((row) => row.name === artifact.name)
     if (!exists) plugins.push(artifact)
   }
   return {

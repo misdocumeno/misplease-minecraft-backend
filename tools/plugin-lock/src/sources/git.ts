@@ -265,6 +265,9 @@ export async function buildNormalizedJar(plugin: DesiredPlugin): Promise<{
       const task = plugin.task ?? "build"
       const gradleArgs = [task, "--no-daemon"]
       if (!plugin.task) gradleArgs.push("-x", "test", "-x", "javadoc")
+      // Rosewood (and similar) build.gradle reads project.mavenUser/Password at config time.
+      // Empty -P keeps configuration alive; public deps still resolve without their private repo.
+      gradleArgs.push("-PmavenUser=", "-PmavenPassword=")
       // Prefer explicit Temurin homes over Foojay init scripts (Gradle 9 settings DSL differs).
       const jdkHomes = new Set<string>([jdk.home])
       if (bytecode !== undefined) {

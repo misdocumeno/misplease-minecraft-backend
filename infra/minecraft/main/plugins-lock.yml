@@ -424,51 +424,13 @@ plugins:
       - "26.2"
       - "26.3"
   - name: Dynmap
-    source: modrinth
-    version: 3.7-beta-8
-    filename: Dynmap-3.7-beta-8-spigot.jar
-    url: https://cdn.modrinth.com/data/fRQREgAc/versions/ImNNT17B/Dynmap-3.7-beta-8-spigot.jar
-    sha512: 7eb79f45ec6ad7f5264e727e9a9b4f0260b621ec605ec4eee942be1221ab750965bccae0e71c2321d4d6321fe44a0251632fec48f9dab1fdb68e0eef33699c37
-    minecraft:
-      - "1.13"
-      - 1.13.1
-      - 1.13.2
-      - "1.14"
-      - 1.14.1
-      - 1.14.2
-      - 1.14.3
-      - 1.14.4
-      - "1.15"
-      - 1.15.1
-      - 1.15.2
-      - "1.16"
-      - 1.16.1
-      - 1.16.2
-      - 1.16.3
-      - 1.16.4
-      - 1.16.5
-      - "1.17"
-      - 1.17.1
-      - "1.18"
-      - 1.18.1
-      - 1.18.2
-      - "1.19"
-      - 1.19.1
-      - 1.19.2
-      - 1.19.3
-      - 1.19.4
-      - "1.20"
-      - 1.20.1
-      - 1.20.2
-      - 1.20.3
-      - 1.20.4
-      - 1.20.5
-      - 1.20.6
-      - "1.21"
-      - 1.21.1
-      - 1.21.2
-      - 1.21.3
-      - 1.21.4
+    source: git
+    version: 38a38c665165c3f2b0c9846f705be9ceafaacb58
+    filename: Dynmap.jar
+    url: https://github.com/webbukkit/dynmap.git
+    jar: /^Dynmap-CE-.*-spigot\.jar$/
+    java: "25"
+    task: :spigot:shadowJar
   - name: LuckPerms
     source: modrinth
     version: v5.5.71-bukkit
@@ -670,34 +632,12 @@ plugins:
     minecraft:
       - 1.21.10
   - name: RoseStacker
-    source: modrinth
-    version: 1.5.42
-    filename: RoseStacker-1.5.42.jar
-    url: https://cdn.modrinth.com/data/Bt25s2nb/versions/d0YeeOKd/RoseStacker-1.5.42.jar
-    sha512: a87fc3c3d519a186ec8ad55264dc4d0eee966ec456773423e9c923e78f6ad4bfc0e2d11dfd1600e79f3b1758f7bd9b700827c03493f8235959fe9ff99f4ebf31
-    minecraft:
-      - 1.16.5
-      - 1.17.1
-      - 1.18.2
-      - 1.19.4
-      - 1.20.4
-      - 1.20.6
-      - "1.21"
-      - 1.21.1
-      - 1.21.10
-      - 1.21.11
-      - 1.21.2
-      - 1.21.3
-      - 1.21.4
-      - 1.21.5
-      - 1.21.6
-      - 1.21.7
-      - 1.21.8
-      - 1.21.9
-      - "26.1"
-      - 26.1.1
-      - 26.1.2
-      - "26.2"
+    source: git
+    version: 47f0fc15e287bfc5b78998bdd0efbda9d664e49a
+    filename: RoseStacker.jar
+    url: https://github.com/Rosewood-Development/RoseStacker.git
+    jar: /^RoseStacker-/
+    java: "25"
   - name: SimpleScore
     source: modrinth
     version: 4.3.1

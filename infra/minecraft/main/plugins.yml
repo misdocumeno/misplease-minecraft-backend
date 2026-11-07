@@ -76,10 +76,20 @@ plugins:
   - name: DecentHolograms
     source: modrinth
     slug: decentholograms
+  # Temporary until the upstream gets updated (Modrinth paper/spigot still 3.7-beta-8;
+  # Paper 26.x helper lives on v3.0-community-edition, not default v3.0).
+  # - name: Dynmap
+  #   source: modrinth
+  #   slug: dynmap
+  #   channel: beta
   - name: Dynmap
-    source: modrinth
-    slug: dynmap
-    channel: beta
+    source: git
+    repo: https://github.com/webbukkit/dynmap.git
+    # tip of v3.0-community-edition (paper-helper-26x); default branch v3.0 lacks it
+    commit: 38a38c665165c3f2b0c9846f705be9ceafaacb58
+    task: ":spigot:shadowJar"
+    jar: /^Dynmap-CE-.*-spigot\.jar$/
+    java: "25"
   - name: LuckPerms
     source: modrinth
     slug: luckperms
@@ -92,9 +102,16 @@ plugins:
   - name: ProtectionStones
     source: modrinth
     slug: protectionstones
+  # Temporary until the upstream gets updated (Modrinth 1.5.42 only lists through 26.2;
+  # master already has NMS v26_3_R1 / "Add support for 26.3").
+  # - name: RoseStacker
+  #   source: modrinth
+  #   slug: rosestacker
   - name: RoseStacker
-    source: modrinth
-    slug: rosestacker
+    source: git
+    repo: https://github.com/Rosewood-Development/RoseStacker.git
+    jar: /^RoseStacker-/
+    java: "25"
   - name: SimpleScore
     source: modrinth
     slug: simplescore
