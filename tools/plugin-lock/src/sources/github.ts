@@ -49,11 +49,10 @@ export async function resolveGithub(plugin: DesiredPlugin): Promise<ResolvedArti
   }
 
   const jars = jarAssets(found.assets)
-  // `jar` selects the release asset; plain string = exact, `/re/` = regex. `asset` is a legacy alias.
-  const selector = plugin.jar ?? plugin.asset
+  // `jar:` exact name or `/regex/` (same as Jenkins). Legacy `asset:` is folded into `jar` in desired.ts.
   const filename = matchJar(
     jars.map((item) => item.name),
-    selector,
+    plugin.jar,
     `github release ${found.tag_name}`,
   )
   const asset = jars.find((item) => item.name === filename)!

@@ -185,9 +185,28 @@ async function update(
   if (only.length > 0) {
     lock = mergeOnly(previous, ordered, server?.name)
   } else {
+    // Keep previous rows for names that failed this run (private GH without token, etc.).
+    // Never write a truncated lock that drops still-desired plugins.
+    const previousByKey = new Map(
+      [...(previous.plugins ?? []), ...(previous.server ? [previous.server] : [])].map((artifact) => [
+        `${artifact.source}:${artifact.name}`,
+        artifact,
+      ]),
+    )
+    const merged: LockedArtifact[] = []
+    for (const entry of entries) {
+      const key = `${entry.source}:${entry.name}`
+      const fresh = ordered.find((artifact) => artifact.name === entry.name && artifact.source === entry.source)
+      const kept = fresh ?? previousByKey.get(key)
+      if (kept) merged.push(kept)
+    }
     lock = {
-      server: server ? ordered.find((artifact) => artifact.name === server.name && artifact.source === server.source) : undefined,
-      plugins: ordered.filter((artifact) => !server || artifact.name !== server.name || artifact.source !== server.source),
+      server: server
+        ? merged.find((artifact) => artifact.name === server.name && artifact.source === server.source)
+        : undefined,
+      plugins: merged.filter(
+        (artifact) => !server || artifact.name !== server.name || artifact.source !== server.source,
+      ),
     }
   }
   await writeFile(lockPath, stringify(lock))
@@ -196,7 +215,8 @@ async function update(
   const pluginCount = lock.plugins.length
   const onlyNote = only.length ? ` (only ${only.join(", ")})` : ""
   const mcNote = ceiling ? ` [minecraft ≤ ${ceiling}]` : ""
-  console.log(`wrote ${lockPath}: ${pluginCount} plugins${lock.server ? " and server" : ""}${onlyNote}${mcNote}`)
+  const keptNote = result.errors.length ? ` (${result.errors.length} kept from previous lock)` : ""
+  console.log(`wrote ${lockPath}: ${pluginCount} plugins${lock.server ? " and server" : ""}${onlyNote}${mcNote}${keptNote}`)
   return result.errors.length === 0 ? 0 : 1
 }
 

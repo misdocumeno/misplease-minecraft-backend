@@ -1,151 +1,32 @@
 server:
-  name: purpur
-  source: purpur
-  version: 1.20.1+2062
-  filename: purpur-1.20.1-2062.jar
-  url: https://api.purpurmc.org/v2/purpur/1.20.1/2062/download
-  sha256: 238e64b33e5c7c9b87506cf1a23f239e6ce7fb71edd9d31837f229c94f4dfa1a
+  name: paper
+  source: papermc
+  version: 26.3+244
+  filename: paper-26.3-244.jar
+  url: https://fill-data.papermc.io/v1/objects/9601f9a26a2a52a0f2c807cf1abf691f96ee4fb287878313b601cebc2c51eabf/paper-26.3-244.jar
+  sha256: 9601f9a26a2a52a0f2c807cf1abf691f96ee4fb287878313b601cebc2c51eabf
   minecraft:
-    - 1.20.1
+    - "26.3"
 plugins:
   - name: ActionHealth
     source: github
-    version: 3.5.9
-    filename: ActionHealth-3.5.9-all.jar
-    url: https://api.github.com/repos/zeshan321/ActionHealth/releases/assets/114049884
-    sha256: 25ae26fe30c28891ae75b4da2b8955a8376f13cbd20bbe774b2e63c0c7ad526e
+    version: 3.9.0
+    filename: ActionHealth-3.9.0-all.jar
+    url: https://api.github.com/repos/zeshan321/ActionHealth/releases/assets/608062381
+    sha256: ac617b07cb5fcbded7c64f58a113d8d543997393b27254ec27950a09df334ee8
   - name: AdvancedRegionMarket
     source: github
-    version: 3.5.1
-    filename: advancedregionmarket-3.5.1.jar
-    url: https://api.github.com/repos/alex9849/advanced-region-market/releases/assets/114282248
-    sha256: e9fbe5fd10bef08b80cf9fd272a25c2de3037084cb1b16a56dc84c4ae800bba5
+    version: 3.5.5
+    filename: advancedregionmarket-3.5.5.jar
+    url: https://api.github.com/repos/alex9849/advanced-region-market/releases/assets/233706953
+    sha256: a6a43ab319c62e360d5b8d720756111398a34aefc5277d973f369253944e484a
   - name: AutoSellChests
     source: hangar
-    version: 2.4.1
-    filename: AutoSellChests-2.4.1.jar
-    url: https://hangarcdn.papermc.io/plugins/GPPlugins/AutoSellChests/versions/2.4.1/PAPER/AutoSellChests-2.4.1.jar
-    sha256: 404d812bc16afe0567d0b41098997d438878747024291208a3fb0eaa87f7b032
+    version: 3.0.0
+    filename: AutoSellChests-3.0.0.jar
+    url: https://hangarcdn.papermc.io/plugins/GPPlugins/AutoSellChests/versions/3.0.0/PAPER/AutoSellChests-3.0.0.jar
+    sha256: b20f3602c96e6e91f5367640db812fc95cfc19409cbe93937227a0c1f47dcb50
     minecraft:
-      - "1.16"
-      - 1.16.1
-      - 1.16.2
-      - 1.16.3
-      - 1.16.4
-      - 1.16.5
-      - "1.17"
-      - 1.17.1
-      - "1.18"
-      - 1.18.1
-      - 1.18.2
-      - "1.19"
-      - 1.19.1
-      - 1.19.2
-      - 1.19.3
-      - 1.19.4
-      - "1.20"
-      - 1.20.1
-  - name: Chunky
-    source: modrinth
-    version: 1.3.92
-    filename: Chunky-1.3.92.jar
-    url: https://cdn.modrinth.com/data/fALzjamp/versions/B0xkCkk4/Chunky-1.3.92.jar
-    sha512: 63c41849020276a6f0156fc5d11abef77ca53c1ab44a242c97ca522666809c29427805cff38b2de484c7d5e2f3e7eb3eb8a989abcfebbd20419718881e12b00b
-    minecraft:
-      - "1.18"
-      - 1.18.1
-      - 1.18.2
-      - "1.19"
-      - 1.19.1
-      - 1.19.2
-      - 1.19.3
-      - 1.19.4
-      - "1.20"
-      - 1.20.1
-      - 1.20.2
-      - 1.20.3
-      - 1.20.4
-  - name: ChunkyBorder
-    source: modrinth
-    version: 1.1.63
-    filename: ChunkyBorder-1.1.63.jar
-    url: https://cdn.modrinth.com/data/s86X568j/versions/22AFyYWv/ChunkyBorder-1.1.63.jar
-    sha512: 56bbcd124a0c727366ca40152e4f79aef0c84c66720033eb362be60c464fa11ebaf8649c0a29d0b60e2868dc830d26558f4ebc0744435b526db57f637526a8e0
-  - name: CoreProtect
-    source: modrinth
-    version: "22.2"
-    filename: CoreProtect-22.2.jar
-    url: https://cdn.modrinth.com/data/Lu3KuzdV/versions/w3P6ufP1/CoreProtect-22.2.jar
-    sha512: 070d310bea288f56cdb3442bf80a73f16b1a0d1d82ac877855924b470c483d51f31993c34871063c8041aa1fe68d70a627b9c1fe9def943819b5ec3fcf03f19d
-    minecraft:
-      - 1.15.2
-      - "1.16"
-      - 1.16.1
-      - 1.16.2
-      - 1.16.3
-      - 1.16.4
-      - 1.16.5
-      - "1.17"
-      - 1.17.1
-      - "1.18"
-      - 1.18.1
-      - 1.18.2
-      - "1.19"
-      - 1.19.1
-      - 1.19.2
-      - 1.19.3
-      - 1.19.4
-      - "1.20"
-      - 1.20.1
-      - 1.20.2
-  - name: EssentialsX
-    source: github
-    version: 2.20.0
-    filename: EssentialsX-2.20.0.jar
-    url: https://api.github.com/repos/EssentialsX/Essentials/releases/assets/109459366
-    sha256: 2c55dafb9350bebec21b530aba18a51f770d95356b218427ba9b5840e4aabbc8
-  - name: EssentialsXChat
-    source: github
-    version: 2.20.0
-    filename: EssentialsXChat-2.20.0.jar
-    url: https://api.github.com/repos/EssentialsX/Essentials/releases/assets/109459369
-    sha256: 095a6c95183ecf900efd7007554a2caea00eb7851cf8965893dab1483f00fd81
-  - name: EssentialsXProtect
-    source: github
-    version: 2.20.0
-    filename: EssentialsXProtect-2.20.0.jar
-    url: https://api.github.com/repos/EssentialsX/Essentials/releases/assets/109459364
-    sha256: 878fecfd8224ded4194d0a8104f6b76c76ce92c31092912d062714cc9c9e5e64
-  - name: EssentialsXSpawn
-    source: github
-    version: 2.20.0
-    filename: EssentialsXSpawn-2.20.0.jar
-    url: https://api.github.com/repos/EssentialsX/Essentials/releases/assets/109459362
-    sha256: df3203cf052cdaf15554d5cbebec889b049b1e5b4d33bf497ea8b4a91e37e10c
-  - name: GSit
-    source: github
-    version: 1.4.7
-    filename: GSit-1.4.7.jar
-    url: https://api.github.com/repos/gecolay/GSit/releases/assets/114382499
-    sha256: 1425e3f5a8264e67baedafdbf257b26b1ef61c28ab9314977e852886f8cd3c98
-  - name: Multiverse-Inventories
-    source: modrinth
-    version: 4.2.6
-    filename: multiverse-inventories-4.2.6.jar
-    url: https://cdn.modrinth.com/data/qvdtDX3s/versions/diNvP5DO/multiverse-inventories-4.2.6.jar
-    sha512: 0e79ff60dc2ce1fc87dc1384d2c6609ace68fbd7b45943535006fb9d43db0586d425b148fe249b766ea6a0582dc47e8cc47c66798be6ced1c7487ca7f3946109
-    minecraft:
-      - "1.13"
-      - 1.13.1
-      - 1.13.2
-      - "1.14"
-      - 1.14.1
-      - 1.14.2
-      - 1.14.3
-      - 1.14.4
-      - "1.15"
-      - 1.15.1
-      - 1.15.2
       - "1.16"
       - 1.16.1
       - 1.16.2
@@ -171,15 +52,158 @@ plugins:
       - 1.20.6
       - "1.21"
       - 1.21.1
+      - 1.21.10
+      - 1.21.11
       - 1.21.2
       - 1.21.3
       - 1.21.4
+      - 1.21.5
+      - 1.21.6
+      - 1.21.7
+      - 1.21.8
+      - 1.21.9
+      - "26.1"
+      - 26.1.1
+      - 26.1.2
+      - "26.2"
+  - name: Chunky
+    source: modrinth
+    version: 1.5.66
+    filename: Chunky-Paper-1.5.66.jar
+    url: https://cdn.modrinth.com/data/fALzjamp/versions/RBuKjN4k/Chunky-Paper-1.5.66.jar
+    sha512: c67b14569b8624d8d4ca550f0a064703e144d388073b4c34a913c3bd34ea39351bef504542101d7f85b499b4de95c24d027a62ee64aad3f9a7051ae4bec80c52
+    minecraft:
+      - "26.1"
+      - 26.1.1
+      - 26.1.2
+      - "26.2"
+      - "26.3"
+  - name: ChunkyBorder
+    source: modrinth
+    version: 1.2.75
+    filename: ChunkyBorder-Paper-1.2.75.jar
+    url: https://cdn.modrinth.com/data/s86X568j/versions/tLk074dt/ChunkyBorder-Paper-1.2.75.jar
+    sha512: 5904063cfbccddb058bcb115dca6b1713807b4b409df0dd2d1b24bc91dbe931d126d6eea1fa904395e1a4e45c904ae7f496f82f8bdf7f745e651f3fd51ebae96
+    minecraft:
+      - "26.1"
+      - 26.1.1
+      - 26.1.2
+      - "26.2"
+      - "26.3"
+  - name: CoreProtect
+    source: modrinth
+    version: "24.1"
+    filename: CoreProtect-CE-24.1.jar
+    url: https://cdn.modrinth.com/data/Lu3KuzdV/versions/3sehX6Sg/CoreProtect-CE-24.1.jar
+    sha512: 76aad727528ddb990bbee5069f8ef3fcd018ae0bcdea89b965be2485e828633eb068672e841be64e550c8474f901a24d8c15c7bd44c2bd6c96244e1e58de0c95
+    minecraft:
+      - 1.16.5
+      - "1.17"
+      - 1.17.1
+      - "1.18"
+      - 1.18.1
+      - 1.18.2
+      - "1.19"
+      - 1.19.1
+      - 1.19.2
+      - 1.19.3
+      - 1.19.4
+      - "1.20"
+      - 1.20.1
+      - 1.20.2
+      - 1.20.3
+      - 1.20.4
+      - 1.20.5
+      - 1.20.6
+      - "1.21"
+      - 1.21.1
+      - 1.21.10
+      - 1.21.11
+      - 1.21.2
+      - 1.21.3
+      - 1.21.4
+      - 1.21.5
+      - 1.21.6
+      - 1.21.7
+      - 1.21.8
+      - 1.21.9
+      - "26.1"
+      - 26.1.1
+      - 26.1.2
+      - "26.2"
+  - name: EssentialsX
+    source: github
+    version: 2.22.0
+    filename: EssentialsX-2.22.0.jar
+    url: https://api.github.com/repos/EssentialsX/Essentials/releases/assets/434509586
+    sha256: bda4685105977fca2e209820a9f0ad24275bd103390a03236f38e59bfdac58e6
+  - name: EssentialsXChat
+    source: github
+    version: 2.22.0
+    filename: EssentialsXChat-2.22.0.jar
+    url: https://api.github.com/repos/EssentialsX/Essentials/releases/assets/434509638
+    sha256: e5b0211f98af1eaba712d9294997639a39209db1fc842394a0923820073ec65a
+  - name: EssentialsXProtect
+    source: github
+    version: 2.22.0
+    filename: EssentialsXProtect-2.22.0.jar
+    url: https://api.github.com/repos/EssentialsX/Essentials/releases/assets/434509630
+    sha256: a287f310c6e321dac977ca17d02df71bcf79a6d37535215491050c090faa6eec
+  - name: EssentialsXSpawn
+    source: github
+    version: 2.22.0
+    filename: EssentialsXSpawn-2.22.0.jar
+    url: https://api.github.com/repos/EssentialsX/Essentials/releases/assets/434509625
+    sha256: dd5377c4c921b9b67814209f4f6646ffbb959729003e721ec5e63c47c7c010b8
+  - name: GSit
+    source: github
+    version: 3.8.0
+    filename: GSit-3.8.0.jar
+    url: https://api.github.com/repos/gecolay/GSit/releases/assets/711223148
+    sha256: 669820b42047eac476ec754142c682dca4f396e0b84f178e7959cf236e64cc4a
+  - name: Multiverse-Inventories
+    source: modrinth
+    version: 5.3.6
+    filename: multiverse-inventories-5.3.6.jar
+    url: https://cdn.modrinth.com/data/qvdtDX3s/versions/86s1EwyC/multiverse-inventories-5.3.6.jar
+    sha512: e587c873e1a01a48d79dabadc629113d68fe11240b85c970f481b62ebfcf5f8c3adffa9c5a5c601db0437b5c873312a02492a191ac8504a66ce4fed48a0d7438
+    minecraft:
+      - 1.18.2
+      - "1.19"
+      - 1.19.1
+      - 1.19.2
+      - 1.19.3
+      - 1.19.4
+      - "1.20"
+      - 1.20.1
+      - 1.20.2
+      - 1.20.3
+      - 1.20.4
+      - 1.20.5
+      - 1.20.6
+      - "1.21"
+      - 1.21.1
+      - 1.21.10
+      - 1.21.11
+      - 1.21.2
+      - 1.21.3
+      - 1.21.4
+      - 1.21.5
+      - 1.21.6
+      - 1.21.7
+      - 1.21.8
+      - 1.21.9
+      - "26.1"
+      - 26.1.1
+      - 26.1.2
+      - "26.2"
+      - "26.3"
   - name: NBTAPI
     source: modrinth
-    version: 2.11.3
-    filename: item-nbt-api-plugin-2.11.3.jar
-    url: https://cdn.modrinth.com/data/nfGCP9fk/versions/wtKsBSun/item-nbt-api-plugin-2.11.3.jar
-    sha512: cef48d0d4c3f997f3dc394aa2d4d4fc2bc69af3fa228bed6cd12c09143a914615d66eacce9ce2424b4223896c0f3756bada94bde488678f35299b09c80d6e041
+    version: 2.16.1
+    filename: item-nbt-api-plugin-2.16.1.jar
+    url: https://cdn.modrinth.com/data/nfGCP9fk/versions/h7feK39u/item-nbt-api-plugin-2.16.1.jar
+    sha512: 1957deb03d07109b0cbf78a54f1030546e6fb3147c400b28d24ef585f527bb503965f4f777b2bc18b06bc682a164a2ffd42ba0468659b2f4bed6729df3e52be0
     minecraft:
       - "1.10"
       - 1.10.1
@@ -219,6 +243,23 @@ plugins:
       - 1.19.4
       - "1.20"
       - 1.20.1
+      - 1.20.2
+      - 1.20.3
+      - 1.20.4
+      - 1.20.5
+      - 1.20.6
+      - "1.21"
+      - 1.21.1
+      - 1.21.10
+      - 1.21.11
+      - 1.21.2
+      - 1.21.3
+      - 1.21.4
+      - 1.21.5
+      - 1.21.6
+      - 1.21.7
+      - 1.21.8
+      - 1.21.9
       - 1.8.8
       - 1.8.9
       - "1.9"
@@ -226,6 +267,11 @@ plugins:
       - 1.9.2
       - 1.9.3
       - 1.9.4
+      - "26.1"
+      - 26.1.1
+      - 26.1.2
+      - "26.2"
+      - "26.3"
   - name: Plot2Dynmap
     source: modrinth
     version: 7.0.0
@@ -242,223 +288,66 @@ plugins:
       - 1.21.8
   - name: VoxelSniper
     source: modrinth
-    version: 2.9.4
-    filename: fastasyncvoxelsniper-2.9.4.jar
-    url: https://cdn.modrinth.com/data/D7XBSI1y/versions/wFvk9g03/fastasyncvoxelsniper-2.9.4.jar
-    sha512: 0d508cbbb6c4aef56d14a10aff85249ffdaf77d29eb55f969ee773ef9a6edf05c948f544ad7571ab5df3fd2cbc7fac1d452f06146eb4904bf74cc1163891a059
+    version: 3.2.5
+    filename: fastasyncvoxelsniper-3.2.5.jar
+    url: https://cdn.modrinth.com/data/D7XBSI1y/versions/AnYq3r1h/fastasyncvoxelsniper-3.2.5.jar
+    sha512: b88398b60b49135135fdff53a88e94d9ab4da7fbc8cf6b4be8598df48d03b71a671d923e934dbf383e8dff3a421c4747fa4f1425aeb388dbd6659533ff37b453
     minecraft:
-      - 1.16.5
-      - 1.17.1
-      - 1.18.2
-      - "1.19"
-      - 1.19.1
-      - 1.19.2
-      - 1.19.3
-      - 1.19.4
-      - "1.20"
-      - 1.20.1
+      - 1.21.1
+      - 1.21.10
+      - 1.21.11
+      - 1.21.4
+      - 1.21.5
+      - 1.21.6
+      - 1.21.7
+      - 1.21.8
+      - 1.21.9
+      - "26.1"
+      - 26.1.1
+      - 26.1.2
+      - "26.2"
+      - "26.3"
   - name: FastAsyncWorldEdit
     source: modrinth
-    version: 2.9.0
-    filename: FastAsyncWorldEdit-Bukkit-2.9.0.jar
-    url: https://cdn.modrinth.com/data/z4HZZnLr/versions/wXbePfoo/FastAsyncWorldEdit-Bukkit-2.9.0.jar
-    sha512: beb45abad2f3c4c7c3127b65994d94a0b55b0d769dc0e03b20e1d40ede3a39cba06aae7385eafae27a32362525d6322d32f3c3ed42095074424769a070d5ef66
+    version: 2.16.2
+    filename: FastAsyncWorldEdit-Paper-2.16.2.jar
+    url: https://cdn.modrinth.com/data/z4HZZnLr/versions/JOyEqKdC/FastAsyncWorldEdit-Paper-2.16.2.jar
+    sha512: 319f6c961b01206dc7d9cf03e8105d87d4bb7698fe82c4405afd346689b948541c05355dca62bbd9cc45ff3de6ae9b481082c9fc5f4e02e2b1fbc33a9e56e404
     minecraft:
-      - 1.17.1
-      - 1.18.2
-      - 1.19.4
-      - "1.20"
-      - 1.20.1
-      - 1.20.2
-      - 1.20.3
-      - 1.20.4
+      - 1.21.1
+      - 1.21.10
+      - 1.21.11
+      - 1.21.4
+      - 1.21.5
+      - 1.21.6
+      - 1.21.7
+      - 1.21.8
+      - 1.21.9
+      - "26.1"
+      - 26.1.1
+      - 26.1.2
+      - "26.2"
+      - "26.3"
   - name: SuperiorSkyblock2
     source: jenkins
-    version: "1"
-    filename: SuperiorSkyblock2-2023.3.jar
-    url: https://hub.bg-software.com/job/SuperiorSkyblock2%20-%20Stable%20Builds/1/artifact/target/SuperiorSkyblock2-2023.3.jar
-    sha256: f8fbceffc725718329b81e8d867001e0e7fc8134fc5ad0a2e6e16c4c9bedd653
+    version: "11"
+    filename: SuperiorSkyblock2-2026.3.jar
+    url: https://hub.bg-software.com/job/SuperiorSkyblock2%20-%20Stable%20Builds/11/artifact/target/SuperiorSkyblock2-2026.3.jar
+    sha256: 552a9ad27b2ccf0b6a8e124805220333c125e361a992a8e82deb62088ba831c1
   - name: PlotSquared
     source: git
-    version: fdc887850c58445f8b3181866def05798cbb386f
-    filename: plotsquared-bukkit-7.2.0.jar
+    version: 7b2f00dc7cd4abe628490b84ebb13413e03e0533
+    filename: plotsquared-bukkit-7.6.1-SNAPSHOT.jar
     url: https://github.com/IntellectualSites/PlotSquared.git
-    sha256: 0bcee4f486a1d896764b7f96d4a95494cd603bdfb39609145ce0d6348f81f170
-    jar: Bukkit/build/libs/plotsquared-bukkit-7.2.0.jar
-    java: 17.0.20.1+1
+    sha256: 25f25a60e4423d4cf3e48177bdbcddb2fafe6dee262ecd8d616553f97cc5dd08
+    jar: Bukkit/build/libs/plotsquared-bukkit-7.6.1-SNAPSHOT.jar
+    java: 25.0.5+8
   - name: DecentHolograms
     source: modrinth
-    version: 2.8.8
-    filename: DecentHolograms-2.8.8.jar
-    url: https://cdn.modrinth.com/data/w02MKsTg/versions/fObkReic/DecentHolograms-2.8.8.jar
-    sha512: d85d5d867f8fc65683ffebc971441ac62f6af72e1c6108038468e4de22bd5bc0cc349889d5d6fd439353807d1e9120462e3a2bfa95fb33243537d62268c55309
-    minecraft:
-      - "1.10"
-      - 1.10.1
-      - 1.10.2
-      - "1.11"
-      - 1.11.1
-      - 1.11.2
-      - "1.12"
-      - 1.12.1
-      - 1.12.2
-      - "1.13"
-      - 1.13.1
-      - 1.13.2
-      - "1.14"
-      - 1.14.1
-      - 1.14.2
-      - 1.14.3
-      - 1.14.4
-      - "1.15"
-      - 1.15.1
-      - 1.15.2
-      - "1.16"
-      - 1.16.1
-      - 1.16.2
-      - 1.16.3
-      - 1.16.4
-      - 1.16.5
-      - "1.17"
-      - 1.17.1
-      - "1.18"
-      - 1.18.1
-      - 1.18.2
-      - "1.19"
-      - 1.19.1
-      - 1.19.2
-      - 1.19.3
-      - 1.19.4
-      - "1.20"
-      - 1.20.1
-      - 1.20.2
-      - 1.20.3
-      - 1.20.4
-      - 1.20.5
-      - 1.20.6
-      - "1.8"
-      - 1.8.1
-      - 1.8.2
-      - 1.8.3
-      - 1.8.4
-      - 1.8.5
-      - 1.8.6
-      - 1.8.7
-      - 1.8.8
-      - 1.8.9
-      - "1.9"
-      - 1.9.1
-      - 1.9.2
-      - 1.9.3
-      - 1.9.4
-  - name: Dynmap
-    source: modrinth
-    version: 3.7-beta-2
-    filename: Dynmap-3.7-beta-2-spigot.jar
-    url: https://cdn.modrinth.com/data/fRQREgAc/versions/UXqPUg7D/Dynmap-3.7-beta-2-spigot.jar
-    sha512: 7be75032a647c74163e6e9726da07f9b5323ff11cc50fcf6ebf197e0dbfc8f296028bbe826a0873b1ee0b029c9df1758fedb7371c3dd9298709367d70d3fc1c0
-    minecraft:
-      - 1.10.2
-      - "1.11"
-      - 1.11.1
-      - 1.11.2
-      - "1.12"
-      - 1.12.1
-      - 1.12.2
-      - "1.13"
-      - 1.13.1
-      - 1.13.2
-      - "1.14"
-      - 1.14.1
-      - 1.14.2
-      - 1.14.3
-      - 1.14.4
-      - "1.15"
-      - 1.15.1
-      - 1.15.2
-      - "1.16"
-      - 1.16.1
-      - 1.16.2
-      - 1.16.3
-      - 1.16.4
-      - 1.16.5
-      - "1.17"
-      - 1.17.1
-      - "1.18"
-      - 1.18.1
-      - 1.18.2
-      - "1.19"
-      - 1.19.1
-      - 1.19.2
-      - 1.19.3
-      - 1.19.4
-      - "1.20"
-      - 1.20.1
-      - 1.20.2
-  - name: LuckPerms
-    source: modrinth
-    version: v5.4.145-bukkit
-    filename: LuckPerms-Bukkit-5.4.145.jar
-    url: https://cdn.modrinth.com/data/Vebnzrzj/versions/cfNN7sys/LuckPerms-Bukkit-5.4.145.jar
-    sha512: 3450844775070d7ef6fcc09ee76f96e18f602e6781636c36c563b52d6faacbda1663087fe97834920a57ea3bb3ed0fa0b39d57c1faefa9ef6babd1e3ae77d085
-    minecraft:
-      - 1.10.2
-      - 1.11.2
-      - 1.12.2
-      - 1.13.2
-      - 1.14.4
-      - 1.15.2
-      - 1.16.5
-      - 1.17.1
-      - 1.18.2
-      - 1.19.4
-      - 1.20.6
-      - 1.21.3
-      - 1.21.4
-      - 1.8.9
-      - 1.9.4
-  - name: Multiverse-Core
-    source: modrinth
-    version: 4.3.1-b861
-    filename: Multiverse-Core-4.3.1.jar
-    url: https://cdn.modrinth.com/data/3wmN97b8/versions/FpNE02Yz/Multiverse-Core-4.3.1.jar
-    sha512: b9289e7bd0892332878fa6ce598bb4896832fe00b9ddffec21345b1ada359dd74993e99f3814ae0213012d3033d43ed5b9f110ff186f054d5b885fb8848ceca9
-    minecraft:
-      - "1.13"
-      - 1.13.1
-      - 1.13.2
-      - "1.14"
-      - 1.14.1
-      - 1.14.2
-      - 1.14.3
-      - 1.14.4
-      - "1.15"
-      - 1.15.1
-      - 1.15.2
-      - "1.16"
-      - 1.16.1
-      - 1.16.2
-      - 1.16.3
-      - 1.16.4
-      - 1.16.5
-      - "1.17"
-      - 1.17.1
-      - "1.18"
-      - 1.18.1
-      - 1.18.2
-      - "1.19"
-      - 1.19.1
-      - 1.19.2
-      - 1.19.3
-      - 1.19.4
-      - "1.20"
-      - 1.20.1
-  - name: PlaceholderAPI
-    source: modrinth
-    version: 2.11.6
-    filename: PlaceholderAPI-2.11.6.jar
-    url: https://cdn.modrinth.com/data/lKEzGugV/versions/vkuwyUC6/PlaceholderAPI-2.11.6.jar
-    sha512: 4402d7ec8045d6634fe19e162bc490ae5a010f6e700efb9c709427451130334066f84948f2cf8086e0accfe6961288231412575142bc8ca15a14e91430a907fe
+    version: 2.10.2
+    filename: DecentHolograms-2.10.2.jar
+    url: https://cdn.modrinth.com/data/w02MKsTg/versions/fbE7wARc/DecentHolograms-2.10.2.jar
+    sha512: f2247802a175cf0c71f0e069ab4c3b2ff2aba683051e474ff54f2ad3ea08da5156de7e11f768087fadbf7bdeac491b5935b2ebb2f4d8fc9f48b3df41558936ce
     minecraft:
       - "1.10"
       - 1.10.1
@@ -505,6 +394,8 @@ plugins:
       - 1.20.6
       - "1.21"
       - 1.21.1
+      - 1.21.10
+      - 1.21.11
       - 1.21.2
       - 1.21.3
       - 1.21.4
@@ -512,6 +403,7 @@ plugins:
       - 1.21.6
       - 1.21.7
       - 1.21.8
+      - 1.21.9
       - "1.8"
       - 1.8.1
       - 1.8.2
@@ -527,57 +419,63 @@ plugins:
       - 1.9.2
       - 1.9.3
       - 1.9.4
-  - name: ProtectionStones
+      - "26.1"
+      - 26.1.1
+      - 26.1.2
+      - "26.2"
+      - "26.3"
+  - name: Dynmap
     source: modrinth
-    version: 2.10.5
-    filename: ProtectionStones-2.10.5.jar
-    url: https://cdn.modrinth.com/data/r1kETbys/versions/5PJqJrXj/ProtectionStones-2.10.5.jar
-    sha512: 8008db354e564339e983ca909d33edb249805a0a6a1cd0f5eb296c029c7a6974be381e60971f3a6dfbf67b1d3971cf0f464fa470c4fc2d777d8a94a16b019774
+    version: 3.7-beta-8
+    filename: Dynmap-3.7-beta-8-spigot.jar
+    url: https://cdn.modrinth.com/data/fRQREgAc/versions/ImNNT17B/Dynmap-3.7-beta-8-spigot.jar
+    sha512: 7eb79f45ec6ad7f5264e727e9a9b4f0260b621ec605ec4eee942be1221ab750965bccae0e71c2321d4d6321fe44a0251632fec48f9dab1fdb68e0eef33699c37
     minecraft:
-      - 1.20.6
-      - "1.21"
-  - name: RoseStacker
-    source: modrinth
-    version: 1.5.30
-    filename: RoseStacker-1.5.30.jar
-    url: https://cdn.modrinth.com/data/Bt25s2nb/versions/olCu9PM0/RoseStacker-1.5.30.jar
-    sha512: 73278083d94686892710221bca25f8abeb65681c7e6aa2b932f8a40eb8dbeddfca7902d621dee82917e1ff93685113d46217fc5c516595f52b1e8f2b0dceec2c
-    minecraft:
+      - "1.13"
+      - 1.13.1
+      - 1.13.2
+      - "1.14"
+      - 1.14.1
+      - 1.14.2
+      - 1.14.3
+      - 1.14.4
+      - "1.15"
+      - 1.15.1
+      - 1.15.2
+      - "1.16"
+      - 1.16.1
+      - 1.16.2
+      - 1.16.3
+      - 1.16.4
       - 1.16.5
+      - "1.17"
       - 1.17.1
+      - "1.18"
+      - 1.18.1
       - 1.18.2
+      - "1.19"
+      - 1.19.1
+      - 1.19.2
+      - 1.19.3
       - 1.19.4
+      - "1.20"
+      - 1.20.1
+      - 1.20.2
+      - 1.20.3
       - 1.20.4
+      - 1.20.5
       - 1.20.6
       - "1.21"
       - 1.21.1
       - 1.21.2
-  - name: SimpleScore
+      - 1.21.3
+      - 1.21.4
+  - name: LuckPerms
     source: modrinth
-    version: 3.12.4
-    filename: SimpleScore-3.12.4.jar
-    url: https://cdn.modrinth.com/data/qG43Afem/versions/6umvE4YN/SimpleScore-3.12.4.jar
-    sha512: 8d716853c77886453a29e1b9e809370604a12649dd0589334c092f305c1bd9620fde79135bef65910e24b2110bc99cc562c111fda5f4ddb5b3840950fb34da7b
-    minecraft:
-      - "1.10"
-      - "1.11"
-      - "1.12"
-      - "1.13"
-      - "1.14"
-      - "1.15"
-      - "1.16"
-      - "1.17"
-      - "1.18"
-      - "1.19"
-      - "1.20"
-      - "1.8"
-      - "1.9"
-  - name: VoidGen
-    source: modrinth
-    version: 2.2.8
-    filename: VoidGen-2.2.8.jar
-    url: https://cdn.modrinth.com/data/DCTiMOWF/versions/T7v75Qst/VoidGen-2.2.8.jar
-    sha512: 95879296adb2e2a76d183e975a8ff8308956bd2f3af911ef260bd010e552647d80f21b6eb5822e1f112fda933b6fe4818a15e84f4bbeb773bf12fbe3ec85cba1
+    version: v5.5.71-bukkit
+    filename: LuckPerms-Bukkit-5.5.71.jar
+    url: https://cdn.modrinth.com/data/Vebnzrzj/versions/b0mk8uS6/LuckPerms-Bukkit-5.5.71.jar
+    sha512: 188a91f0a543d23bfda32385fca6db63d61e49c8a422bd452a260bd9cbc6a7d7fe45071199e9fca8f3ce43c2b41ee84fd315bd15464577028ff3951a7d4fab27
     minecraft:
       - "1.10"
       - 1.10.1
@@ -624,12 +522,134 @@ plugins:
       - 1.20.6
       - "1.21"
       - 1.21.1
+      - 1.21.10
+      - 1.21.11
       - 1.21.2
       - 1.21.3
       - 1.21.4
       - 1.21.5
       - 1.21.6
       - 1.21.7
+      - 1.21.8
+      - 1.21.9
+      - 1.8.9
+      - "1.9"
+      - 1.9.1
+      - 1.9.2
+      - 1.9.3
+      - 1.9.4
+      - "26.1"
+      - 26.1.1
+      - 26.1.2
+      - "26.2"
+      - "26.3"
+  - name: Multiverse-Core
+    source: modrinth
+    version: 5.8.2
+    filename: multiverse-core-5.8.2.jar
+    url: https://cdn.modrinth.com/data/3wmN97b8/versions/de7TbcZG/multiverse-core-5.8.2.jar
+    sha512: 1165c96755229583477d120485b49ddf731f44a97e17b99f955892e8e90d1f6b24d2e06bd15b6fc4240197c32970592a2af2febe31044afed949dc2d722d17a8
+    minecraft:
+      - 1.18.2
+      - "1.19"
+      - 1.19.1
+      - 1.19.2
+      - 1.19.3
+      - 1.19.4
+      - "1.20"
+      - 1.20.1
+      - 1.20.2
+      - 1.20.3
+      - 1.20.4
+      - 1.20.5
+      - 1.20.6
+      - "1.21"
+      - 1.21.1
+      - 1.21.10
+      - 1.21.11
+      - 1.21.2
+      - 1.21.3
+      - 1.21.4
+      - 1.21.5
+      - 1.21.6
+      - 1.21.7
+      - 1.21.8
+      - 1.21.9
+      - "26.1"
+      - 26.1.1
+      - 26.1.2
+      - "26.2"
+      - "26.3"
+  - name: PlaceholderAPI
+    source: modrinth
+    version: 2.12.3
+    filename: PlaceholderAPI-2.12.3.jar
+    url: https://cdn.modrinth.com/data/lKEzGugV/versions/pIvQcXW8/PlaceholderAPI-2.12.3.jar
+    sha512: f048d55b633fd816c08e2e4472bd54a75fc4d13534682e6e7745408253d2f393706efdc389d12ca2cf28d4dc035a9afdda3eed9ecde51c7e332831391d9b6479
+    minecraft:
+      - "1.10"
+      - 1.10.1
+      - 1.10.2
+      - "1.11"
+      - 1.11.1
+      - 1.11.2
+      - "1.12"
+      - 1.12.1
+      - 1.12.2
+      - "1.13"
+      - 1.13.1
+      - 1.13.2
+      - "1.14"
+      - 1.14.1
+      - 1.14.2
+      - 1.14.3
+      - 1.14.4
+      - "1.15"
+      - 1.15.1
+      - 1.15.2
+      - "1.16"
+      - 1.16.1
+      - 1.16.2
+      - 1.16.3
+      - 1.16.4
+      - 1.16.5
+      - "1.17"
+      - 1.17.1
+      - "1.18"
+      - 1.18.1
+      - 1.18.2
+      - "1.19"
+      - 1.19.1
+      - 1.19.2
+      - 1.19.3
+      - 1.19.4
+      - "1.20"
+      - 1.20.1
+      - 1.20.2
+      - 1.20.3
+      - 1.20.4
+      - 1.20.5
+      - 1.20.6
+      - "1.21"
+      - 1.21.1
+      - 1.21.10
+      - 1.21.11
+      - 1.21.2
+      - 1.21.3
+      - 1.21.4
+      - 1.21.5
+      - 1.21.6
+      - 1.21.7
+      - 1.21.8
+      - 1.21.9
+      - "1.8"
+      - 1.8.1
+      - 1.8.2
+      - 1.8.3
+      - 1.8.4
+      - 1.8.5
+      - 1.8.6
+      - 1.8.7
       - 1.8.8
       - 1.8.9
       - "1.9"
@@ -637,17 +657,187 @@ plugins:
       - 1.9.2
       - 1.9.3
       - 1.9.4
-  - name: WorldGuard
+      - "26.1"
+      - 26.1.1
+      - 26.1.2
+      - "26.2"
+      - "26.3"
+  - name: ProtectionStones
     source: modrinth
-    version: 7.0.9
-    filename: worldguard-bukkit-7.0.9-dist.jar
-    url: https://cdn.modrinth.com/data/DKY9btbd/versions/NpagB1YQ/worldguard-bukkit-7.0.9-dist.jar
-    sha512: a16715f02d3e1a021c6263fc53cf6c5acee93c1509d42ace0b9681fb4b2010729547fa3da0e051be9a26332b6fcd8469a7fb64274a9c02e177356d4779c6ac62
+    version: 2.10.6
+    filename: ProtectionStones-2.10.6.jar
+    url: https://cdn.modrinth.com/data/r1kETbys/versions/y1r6kma7/ProtectionStones-2.10.6.jar
+    sha512: 3d5828b840125fc5c65a9b9797eedb1465d002514a2f3a9d466adce848aba6089e57bf56fc967f7f88e8726bcfd6531de19efe9d6139597b15145bfe12b5b568
     minecraft:
+      - 1.21.10
+  - name: RoseStacker
+    source: modrinth
+    version: 1.5.42
+    filename: RoseStacker-1.5.42.jar
+    url: https://cdn.modrinth.com/data/Bt25s2nb/versions/d0YeeOKd/RoseStacker-1.5.42.jar
+    sha512: a87fc3c3d519a186ec8ad55264dc4d0eee966ec456773423e9c923e78f6ad4bfc0e2d11dfd1600e79f3b1758f7bd9b700827c03493f8235959fe9ff99f4ebf31
+    minecraft:
+      - 1.16.5
+      - 1.17.1
+      - 1.18.2
+      - 1.19.4
+      - 1.20.4
+      - 1.20.6
+      - "1.21"
+      - 1.21.1
+      - 1.21.10
+      - 1.21.11
+      - 1.21.2
+      - 1.21.3
+      - 1.21.4
+      - 1.21.5
+      - 1.21.6
+      - 1.21.7
+      - 1.21.8
+      - 1.21.9
+      - "26.1"
+      - 26.1.1
+      - 26.1.2
+      - "26.2"
+  - name: SimpleScore
+    source: modrinth
+    version: 4.3.1
+    filename: SimpleScore-4.3.1.jar
+    url: https://cdn.modrinth.com/data/qG43Afem/versions/g9v62rqb/SimpleScore-4.3.1.jar
+    sha512: 667eb04b7600950c829206116af4b7c4a6877dbba9ead00a8e82ec272bf3e8368c748fea66f712ef8fcc683e2076cfceab66957a08152464757ea6cf5ceb674e
+    minecraft:
+      - "1.10"
+      - 1.10.1
+      - 1.10.2
+      - "1.11"
+      - 1.11.1
+      - 1.11.2
+      - "1.12"
+      - 1.12.1
+      - 1.12.2
+      - "1.13"
+      - 1.13.1
+      - 1.13.2
+      - "1.14"
+      - 1.14.1
+      - 1.14.2
+      - 1.14.3
+      - 1.14.4
+      - "1.15"
+      - 1.15.1
+      - 1.15.2
+      - "1.16"
+      - 1.16.1
+      - 1.16.2
+      - 1.16.3
+      - 1.16.4
+      - 1.16.5
+      - "1.17"
+      - 1.17.1
+      - "1.18"
+      - 1.18.1
+      - 1.18.2
+      - "1.19"
+      - 1.19.1
+      - 1.19.2
+      - 1.19.3
+      - 1.19.4
       - "1.20"
       - 1.20.1
       - 1.20.2
+      - 1.20.3
       - 1.20.4
+      - 1.20.5
+      - 1.20.6
+      - "1.21"
+      - 1.21.1
+      - 1.21.10
+      - 1.21.11
+      - 1.21.2
+      - 1.21.3
+      - 1.21.4
+      - 1.21.5
+      - 1.21.6
+      - 1.21.7
+      - 1.21.8
+      - 1.21.9
+      - "1.8"
+      - 1.8.1
+      - 1.8.2
+      - 1.8.3
+      - 1.8.4
+      - 1.8.5
+      - 1.8.6
+      - 1.8.7
+      - 1.8.8
+      - 1.8.9
+      - "1.9"
+      - 1.9.1
+      - 1.9.2
+      - 1.9.3
+      - 1.9.4
+      - "26.1"
+      - 26.1.1
+      - 26.1.2
+      - "26.2"
+  - name: VoidGen
+    source: modrinth
+    version: 2.3.9
+    filename: VoidGen-2.3.9.jar
+    url: https://cdn.modrinth.com/data/DCTiMOWF/versions/YhgDxaDY/VoidGen-2.3.9.jar
+    sha512: 7dc30cd931a18426270abbcccd848aa78cef8d2c8d726d18725207eec49f45a904aed1dc491d4edeb59953befafb483b71311a0dfc0fae275894c75f866f7113
+    minecraft:
+      - "1.15"
+      - 1.15.1
+      - 1.15.2
+      - "1.16"
+      - 1.16.1
+      - 1.16.2
+      - 1.16.3
+      - 1.16.4
+      - 1.16.5
+      - "1.17"
+      - 1.17.1
+      - "1.18"
+      - 1.18.1
+      - 1.18.2
+      - "1.19"
+      - 1.19.1
+      - 1.19.2
+      - 1.19.3
+      - 1.19.4
+      - "1.20"
+      - 1.20.1
+      - 1.20.2
+      - 1.20.3
+      - 1.20.4
+      - 1.20.5
+      - 1.20.6
+      - "1.21"
+      - 1.21.1
+      - 1.21.10
+      - 1.21.11
+      - 1.21.2
+      - 1.21.3
+      - 1.21.4
+      - 1.21.5
+      - 1.21.6
+      - 1.21.7
+      - 1.21.8
+      - 1.21.9
+      - "26.1"
+      - 26.1.1
+      - 26.1.2
+      - "26.2"
+      - "26.3"
+  - name: WorldGuard
+    source: modrinth
+    version: 7.0.21
+    filename: worldguard-bukkit-7.0.21.jar
+    url: https://cdn.modrinth.com/data/DKY9btbd/versions/fiHLM6oY/worldguard-bukkit-7.0.21.jar
+    sha512: 4253b97627f93ea007d91e977c15f5f4a3219865589083fa3b523d8b15a2cfe26d71076c8eb98c0122e7fde618ad3fc44cb986dbd40a222f09678b91a98245c2
+    minecraft:
+      - "26.3"
   - name: Vault
     source: github
     version: 1.7.3
@@ -666,24 +856,181 @@ plugins:
     filename: ImageFrame-2026.1.5.0.jar
     url: https://cdn.modrinth.com/data/lJFOpcEj/versions/dKkWOwRr/ImageFrame-2026.1.5.0.jar
     sha512: e9ee5cea569946767c125397550c7ca5bbcbe0d504832af216ec9d8dea99f532f4af80e0e9a17ee917c7fd78c10292ba3bbe61457947f19d3edf68bbf5f2f4a8
+    minecraft:
+      - "1.16"
+      - 1.16.1
+      - 1.16.2
+      - 1.16.3
+      - 1.16.4
+      - 1.16.5
+      - "1.17"
+      - 1.17.1
+      - "1.18"
+      - 1.18.1
+      - 1.18.2
+      - "1.19"
+      - 1.19.1
+      - 1.19.2
+      - 1.19.3
+      - 1.19.4
+      - "1.20"
+      - 1.20.1
+      - 1.20.2
+      - 1.20.3
+      - 1.20.4
+      - 1.20.5
+      - 1.20.6
+      - "1.21"
+      - 1.21.1
+      - 1.21.10
+      - 1.21.11
+      - 1.21.2
+      - 1.21.3
+      - 1.21.4
+      - 1.21.5
+      - 1.21.6
+      - 1.21.7
+      - 1.21.8
+      - 1.21.9
+      - "26.1"
+      - 26.1.1
+      - 26.1.2
+      - "26.2"
+      - "26.3"
   - name: ColoredSigns
     source: modrinth
     version: "1.0"
     filename: coloredsigns-1.0.jar
     url: https://cdn.modrinth.com/data/dgk8Oguf/versions/ztPwHDRZ/coloredsigns-1.0.jar
     sha512: 24168cf6bb3f74361214ea9f0611c60656ec8e6d8d3e7a55695e2659911ef0a8c08235daae78292e3cf34b3664fce63505877995fd54972e5b5c53ef7b58a53f
+    minecraft:
+      - "1.20"
+      - 1.20.1
+      - 1.20.2
+      - 1.20.3
+      - 1.20.4
+      - 1.20.5
+      - 1.20.6
+      - "1.21"
+      - 1.21.1
+      - 1.21.10
+      - 1.21.11
+      - 1.21.2
+      - 1.21.3
+      - 1.21.4
+      - 1.21.5
+      - 1.21.6
+      - 1.21.7
+      - 1.21.8
+      - 1.21.9
+      - "26.1"
+      - 26.1.1
+      - 26.1.2
+      - "26.2"
   - name: SignManager
     source: modrinth
     version: 1.0.1
     filename: SignManager-1.0.1.jar
     url: https://cdn.modrinth.com/data/Y2CXVODw/versions/QkTdWuj9/SignManager-1.0.1.jar
     sha512: bf578fb71fadbe5e8e94a73437cb8adb0e6b9d328583bb96089b9fdc10137979905da13e1e03aefc62a7e9d72b909738c7bef8c970883ca9e364ba12c874a387
+    minecraft:
+      - "1.20"
+      - 1.20.1
+      - 1.20.2
+      - 1.20.3
+      - 1.20.4
+      - 1.20.5
+      - 1.20.6
+      - "1.21"
+      - 1.21.1
+      - 1.21.10
+      - 1.21.11
+      - 1.21.2
+      - 1.21.3
+      - 1.21.4
+      - 1.21.5
+      - 1.21.6
+      - 1.21.7
+      - 1.21.8
+      - 1.21.9
+      - "26.1"
+      - 26.1.1
+      - 26.1.2
+      - "26.2"
   - name: AdvancedPlHide
     source: modrinth
     version: "2.6"
     filename: AdvancedPlHide-2.6.jar
     url: https://cdn.modrinth.com/data/WNCU1bRz/versions/hsSFRd3R/AdvancedPlHide-2.6.jar
     sha512: e3aaf090db574006cb161689507011d83ead6bf4952d4c7025645311c04047ac446556b370f182eefd8b9c95119ae9ef7f19140564a8f8f86611908a42feabf3
+    minecraft:
+      - "1.10"
+      - 1.10.1
+      - 1.10.2
+      - "1.11"
+      - 1.11.1
+      - 1.11.2
+      - "1.12"
+      - 1.12.1
+      - 1.12.2
+      - "1.13"
+      - 1.13.1
+      - 1.13.2
+      - "1.14"
+      - 1.14.1
+      - 1.14.2
+      - 1.14.3
+      - 1.14.4
+      - "1.15"
+      - 1.15.1
+      - 1.15.2
+      - "1.16"
+      - 1.16.1
+      - 1.16.2
+      - 1.16.3
+      - 1.16.4
+      - 1.16.5
+      - "1.17"
+      - 1.17.1
+      - "1.18"
+      - 1.18.1
+      - 1.18.2
+      - "1.19"
+      - 1.19.1
+      - 1.19.2
+      - 1.19.3
+      - 1.19.4
+      - "1.20"
+      - 1.20.1
+      - 1.20.2
+      - 1.20.3
+      - 1.20.4
+      - 1.20.5
+      - 1.20.6
+      - "1.21"
+      - 1.21.1
+      - 1.21.2
+      - 1.21.3
+      - 1.21.4
+      - 1.21.5
+      - 1.21.6
+      - 1.21.7
+      - 1.21.8
+      - "1.8"
+      - 1.8.1
+      - 1.8.2
+      - 1.8.3
+      - 1.8.4
+      - 1.8.5
+      - 1.8.6
+      - 1.8.7
+      - 1.8.8
+      - 1.8.9
+      - "1.9"
+      - 1.9.1
+      - 1.9.2
+      - 1.9.3
+      - 1.9.4
   - name: ExtraContexts
     source: jenkins
     version: "21"
@@ -693,15 +1040,21 @@ plugins:
   - name: spark
     source: jenkins
     version: "547"
-    filename: spark-1.10.195-bukkit.jar
-    url: https://ci.lucko.me/job/spark/547/artifact/spark-bukkit/build/libs/spark-1.10.195-bukkit.jar
-    sha256: a06943d3b35a535f3816e0603eb8640dd016a71f0728edb088155f9bdd115f90
+    filename: spark-1.10.195-paper.jar
+    url: https://ci.lucko.me/job/spark/547/artifact/spark-paper/build/libs/spark-1.10.195-paper.jar
+    sha256: 9c0a06654e1b475707e8573f495ccb936c2ab429e64c0653ade9caced425032b
+  - name: Jobs
+    source: spiget
+    version: "655380"
+    filename: Jobs-5.2.6.7.jar
+    url: https://cdn.spiget.org/file/spiget-resources/4216.jar
+    sha256: 21dfc80ec85bb253e88cbc0de1bd379ea69c96ba5135d04dd185043ebb903b3f
   - name: CMILib
     source: spiget
-    version: "657803"
-    filename: CMILib-1.6.1.2.jar
+    version: "659188"
+    filename: CMILib-1.6.1.3.jar
     url: https://cdn.spiget.org/file/spiget-resources/87610.jar
-    sha256: 908f2b85a71cb10d8f00a528faa8ce46018074cbba79862888adda15111f1c17
+    sha256: 856962ace9555b3425d91070cfc41dd1b64c416b21687466c24ecbef85a1d7ed
   - name: VillagerTradeLimiter
     source: spiget
     version: "503160"
@@ -714,6 +1067,136 @@ plugins:
     filename: GravityTubes-1.11.4.jar
     url: https://cdn.spiget.org/file/spiget-resources/64624.jar
     sha256: 5364902bba8167f8e3fb4a2cec4061271fc2d5e12052efb8849c77cad3d63e27
+  - name: BKCommonLib
+    source: modrinth
+    version: 2.0.5
+    filename: BKCommonLib-2.0.5-2090.jar
+    url: https://cdn.modrinth.com/data/rTg6ckWb/versions/bV0IsMUE/BKCommonLib-2.0.5-2090.jar
+    sha512: f9c8ddb60c11a14dbbc989a170fedd484ad3bef1b96e9071102e98db3834cbbacf3736ce92972543961fc2c7f683599e3423e299615a3a54e786d8ab6d958502
+    minecraft:
+      - "1.10"
+      - 1.10.1
+      - 1.10.2
+      - "1.11"
+      - 1.11.1
+      - 1.11.2
+      - "1.12"
+      - 1.12.1
+      - 1.12.2
+      - "1.13"
+      - 1.13.1
+      - 1.13.2
+      - "1.14"
+      - 1.14.1
+      - 1.14.2
+      - 1.14.3
+      - 1.14.4
+      - "1.15"
+      - 1.15.1
+      - 1.15.2
+      - "1.16"
+      - 1.16.1
+      - 1.16.2
+      - 1.16.3
+      - 1.16.4
+      - 1.16.5
+      - "1.17"
+      - 1.17.1
+      - "1.18"
+      - 1.18.1
+      - 1.18.2
+      - "1.19"
+      - 1.19.1
+      - 1.19.2
+      - 1.19.3
+      - 1.19.4
+      - "1.20"
+      - 1.20.1
+      - 1.20.2
+      - 1.20.3
+      - 1.20.4
+      - 1.20.5
+      - 1.20.6
+      - "1.21"
+      - 1.21.1
+      - 1.21.10
+      - 1.21.11
+      - 1.21.2
+      - 1.21.3
+      - 1.21.4
+      - 1.21.5
+      - 1.21.6
+      - 1.21.7
+      - 1.21.8
+      - 1.21.9
+      - "1.8"
+      - 1.8.1
+      - 1.8.2
+      - 1.8.3
+      - 1.8.4
+      - 1.8.5
+      - 1.8.6
+      - 1.8.7
+      - 1.8.8
+      - 1.8.9
+      - "1.9"
+      - 1.9.1
+      - 1.9.2
+      - 1.9.3
+      - 1.9.4
+      - "26.1"
+      - 26.1.1
+      - 26.1.2
+      - "26.2"
+      - "26.3"
+  - name: LightCleaner
+    source: spiget
+    version: "643429"
+    filename: LightCleaner-2.0.0.jar
+    url: https://cdn.spiget.org/file/spiget-resources/42469.jar
+    sha256: 6a91ec9b0d71e6d86b7d4739975e8ffffe78bcba1a038359ae2f406d73e43087
+  - name: EconomyShopGUI
+    source: modrinth
+    version: 7.3.4
+    filename: EconomyShopGUI-7.3.4.jar
+    url: https://cdn.modrinth.com/data/khsXZqla/versions/vMyzN3k4/EconomyShopGUI-7.3.4.jar
+    sha512: 5c09b6a9f03b6fcfb1682af329722fb1f3f3503ff1cd7efb8dc9dbc21e0113fbb11d419d79300a3b61a37409a27c9f4fe898ed37527934a349d488a7e06bb0f0
+    minecraft:
+      - 1.16.5
+      - "26.3"
+      - "26.2"
+      - 26.1.2
+      - 26.1.1
+      - "26.1"
+      - 1.21.11
+      - 1.21.10
+      - 1.21.9
+      - 1.21.8
+      - 1.21.7
+      - 1.21.6
+      - 1.21.5
+      - 1.21.4
+      - 1.21.3
+      - 1.21.2
+      - 1.21.1
+      - "1.21"
+      - 1.20.6
+      - 1.20.5
+      - 1.20.4
+      - 1.20.3
+      - 1.20.2
+      - 1.20.1
+      - "1.20"
+      - 1.19.4
+      - 1.19.3
+      - 1.19.2
+      - 1.19.1
+      - "1.19"
+      - 1.18.2
+      - 1.18.1
+      - "1.18"
+      - 1.17.1
+      - "1.17"
   - name: PlayMoreSounds
     source: github
     version: "4.2"
@@ -722,10 +1205,10 @@ plugins:
     sha256: 12511ecf710ba2686119d304fbfa9871cbd8fa4c127aa05ebb383343b08e03f2
   - name: WorldGuardExtraFlags
     source: github
-    version: v4.2.3
+    version: v4.2.4
     filename: WorldGuardExtraFlags.jar
-    url: https://api.github.com/repos/aromaa/WorldGuardExtraFlags/releases/assets/153520267
-    sha256: 4c1f94d51ecc62e1d41b08b5cc320c6f0e6cc6e261232527b8d42e24ab7540ab
+    url: https://api.github.com/repos/aromaa/WorldGuardExtraFlags/releases/assets/174093673
+    sha256: 43baf19d4d1d2274239cec60bfcd540433a7c03fb77fbb75a55e879f6e492114
   - name: AutoConsoleCommands
     source: github
     version: v0.1.1
@@ -840,81 +1323,3 @@ plugins:
     filename: QuickShop.jar
     url: https://api.github.com/repos/misdocumeno/QuickShop-Reremake/releases/assets/711214691
     sha256: b5903eb3950c2e27b0339fb53a49f90ae6b2c17559d98349d992dd01cd631d2b
-  - name: Jobs
-    source: spiget
-    version: "511697"
-    filename: Jobs-5.2.1.0.jar
-    url: https://avocado.api.spiget.org/v2/resources/4216/versions/511697/download/proxy
-    sha256: 713aa72c7746fdf0b97a091120d6a4da4bc417546b54c63c3588d96de209c07d
-  - name: LightCleaner
-    source: spiget
-    version: "486939"
-    filename: LightCleaner-1.19.3-v1.jar
-    url: https://avocado.api.spiget.org/v2/resources/42469/versions/486939/download/proxy
-    sha256: 27fa0a940742416df57a5b8273b431d043c4c7c175c6cfaa33aec4d97ba6f6a2
-  - name: EconomyShopGUI
-    source: modrinth
-    version: 7.3.4
-    filename: EconomyShopGUI-7.3.4.jar
-    url: https://cdn.modrinth.com/data/khsXZqla/versions/vMyzN3k4/EconomyShopGUI-7.3.4.jar
-    sha512: 5c09b6a9f03b6fcfb1682af329722fb1f3f3503ff1cd7efb8dc9dbc21e0113fbb11d419d79300a3b61a37409a27c9f4fe898ed37527934a349d488a7e06bb0f0
-  - name: BKCommonLib
-    source: modrinth
-    version: 1.20.1-v3
-    filename: BKCommonLib-1.20.1-v3-1613.jar
-    url: https://cdn.modrinth.com/data/rTg6ckWb/versions/rRe6M0fA/BKCommonLib-1.20.1-v3-1613.jar
-    sha512: eb1c1db15030a548f24af4c211915bb365c80557dcec68342a36aabf3272ada0118aa5222dc071fa4d2943ceb871da5cf7b20b273e78db3522ece58f216dab87
-    minecraft:
-      - "1.10"
-      - 1.10.1
-      - 1.10.2
-      - "1.11"
-      - 1.11.1
-      - 1.11.2
-      - "1.12"
-      - 1.12.1
-      - 1.12.2
-      - "1.13"
-      - 1.13.1
-      - 1.13.2
-      - "1.14"
-      - 1.14.1
-      - 1.14.2
-      - 1.14.3
-      - 1.14.4
-      - "1.15"
-      - 1.15.1
-      - 1.15.2
-      - "1.16"
-      - 1.16.1
-      - 1.16.2
-      - 1.16.3
-      - 1.16.4
-      - 1.16.5
-      - "1.17"
-      - 1.17.1
-      - "1.18"
-      - 1.18.1
-      - 1.18.2
-      - "1.19"
-      - 1.19.1
-      - 1.19.2
-      - 1.19.3
-      - 1.19.4
-      - "1.20"
-      - 1.20.1
-      - "1.8"
-      - 1.8.1
-      - 1.8.2
-      - 1.8.3
-      - 1.8.4
-      - 1.8.5
-      - 1.8.6
-      - 1.8.7
-      - 1.8.8
-      - 1.8.9
-      - "1.9"
-      - 1.9.1
-      - 1.9.2
-      - 1.9.3
-      - 1.9.4

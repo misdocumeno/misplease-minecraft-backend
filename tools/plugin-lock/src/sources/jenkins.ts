@@ -1,5 +1,5 @@
-import { basename } from "../desired.ts"
 import { digest, downloadBytes } from "../http.ts"
+import { matchJar } from "../jar-match.ts"
 import type { DesiredPlugin, ResolvedArtifact } from "../model.ts"
 
 interface JenkinsArtifact {
@@ -8,6 +8,7 @@ interface JenkinsArtifact {
 }
 
 interface JenkinsBuild {
+  number?: number
   artifacts?: JenkinsArtifact[]
 }
 
@@ -20,35 +21,48 @@ function buildUrl(plugin: DesiredPlugin): string {
   if (!job || job.split("/").some((part) => part.length === 0 || part === "." || part === "..")) {
     throw new Error(`${plugin.name} needs a Jenkins job`)
   }
-  if (!plugin.build || !/^[0-9]+$/.test(plugin.build)) {
-    throw new Error(`${plugin.name} needs a Jenkins build number`)
-  }
+  // Numeric build, or lastSuccessfulBuild when omitted / explicitly requested.
+  const build =
+    plugin.build && /^[0-9]+$/.test(plugin.build)
+      ? plugin.build
+      : plugin.build === "lastSuccessfulBuild" || !plugin.build
+        ? "lastSuccessfulBuild"
+        : (() => {
+            throw new Error(`${plugin.name} needs a Jenkins build number or lastSuccessfulBuild`)
+          })()
   const segments = job.split("/").map((part) => encodeURIComponent(part)).join("/job/")
-  return `${server}/job/${segments}/${plugin.build}`
+  return `${server}/job/${segments}/${build}`
 }
 
 export async function resolveJenkins(plugin: DesiredPlugin): Promise<ResolvedArtifact> {
   const base = buildUrl(plugin)
-  const response = await fetch(`${base}/api/json?tree=artifacts[fileName,relativePath]`, {
+  const response = await fetch(`${base}/api/json?tree=number,artifacts[fileName,relativePath]`, {
     headers: { "user-agent": "misplease-plugin-lock", accept: "application/json" },
     signal: AbortSignal.timeout(60_000),
   })
   if (!response.ok) throw new Error(`${response.status} for ${base}`)
   const build = (await response.json()) as JenkinsBuild
   const jars = (build.artifacts ?? []).filter((artifact) => artifact.fileName.toLowerCase().endsWith(".jar"))
-  const named = plugin.asset ? jars.filter((artifact) => artifact.fileName === basename(plugin.asset ?? "")) : jars
-  if (named.length !== 1) {
-    const listed = (named.length > 0 ? named : jars).map((artifact) => artifact.fileName).join(", ")
-    throw new Error(`${plugin.name} matched ${named.length} Jenkins jars${listed ? `: ${listed}` : ""}`)
-  }
-  const artifact = named[0]
+  // `jar:` exact name or `/regex/` (same as GitHub). Legacy `asset:` is folded into `jar` in desired.ts.
+  const filename = matchJar(
+    jars.map((artifact) => artifact.fileName),
+    plugin.jar,
+    plugin.name,
+  )
+  const artifact = jars.find((row) => row.fileName === filename)!
   const artifactPath = artifact.relativePath.split("/").map((part) => encodeURIComponent(part)).join("/")
-  const url = `${base}/artifact/${artifactPath}`
+  // Resolve lastSuccessfulBuild to a concrete /job/.../N/ URL so the lock is reproducible.
+  const number = build.number
+  const concreteBase =
+    typeof number === "number" && Number.isFinite(number)
+      ? base.replace(/\/lastSuccessfulBuild$/, `/${number}`)
+      : base
+  const url = `${concreteBase}/artifact/${artifactPath}`
   const bytes = await downloadBytes(url)
   return {
     name: plugin.name,
     source: "jenkins",
-    version: plugin.build ?? "",
+    version: typeof number === "number" ? String(number) : (plugin.build ?? ""),
     filename: artifact.fileName,
     url,
     sha256: digest("sha256", bytes),

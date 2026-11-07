@@ -70,7 +70,7 @@ jobs:
             prefix: backend-
             kind: server
             config: infra/minecraft/main/config
-            runtime_java: "21"
+            runtime_java: "25"
             smoke: true
           - name: tech
             lock: infra/minecraft/tech/plugins-lock.yml
@@ -84,7 +84,7 @@ jobs:
             prefix: velocity-
             kind: proxy
             config: infra/velocity/config
-            runtime_java: "21"
+            runtime_java: "25"
             smoke: true
     steps:
       - uses: actions/checkout@v4

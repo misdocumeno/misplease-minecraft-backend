@@ -1,10 +1,10 @@
 server:
   name: paper
   source: papermc
-  version: 26.3+242
-  filename: paper-26.3-242.jar
-  url: https://fill-data.papermc.io/v1/objects/fc704a4510a2744bab90a6770336b202038e60333e37f24af8027ee948935d20/paper-26.3-242.jar
-  sha256: fc704a4510a2744bab90a6770336b202038e60333e37f24af8027ee948935d20
+  version: 26.3+244
+  filename: paper-26.3-244.jar
+  url: https://fill-data.papermc.io/v1/objects/9601f9a26a2a52a0f2c807cf1abf691f96ee4fb287878313b601cebc2c51eabf/paper-26.3-244.jar
+  sha256: 9601f9a26a2a52a0f2c807cf1abf691f96ee4fb287878313b601cebc2c51eabf
   minecraft:
     - "26.3"
 plugins:
@@ -14,9 +14,85 @@ plugins:
     filename: DecentHolograms-2.10.2.jar
     url: https://cdn.modrinth.com/data/w02MKsTg/versions/fbE7wARc/DecentHolograms-2.10.2.jar
     sha512: f2247802a175cf0c71f0e069ab4c3b2ff2aba683051e474ff54f2ad3ea08da5156de7e11f768087fadbf7bdeac491b5935b2ebb2f4d8fc9f48b3df41558936ce
+    minecraft:
+      - "1.10"
+      - 1.10.1
+      - 1.10.2
+      - "1.11"
+      - 1.11.1
+      - 1.11.2
+      - "1.12"
+      - 1.12.1
+      - 1.12.2
+      - "1.13"
+      - 1.13.1
+      - 1.13.2
+      - "1.14"
+      - 1.14.1
+      - 1.14.2
+      - 1.14.3
+      - 1.14.4
+      - "1.15"
+      - 1.15.1
+      - 1.15.2
+      - "1.16"
+      - 1.16.1
+      - 1.16.2
+      - 1.16.3
+      - 1.16.4
+      - 1.16.5
+      - "1.17"
+      - 1.17.1
+      - "1.18"
+      - 1.18.1
+      - 1.18.2
+      - "1.19"
+      - 1.19.1
+      - 1.19.2
+      - 1.19.3
+      - 1.19.4
+      - "1.20"
+      - 1.20.1
+      - 1.20.2
+      - 1.20.3
+      - 1.20.4
+      - 1.20.5
+      - 1.20.6
+      - "1.21"
+      - 1.21.1
+      - 1.21.10
+      - 1.21.11
+      - 1.21.2
+      - 1.21.3
+      - 1.21.4
+      - 1.21.5
+      - 1.21.6
+      - 1.21.7
+      - 1.21.8
+      - 1.21.9
+      - "1.8"
+      - 1.8.1
+      - 1.8.2
+      - 1.8.3
+      - 1.8.4
+      - 1.8.5
+      - 1.8.6
+      - 1.8.7
+      - 1.8.8
+      - 1.8.9
+      - "1.9"
+      - 1.9.1
+      - 1.9.2
+      - 1.9.3
+      - 1.9.4
+      - "26.1"
+      - 26.1.1
+      - 26.1.2
+      - "26.2"
+      - "26.3"
   - name: EssentialsX
     source: github
-    version: "2.22.0"
+    version: 2.22.0
     filename: EssentialsX-2.22.0.jar
     url: https://api.github.com/repos/EssentialsX/Essentials/releases/assets/434509586
     sha256: bda4685105977fca2e209820a9f0ad24275bd103390a03236f38e59bfdac58e6
@@ -27,6 +103,15 @@ plugins:
     url: https://cdn.modrinth.com/data/z4HZZnLr/versions/JOyEqKdC/FastAsyncWorldEdit-Paper-2.16.2.jar
     sha512: 319f6c961b01206dc7d9cf03e8105d87d4bb7698fe82c4405afd346689b948541c05355dca62bbd9cc45ff3de6ae9b481082c9fc5f4e02e2b1fbc33a9e56e404
     minecraft:
+      - 1.21.1
+      - 1.21.10
+      - 1.21.11
+      - 1.21.4
+      - 1.21.5
+      - 1.21.6
+      - 1.21.7
+      - 1.21.8
+      - 1.21.9
       - "26.1"
       - 26.1.1
       - 26.1.2
@@ -39,6 +124,67 @@ plugins:
     url: https://cdn.modrinth.com/data/Vebnzrzj/versions/b0mk8uS6/LuckPerms-Bukkit-5.5.71.jar
     sha512: 188a91f0a543d23bfda32385fca6db63d61e49c8a422bd452a260bd9cbc6a7d7fe45071199e9fca8f3ce43c2b41ee84fd315bd15464577028ff3951a7d4fab27
     minecraft:
+      - "1.10"
+      - 1.10.1
+      - 1.10.2
+      - "1.11"
+      - 1.11.1
+      - 1.11.2
+      - "1.12"
+      - 1.12.1
+      - 1.12.2
+      - "1.13"
+      - 1.13.1
+      - 1.13.2
+      - "1.14"
+      - 1.14.1
+      - 1.14.2
+      - 1.14.3
+      - 1.14.4
+      - "1.15"
+      - 1.15.1
+      - 1.15.2
+      - "1.16"
+      - 1.16.1
+      - 1.16.2
+      - 1.16.3
+      - 1.16.4
+      - 1.16.5
+      - "1.17"
+      - 1.17.1
+      - "1.18"
+      - 1.18.1
+      - 1.18.2
+      - "1.19"
+      - 1.19.1
+      - 1.19.2
+      - 1.19.3
+      - 1.19.4
+      - "1.20"
+      - 1.20.1
+      - 1.20.2
+      - 1.20.3
+      - 1.20.4
+      - 1.20.5
+      - 1.20.6
+      - "1.21"
+      - 1.21.1
+      - 1.21.10
+      - 1.21.11
+      - 1.21.2
+      - 1.21.3
+      - 1.21.4
+      - 1.21.5
+      - 1.21.6
+      - 1.21.7
+      - 1.21.8
+      - 1.21.9
+      - 1.8.9
+      - "1.9"
+      - 1.9.1
+      - 1.9.2
+      - 1.9.3
+      - 1.9.4
       - "26.1"
       - 26.1.1
       - 26.1.2
@@ -46,15 +192,11 @@ plugins:
       - "26.3"
   - name: WorldGuard
     source: modrinth
-    version: 7.0.18
-    filename: worldguard-bukkit-7.0.18.jar
-    url: https://cdn.modrinth.com/data/DKY9btbd/versions/btHBavWa/worldguard-bukkit-7.0.18.jar
-    sha512: 9404a0eacebc5c85bdcf4a7d343330b4894dcd87246548adca75c43dbf2a3c0539f75bb15665cdd04d7f980e8d0d2a95d79e96861ba74fcd5636d685496f47f2
+    version: 7.0.21
+    filename: worldguard-bukkit-7.0.21.jar
+    url: https://cdn.modrinth.com/data/DKY9btbd/versions/fiHLM6oY/worldguard-bukkit-7.0.21.jar
+    sha512: 4253b97627f93ea007d91e977c15f5f4a3219865589083fa3b523d8b15a2cfe26d71076c8eb98c0122e7fde618ad3fc44cb986dbd40a222f09678b91a98245c2
     minecraft:
-      - "26.1"
-      - 26.1.1
-      - 26.1.2
-      - "26.2"
       - "26.3"
   - name: GriefPrevention
     source: modrinth
@@ -62,3 +204,5 @@ plugins:
     filename: GriefPrevention.jar
     url: https://cdn.modrinth.com/data/O4o4mKaq/versions/MtwPHMAS/GriefPrevention.jar
     sha512: 248edc681e94fe333aa4262b4e8858e9e8f79e7e4872a76348ff6df213cc56e6069eea9916c5c4e6476b1513575f0d45db76c91526f5dc032e02b8806341b9e9
+    minecraft:
+      - "26.3"

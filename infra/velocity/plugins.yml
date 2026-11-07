@@ -2,6 +2,7 @@
 server:
   source: papermc
   id: velocity
+  version: "4.3.1"
 
 plugins:
   - name: ViaVersion

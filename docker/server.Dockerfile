@@ -8,30 +8,24 @@
 # FROM-substitution ARGs must be declared before the first FROM (BuildKit global scope).
 ARG RUNTIME_JAVA=21
 ARG LOCK_VARIANT=local
-# backend- | velocity- — only compile matching projects (avoids 11 cold Gradle JVMs per image).
+# backend- | velocity- — only compile matching projects (one Gradle daemon, filtered tasks).
 ARG PLUGIN_PREFIX=backend-
 
-FROM eclipse-temurin:21-jdk AS plugins
+# Paper 26.3 / Velocity 4.3 APIs require JDK 25+ to resolve (Gradle toolchain).
+FROM eclipse-temurin:25-jdk AS plugins
 
 ARG PLUGIN_PREFIX
 
 USER root
-WORKDIR /src
+WORKDIR /src/plugins
 
-COPY plugins ./plugins
+COPY plugins/ ./
 
 RUN set -eux; \
-    find plugins -name gradlew -exec chmod +x {} \; ; \
-    find plugins -name gradlew -printf '%h\n' | while read -r project; do \
-      base="$(basename "$project")"; \
-      case "$base" in \
-        ${PLUGIN_PREFIX}*) ;; \
-        *) echo "skip $base (prefix ${PLUGIN_PREFIX})"; continue ;; \
-      esac; \
-      (cd "$project" && ./gradlew shadowJar --no-daemon || ./gradlew build --no-daemon); \
-    done; \
+    chmod +x gradlew; \
+    ./gradlew --no-daemon --parallel shadowJars -PpluginPrefix="${PLUGIN_PREFIX}"; \
     mkdir -p /out; \
-    find plugins -path '*/build/libs/*.jar' \
+    find . -path '*/build/libs/*.jar' \
       ! -name '*-sources.jar' \
       ! -name '*-javadoc.jar' \
       ! -name '*-plain.jar' \
@@ -87,7 +81,7 @@ RUN set -eux; \
 
 FROM fetch-${LOCK_VARIANT} AS fetch
 
-# Runtime JRE only — main/proxy stay on 21; Paper 26.3 (tech) needs 25+.
+# Runtime JRE — Paper 26.3 and Velocity 4.3 need 25+.
 FROM eclipse-temurin:${RUNTIME_JAVA}-jre
 
 USER root

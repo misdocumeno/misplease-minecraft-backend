@@ -31,19 +31,6 @@ gradle.projectsLoaded {
 `
 }
 
-const FOOJAY_INIT = `beforeSettings { settings ->
-    settings.pluginManagement {
-        repositories {
-            gradlePluginPortal()
-        }
-        plugins {
-            id("org.gradle.toolchains.foojay-resolver-convention") version "0.10.0"
-        }
-    }
-    settings.pluginManager.apply("org.gradle.toolchains.foojay-resolver-convention")
-}
-`
-
 function run(command: string, args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): Promise<void> {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
@@ -178,6 +165,35 @@ async function chooseJar(plugin: DesiredPlugin, directory: string): Promise<stri
   throw new Error(`${plugin.name} produced ${named.length} plugin jars${listed ? `: ${listed}` : ""}`)
 }
 
+async function resolveCommit(repo: string, commit: string | undefined): Promise<string> {
+  if (commit && /^[0-9a-f]{40}$/i.test(commit)) return commit
+  // No pin → tip of the remote default branch (ls-remote HEAD).
+  const out = await new Promise<string>((resolve, reject) => {
+    const child = spawn("git", ["ls-remote", repo, "HEAD"], {
+      stdio: ["ignore", "pipe", "pipe"],
+      env: process.env,
+    })
+    let stdout = ""
+    let stderr = ""
+    child.stdout.on("data", (chunk: Buffer) => {
+      stdout += chunk.toString()
+    })
+    child.stderr.on("data", (chunk: Buffer) => {
+      stderr += chunk.toString()
+    })
+    child.on("error", reject)
+    child.on("close", (code) => {
+      if (code === 0) resolve(stdout)
+      else reject(new Error(`git ls-remote failed (${code}): ${stderr.trim() || stdout.trim()}`))
+    })
+  })
+  const hash = out.trim().split(/\s+/)[0] ?? ""
+  if (!/^[0-9a-f]{40}$/i.test(hash)) {
+    throw new Error(`could not resolve HEAD for ${repo}`)
+  }
+  return hash
+}
+
 export async function buildNormalizedJar(plugin: DesiredPlugin): Promise<{
   filename: string
   jar: string
@@ -185,15 +201,13 @@ export async function buildNormalizedJar(plugin: DesiredPlugin): Promise<{
   builder?: string
   java: string
   release?: string
+  commit: string
 }> {
-  const commit = plugin.commit ?? ""
-  if (!/^[0-9a-f]{40}$/i.test(commit)) {
-    throw new Error(`${plugin.name} needs a full git commit`)
-  }
   const repo = plugin.id ?? ""
   if (!repo.startsWith("https://") && !repo.startsWith("git@")) {
     throw new Error(`${plugin.name} needs an https or git repository url`)
   }
+  const commit = await resolveCommit(repo, plugin.commit)
   const directory = await mkdtemp(path.join(tmpdir(), "plugin-lock-"))
   try {
     await run("git", ["init"], directory)
@@ -240,18 +254,20 @@ export async function buildNormalizedJar(plugin: DesiredPlugin): Promise<{
       const task = plugin.task ?? "build"
       const gradleArgs = [task, "--no-daemon"]
       if (!plugin.task) gradleArgs.push("-x", "test", "-x", "javadoc")
+      // Prefer explicit Temurin homes over Foojay init scripts (Gradle 9 settings DSL differs).
+      const jdkHomes = new Set<string>([jdk.home])
       if (bytecode !== undefined) {
         const compiler = await ensureJdk(bytecode)
+        jdkHomes.add(compiler.home)
         const targetScript = path.join(directory, ".plugin-lock-target.init.gradle")
         await writeFile(targetScript, targetInit(bytecode))
-        gradleArgs.push("--init-script", targetScript, `-Dorg.gradle.java.installations.paths=${compiler.home}`)
+        gradleArgs.push("--init-script", targetScript)
       }
-      const needsAnotherJdk = declared.some((version) => version !== major) || (bytecode !== undefined && bytecode !== major)
-      if (needsAnotherJdk && !texts.includes("foojay")) {
-        const initScript = path.join(directory, ".plugin-lock-foojay.init.gradle")
-        await writeFile(initScript, FOOJAY_INIT)
-        gradleArgs.push("--init-script", initScript)
+      for (const version of declared) {
+        if (version !== major) jdkHomes.add((await ensureJdk(version)).home)
       }
+      gradleArgs.push(`-Dorg.gradle.java.installations.paths=${[...jdkHomes].join(",")}`)
+      gradleArgs.push("-Dorg.gradle.java.installations.auto-download=false")
       if (process.platform === "win32") {
         await run("cmd.exe", ["/d", "/c", "gradlew.bat", ...gradleArgs], directory, env)
       } else {
@@ -280,6 +296,7 @@ export async function buildNormalizedJar(plugin: DesiredPlugin): Promise<{
       builder: ambiguous ? builder : undefined,
       java: jdk.release,
       release: bytecode === undefined ? undefined : String(bytecode),
+      commit,
     }
   } finally {
     await rm(directory, { recursive: true, force: true })
@@ -291,7 +308,7 @@ export async function resolveGit(plugin: DesiredPlugin): Promise<ResolvedArtifac
   return {
     name: plugin.name,
     source: "git",
-    version: plugin.commit ?? "",
+    version: built.commit,
     filename: built.filename,
     url: plugin.id ?? "",
     sha256: digest("sha256", built.bytes),

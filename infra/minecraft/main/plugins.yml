@@ -3,8 +3,11 @@
 # plugins share one repo (EssentialsX*) or when the slug/repo label would differ
 # from the lock name.
 # GitHub multi-jar releases: jar: exact filename, or /regex/ (YAML has no regex type).
+minecraft: "26.3"
 server:
-  source: purpur
+  source: papermc
+  id: paper
+  version: "26.3"
 
 plugins:
   - name: ActionHealth
@@ -64,9 +67,11 @@ plugins:
     source: jenkins
     server: https://hub.bg-software.com
     job: SuperiorSkyblock2 - Stable Builds
+    jar: /^SuperiorSkyblock2-[0-9]/
   - name: PlotSquared
     source: git
     repo: https://github.com/IntellectualSites/PlotSquared.git
+    java: "25"
   - name: DecentHolograms
     source: modrinth
     slug: decentholograms
@@ -95,11 +100,9 @@ plugins:
   - name: VoidGen
     source: modrinth
     slug: voidgen
-  # FAWE 2.9.0 (1.20.1) ships an older WorldEdit API; WG 7.0.10+ calls BlockVector2.x() and crashes.
   - name: WorldGuard
     source: modrinth
     slug: worldguard
-    version: "7.0.9"
   - name: Vault
     source: github
     repo: MilkBowl/Vault
@@ -130,6 +133,7 @@ plugins:
     source: jenkins
     server: https://ci.lucko.me
     job: spark
+    jar: /^spark-.*-paper\.jar$/
   - name: Jobs
     source: spiget
     id: "4216"
@@ -148,7 +152,6 @@ plugins:
   - name: BKCommonLib
     source: modrinth
     slug: bkcommonlib
-    version: "1.20.1-v3"
   - name: LightCleaner
     source: spiget
     id: "42469"

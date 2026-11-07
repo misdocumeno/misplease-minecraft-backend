@@ -1,51 +1,14 @@
 plugins {
-    kotlin("jvm") version "2.3.0"
-    kotlin("plugin.serialization") version "2.3.0"
-    id("com.gradleup.shadow") version "9.3.0"
-}
-
-group = "io.github.misdocumeno"
-version = "0.1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral()
-    maven("https://repo.papermc.io/repository/maven-public/")
+    id("misplease.paper")
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
-
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
-    implementation("io.lettuce:lettuce-core:7.0.0.RELEASE")
-
-    implementation(kotlin("stdlib"))
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.lettuce.core)
 }
 
-tasks {
-    jar {
-        enabled = false
-    }
-
-    shadowJar {
-        archiveClassifier.set("")
-        mergeServiceFiles()
-
-        val libPackage = "${project.group}.shaded"
-        relocate("kotlin.", "$libPackage.kotlin.")
-        relocate("kotlinx.", "$libPackage.kotlinx.")
-        relocate("io.lettuce.", "$libPackage.io.lettuce.")
-        relocate("io.netty.", "$libPackage.io.netty.")
-    }
-
-    build {
-        dependsOn(shadowJar)
-    }
-}
-
-kotlin {
-    jvmToolchain(21)
-
-    sourceSets.all {
-        languageSettings.optIn("kotlin.uuid.ExperimentalUuidApi")
-    }
+tasks.shadowJar {
+    val libPackage = "${project.group}.shaded"
+    relocate("io.lettuce.", "$libPackage.io.lettuce.")
+    relocate("io.netty.", "$libPackage.io.netty.")
 }
