@@ -76,7 +76,16 @@ export async function ensureJdk(major: number, release?: string): Promise<{ home
       return { home: existing, release: cachedRelease }
     }
   }
-  const asset = await adoptium(major, cachedRelease)
+  // Exact Temurin builds are OS-specific; a Windows-locked 25.0.5+8 often 404s on Linux.
+  // Prefer the pin when present, otherwise (or on 404) take latest for that major.
+  let asset: { release: string; link: string }
+  try {
+    asset = await adoptium(major, cachedRelease)
+  } catch (error) {
+    if (!cachedRelease) throw error
+    console.log(`Temurin ${cachedRelease} unavailable for this OS; falling back to latest ${major}`)
+    asset = await adoptium(major)
+  }
   const home = path.join(cache, asset.release)
   const binary = path.join(home, "bin", process.platform === "win32" ? "java.exe" : "java")
   if (await exists(binary)) return { home, release: asset.release }

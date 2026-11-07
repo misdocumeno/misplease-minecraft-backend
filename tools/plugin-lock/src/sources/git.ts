@@ -294,7 +294,8 @@ export async function buildNormalizedJar(plugin: DesiredPlugin): Promise<{
       jar: path.relative(directory, chosen).replace(/\\/g, "/"),
       bytes,
       builder: ambiguous ? builder : undefined,
-      java: jdk.release,
+      // Major only — full Temurin builds (25.0.5+8) are not portable across OS in the lock.
+      java: String(major),
       release: bytecode === undefined ? undefined : String(bytecode),
       commit,
     }

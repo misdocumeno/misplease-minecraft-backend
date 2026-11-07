@@ -341,7 +341,7 @@ plugins:
     url: https://github.com/IntellectualSites/PlotSquared.git
     sha256: 25f25a60e4423d4cf3e48177bdbcddb2fafe6dee262ecd8d616553f97cc5dd08
     jar: Bukkit/build/libs/plotsquared-bukkit-7.6.1-SNAPSHOT.jar
-    java: 25.0.5+8
+    java: "25"
   - name: DecentHolograms
     source: modrinth
     version: 2.10.2
