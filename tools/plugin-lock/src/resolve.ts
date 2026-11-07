@@ -41,6 +41,21 @@ function apiHash(resolved: ResolvedArtifact): { algorithm: HashAlgorithm; value:
 
 export async function lockArtifact(plugin: DesiredPlugin): Promise<LockedArtifact> {
   const resolved = await resolve(plugin)
+  // Git pins the commit only — jars are not bit-identical across OS, so no content hash at update.
+  if (plugin.source === "git") {
+    return {
+      name: resolved.name,
+      source: resolved.source,
+      version: resolved.version,
+      filename: resolved.filename,
+      url: resolved.url,
+      jar: resolved.jar,
+      builder: resolved.builder,
+      java: resolved.java,
+      release: resolved.release,
+      task: resolved.task,
+    }
+  }
   const fromApi = apiHash(resolved)
   const pin = fromApi ?? { algorithm: "sha256" as const, value: digest("sha256", await downloadBytes(resolved.url)) }
   console.log(`${resolved.name} ${resolved.version} ${pin.algorithm} ${fromApi ? "from the api" : "from the downloaded jar"}`)
@@ -54,7 +69,6 @@ export async function lockArtifact(plugin: DesiredPlugin): Promise<LockedArtifac
     minecraft: resolved.minecraft && resolved.minecraft.length > 0 ? resolved.minecraft : undefined,
     task: resolved.task,
     jar: resolved.jar,
-    jarPath: resolved.jarPath,
     builder: resolved.builder,
     java: resolved.java,
     release: resolved.release,

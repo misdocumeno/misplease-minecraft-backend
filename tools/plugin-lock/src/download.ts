@@ -8,11 +8,12 @@ import { basename } from "./desired.ts"
 import type { LockedArtifact } from "./model.ts"
 import { buildNormalizedJar } from "./sources/git.ts"
 
-function pin(artifact: LockedArtifact): { algorithm: HashAlgorithm; value: string } {
+function pin(artifact: LockedArtifact): { algorithm: HashAlgorithm; value: string } | undefined {
   const pins = (["sha256", "sha512", "sha1"] as const).flatMap((algorithm) => {
     const value = artifact[algorithm]
     return value ? [{ algorithm, value }] : []
   })
+  if (pins.length === 0) return undefined
   if (pins.length !== 1) {
     throw new Error(`lock needs exactly one hash, found ${pins.length}`)
   }
@@ -80,6 +81,9 @@ async function writeDisk(entryHash: string, bytes: Buffer): Promise<void> {
 export async function downloadArtifact(artifact: LockedArtifact, outDir: string): Promise<void> {
   const filename = basename(artifact.filename)
   const expected = pin(artifact)
+  if (!expected && artifact.source !== "git") {
+    throw new Error(`${artifact.name}: lock needs a content hash`)
+  }
   const entryHash = lockEntryHash(artifact)
   const root = cacheRoot()
   const absolute = root ? cacheFile(entryHash) : undefined
@@ -98,15 +102,9 @@ export async function downloadArtifact(artifact: LockedArtifact, outDir: string)
     source = "network"
   }
 
-  const hash = digest(expected.algorithm, bytes)
-  if (hash !== expected.value) {
-    // Git jars are rebuilt from the locked commit; bytecode is not bit-identical across OS/JDK.
-    // The commit is the pin — keep the rebuilt bytes and do not fail the download.
-    if (artifact.source === "git") {
-      console.log(
-        `${filename} git rebuild ${expected.algorithm} ${hash.slice(0, 12)}… (lock had ${expected.value.slice(0, 12)}…)`,
-      )
-    } else {
+  if (expected) {
+    const hash = digest(expected.algorithm, bytes)
+    if (hash !== expected.value) {
       throw new Error(`${expected.algorithm} ${hash} does not match the lock ${expected.value}`)
     }
   }
@@ -123,7 +121,6 @@ export async function downloadArtifact(artifact: LockedArtifact, outDir: string)
 }
 
 async function gitBytes(artifact: LockedArtifact): Promise<Buffer> {
-  const legacyPath = artifact.jarPath ?? artifact.jar
   const built = await buildNormalizedJar({
     name: artifact.name,
     source: "git",
@@ -133,8 +130,7 @@ async function gitBytes(artifact: LockedArtifact): Promise<Buffer> {
     java: artifact.java,
     release: artifact.release,
     task: artifact.task,
-    jarPath: legacyPath?.includes("/") ? legacyPath : undefined,
-    jar: legacyPath && !legacyPath.includes("/") ? legacyPath : undefined,
+    jar: artifact.jar,
   })
   return built.bytes
 }

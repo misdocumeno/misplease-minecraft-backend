@@ -10,16 +10,19 @@ export function matchJar(candidates: string[], selector: string | undefined, con
     throw new Error(`${context} has ${candidates.length} jars; set jar: to an exact name or /regex/; jars: ${candidates.join(", ") || "none"}`)
   }
 
-  const regex = parseRegexLiteral(selector)
-  const hits = regex
-    ? candidates.filter((name) => regex.test(name))
-    : candidates.filter((name) => name === selector)
+  const hits = candidates.filter((name) => jarSelectorMatches(selector, name))
 
   if (hits.length === 1) return hits[0]
   if (hits.length === 0) {
     throw new Error(`${context} has no jar matching ${selector}; jars: ${candidates.join(", ") || "none"}`)
   }
   throw new Error(`${context} jar ${selector} matched ${hits.length} files: ${hits.join(", ")}`)
+}
+
+/** Exact string or `/regex/flags` against one candidate name/path. */
+export function jarSelectorMatches(selector: string, candidate: string): boolean {
+  const regex = parseRegexLiteral(selector)
+  return regex ? regex.test(candidate) : candidate === selector
 }
 
 function parseRegexLiteral(value: string): RegExp | undefined {

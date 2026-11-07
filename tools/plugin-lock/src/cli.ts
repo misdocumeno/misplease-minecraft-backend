@@ -76,8 +76,14 @@ function reusePinned(entry: DesiredPlugin, previous: LockFile): LockedArtifact |
     if (artifact.name !== entry.name || artifact.source !== entry.source || artifact.version !== version) {
       return false
     }
+    if (entry.source === "git") {
+      // Commit is the pin; no content hash. jar/java/builder must still match desired.
+      if (entry.id && artifact.url !== entry.id) return false
+      if ((entry.jar ?? "") !== (artifact.jar ?? "")) return false
+      if ((entry.java ?? "") !== (artifact.java ?? "")) return false
+      return true
+    }
     if (!artifact.sha256 && !artifact.sha512 && !artifact.sha1) return false
-    if (entry.source === "git" && entry.id && artifact.url !== entry.id) return false
     return true
   })
 }

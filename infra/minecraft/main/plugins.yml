@@ -2,8 +2,7 @@
 # `name` is the stable label (used by update --only). Required when several
 # plugins share one repo (EssentialsX*) or when the slug/repo label would differ
 # from the lock name.
-# jar: exact filename or /regex/ (YAML has no regex type) — GitHub, Jenkins, Modrinth, git outputs.
-# jarPath: git only — optional repo-relative path to the built jar if you must pin the path.
+# jar: exact name/path or /regex/ (YAML has no regex type). Git matches repo-relative path and basename.
 minecraft: "26.3"
 server:
   source: papermc
