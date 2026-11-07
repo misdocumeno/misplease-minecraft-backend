@@ -176,6 +176,210 @@ async function chooseJar(plugin: DesiredPlugin, directory: string): Promise<stri
   )
 }
 
+/**
+ * RoseStacker (and similar Rosewood plugins) require private maven-public credentials
+ * for third-party compileOnly hooks. Without them Gradle 401s and the build dies.
+ * Strip that repo, drop the private-only compileOnly lines, and stub NPCsHook so the
+ * rest of the plugin still compiles from public deps alone.
+ */
+async function softenRosewoodPrivateMaven(directory: string): Promise<void> {
+  const rootGradle = path.join(directory, "build.gradle")
+  if (!(await exists(rootGradle))) return
+  const root = await readFile(rootGradle, "utf8")
+  if (!root.includes("repo.rosewooddev.io/repository/maven-public")) return
+  const stripped = root.replace(
+    /\n\s*maven\s*\{\s*\n\s*url\s*=\s*['"]https:\/\/repo\.rosewooddev\.io\/repository\/maven-public['"][\s\S]*?\n\s*\}\n/,
+    "\n        // plugin-lock: dropped private rosewood maven-public (no credentials)\n",
+  )
+  if (stripped === root) {
+    throw new Error("could not strip rosewood maven-public credentials block from build.gradle")
+  }
+  await writeFile(rootGradle, stripped)
+
+  const pluginGradle = path.join(directory, "Plugin", "build.gradle")
+  if (await exists(pluginGradle)) {
+    let plugin = await readFile(pluginGradle, "utf8")
+    // These coordinates live only on the private mirror.
+    const drop = [
+      /[ \t]*compileOnly\s+['"]com\.songoda:epicbosses:[^'"]+['"]\s*\n/g,
+      /[ \t]*compileOnly\s+['"]net\.citizensnpcs:citizens:[^'"]+['"]\s*\n/g,
+      /[ \t]*compileOnly\s+['"]com\.nisovin:shopkeepers:[^'"]+['"]\s*\n/g,
+      /[ \t]*compileOnly\s+['"]com\.magmaguy:elitemobs:[^'"]+['"]\s*\n/g,
+      /[ \t]*compileOnly\s+['"]simplepets\.brainsnyder:simplepets:[^'"]+['"]\s*\n/g,
+      /[ \t]*compileOnly\s+['"]com\.jacob_vejvoda:infernalmobs:[^'"]+['"]\s*\n/g,
+      /[ \t]*compileOnly\s+['"]com\.github\.Bestem0r:VillagerMarket:[^'"]+['"]\s*\n/g,
+    ]
+    for (const pattern of drop) plugin = plugin.replace(pattern, "")
+    await writeFile(pluginGradle, plugin)
+  }
+
+  const npcHook = path.join(
+    directory,
+    "Plugin",
+    "src",
+    "main",
+    "java",
+    "dev",
+    "rosewood",
+    "rosestacker",
+    "hook",
+    "NPCsHook.java",
+  )
+  if (await exists(npcHook)) {
+    await writeFile(
+      npcHook,
+      `package dev.rosewood.rosestacker.hook;
+
+import dev.rosewood.rosegarden.utils.StringPlaceholders;
+import java.lang.reflect.Method;
+import org.bukkit.Bukkit;
+import org.bukkit.NamespacedKey;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.Plugin;
+
+/** plugin-lock stub: no private Rosewood compileOnly APIs; reflection / Bukkit only. */
+public class NPCsHook {
+
+    private static final NamespacedKey LEVELLEDMOBS_KEY = new NamespacedKey("levelledmobs", "level");
+
+    public static boolean citizensEnabled() {
+        return Bukkit.getPluginManager().isPluginEnabled("Citizens");
+    }
+
+    public static boolean shopkeepersEnabled() {
+        return Bukkit.getPluginManager().isPluginEnabled("Shopkeepers");
+    }
+
+    public static boolean mythicMobsEnabled() {
+        return Bukkit.getPluginManager().isPluginEnabled("MythicMobs");
+    }
+
+    public static boolean epicBossesEnabled() {
+        return Bukkit.getPluginManager().isPluginEnabled("EpicBosses");
+    }
+
+    public static boolean eliteMobsEnabled() {
+        return Bukkit.getPluginManager().isPluginEnabled("EliteMobs");
+    }
+
+    public static boolean bossEnabled() {
+        return Bukkit.getPluginManager().isPluginEnabled("Boss");
+    }
+
+    public static boolean proCosmeticsEnabled() {
+        return Bukkit.getPluginManager().isPluginEnabled("ProCosmetics");
+    }
+
+    public static boolean infernalMobsEnabled() {
+        return Bukkit.getPluginManager().isPluginEnabled("InfernalMobs");
+    }
+
+    public static boolean simplePetsEnabled() {
+        return Bukkit.getPluginManager().isPluginEnabled("SimplePets");
+    }
+
+    public static boolean levelledMobsEnabled() {
+        return Bukkit.getPluginManager().isPluginEnabled("LevelledMobs");
+    }
+
+    public static boolean villagerMarketEnabled() {
+        return Bukkit.getPluginManager().isPluginEnabled("VillagerMarket");
+    }
+
+    public static boolean mypetEnabled() {
+        return Bukkit.getPluginManager().isPluginEnabled("MyPet");
+    }
+
+    public static boolean anyEnabled() {
+        return citizensEnabled()
+                || shopkeepersEnabled()
+                || mythicMobsEnabled()
+                || epicBossesEnabled()
+                || eliteMobsEnabled()
+                || bossEnabled()
+                || proCosmeticsEnabled()
+                || infernalMobsEnabled()
+                || simplePetsEnabled()
+                || levelledMobsEnabled()
+                || villagerMarketEnabled()
+                || mypetEnabled();
+    }
+
+    public static boolean isNPC(LivingEntity entity) {
+        if (entity.hasMetadata("Boss_V4") || entity.hasMetadata("PROCOSMETICS_ENTITY")) return true;
+        if (levelledMobsEnabled() && entity.getPersistentDataContainer().has(LEVELLEDMOBS_KEY, PersistentDataType.INTEGER)) {
+            return true;
+        }
+        return reflectNpc(entity);
+    }
+
+    private static boolean reflectNpc(LivingEntity entity) {
+        try {
+            if (citizensEnabled()) {
+                Class<?> api = Class.forName("net.citizensnpcs.api.CitizensAPI");
+                Object registry = api.getMethod("getNPCRegistry").invoke(null);
+                if (registry != null && Boolean.TRUE.equals(registry.getClass().getMethod("isNPC", org.bukkit.entity.Entity.class).invoke(registry, entity))) {
+                    return true;
+                }
+            }
+        } catch (ReflectiveOperationException ignored) {
+        }
+        try {
+            if (mythicMobsEnabled()) {
+                Class<?> mythic = Class.forName("io.lumine.mythic.bukkit.MythicBukkit");
+                Object inst = mythic.getMethod("inst").invoke(null);
+                Object helper = inst.getClass().getMethod("getAPIHelper").invoke(inst);
+                if (Boolean.TRUE.equals(helper.getClass().getMethod("isMythicMob", org.bukkit.entity.Entity.class).invoke(helper, entity))) {
+                    return true;
+                }
+            }
+        } catch (ReflectiveOperationException ignored) {
+        }
+        try {
+            if (simplePetsEnabled()) {
+                Class<?> pets = Class.forName("simplepets.brainsynder.api.plugin.SimplePets");
+                Method isPet = pets.getMethod("isPetEntity", org.bukkit.entity.Entity.class);
+                if (Boolean.TRUE.equals(isPet.invoke(null, entity))) return true;
+            }
+        } catch (ReflectiveOperationException ignored) {
+        }
+        try {
+            if (mypetEnabled()) {
+                Class<?> api = Class.forName("de.Keyle.MyPet.MyPetApi");
+                if (Boolean.TRUE.equals(api.getMethod("isReady").invoke(null))) {
+                    Object manager = api.getMethod("getPetManager").invoke(null);
+                    if (manager.getClass().getMethod("getPetFromEntity", org.bukkit.entity.Entity.class).invoke(manager, entity) != null) {
+                        return true;
+                    }
+                }
+            }
+        } catch (ReflectiveOperationException ignored) {
+        }
+        Plugin infernal = Bukkit.getPluginManager().getPlugin("InfernalMobs");
+        if (infernal != null && infernal.isEnabled()) {
+            try {
+                Method idSearch = infernal.getClass().getMethod("idSearch", java.util.UUID.class);
+                Object id = idSearch.invoke(infernal, entity.getUniqueId());
+                if (id instanceof Number && ((Number) id).intValue() >= 0) return true;
+            } catch (ReflectiveOperationException ignored) {
+            }
+        }
+        return false;
+    }
+
+    public static void addCustomPlaceholders(LivingEntity entity, StringPlaceholders.Builder placeholders) {
+        if (levelledMobsEnabled()) {
+            Integer level = entity.getPersistentDataContainer().get(LEVELLEDMOBS_KEY, PersistentDataType.INTEGER);
+            placeholders.add("levelledmobs_level", level == null ? 0 : level);
+        }
+    }
+}
+`,
+    )
+  }
+}
+
 async function resolveCommit(repo: string, commit: string | undefined): Promise<string> {
   if (commit && /^[0-9a-f]{40}$/i.test(commit)) return commit
   // No pin → tip of the remote default branch (ls-remote HEAD).
@@ -225,6 +429,7 @@ export async function buildNormalizedJar(plugin: DesiredPlugin): Promise<{
     await run("git", ["remote", "add", "origin", repo], directory)
     await run("git", ["fetch", "--depth", "1", "origin", commit], directory)
     await run("git", ["checkout", "--detach", "FETCH_HEAD"], directory)
+    await softenRosewoodPrivateMaven(directory)
     const { builder, ambiguous } = await detectBuilder(plugin, directory)
     const texts = await buildTexts(directory)
     const declared = declaredJava(texts)
@@ -265,9 +470,6 @@ export async function buildNormalizedJar(plugin: DesiredPlugin): Promise<{
       const task = plugin.task ?? "build"
       const gradleArgs = [task, "--no-daemon"]
       if (!plugin.task) gradleArgs.push("-x", "test", "-x", "javadoc")
-      // Rosewood (and similar) build.gradle reads project.mavenUser/Password at config time.
-      // Empty -P keeps configuration alive; public deps still resolve without their private repo.
-      gradleArgs.push("-PmavenUser=", "-PmavenPassword=")
       // Prefer explicit Temurin homes over Foojay init scripts (Gradle 9 settings DSL differs).
       const jdkHomes = new Set<string>([jdk.home])
       if (bytecode !== undefined) {
