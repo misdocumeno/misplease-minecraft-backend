@@ -28,9 +28,20 @@ plugins-velocity/
 .plugin-lock-cache/
 .cursor/materialized*/
 
-# Runtime data
+# Runtime data (lives on prod /data only — never in git or Windows dev)
 infra/minecraft/**/data/
 **/*.db
+**/playtime.yml
+**/blockOwnerShips.yml
+**/gravitytubes.yml
+**/AdvancedRegionMarket/regions.yml
+**/AdvancedRegionMarket/analytics.yml
+**/Essentials/warps/
+**/DecentHolograms/holograms/
+**/GSit/data/
+**/WorldGuard/worlds/
+**/WorldGuard/world2/
+**/WorldGuard/recursos3/
 
 # OS
 Thumbs.db
