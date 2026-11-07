@@ -186,14 +186,29 @@ async function softenRosewoodPrivateMaven(directory: string): Promise<void> {
   const rootGradle = path.join(directory, "build.gradle")
   if (!(await exists(rootGradle))) return
   const root = await readFile(rootGradle, "utf8")
-  if (!root.includes("repo.rosewooddev.io/repository/maven-public")) return
-  const stripped = root.replace(
-    /\n\s*maven\s*\{\s*\n\s*url\s*=\s*['"]https:\/\/repo\.rosewooddev\.io\/repository\/maven-public['"][\s\S]*?\n\s*\}\n/,
-    "\n        // plugin-lock: dropped private rosewood maven-public (no credentials)\n",
-  )
-  if (stripped === root) {
-    throw new Error("could not strip rosewood maven-public credentials block from build.gradle")
+  const marker = "https://repo.rosewooddev.io/repository/maven-public"
+  if (!root.includes(marker)) return
+  const urlAt = root.indexOf(marker)
+  const mavenAt = root.lastIndexOf("maven", urlAt)
+  if (mavenAt < 0) throw new Error("could not find maven block for rosewood maven-public")
+  let depth = 0
+  let end = -1
+  for (let i = mavenAt; i < root.length; i++) {
+    const ch = root[i]
+    if (ch === "{") depth++
+    else if (ch === "}") {
+      depth--
+      if (depth === 0) {
+        end = i + 1
+        break
+      }
+    }
   }
+  if (end < 0) throw new Error("could not strip rosewood maven-public credentials block from build.gradle")
+  const stripped =
+    root.slice(0, mavenAt) +
+    "// plugin-lock: dropped private rosewood maven-public (no credentials)\n" +
+    root.slice(end)
   await writeFile(rootGradle, stripped)
 
   const pluginGradle = path.join(directory, "Plugin", "build.gradle")
