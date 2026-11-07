@@ -21,7 +21,12 @@ WORKDIR /src/plugins
 
 COPY plugins/ ./
 
-RUN set -eux; \
+# Persist Gradle caches across builds (GHA exports these with cache-to mode=max).
+# Layer cache still skips this RUN when plugins/ is unchanged; on a partial change,
+# deps + Gradle build-cache avoid a full cold compile.
+RUN --mount=type=cache,target=/root/.gradle/caches,id=misplease-gradle-caches \
+    --mount=type=cache,target=/root/.gradle/wrapper,id=misplease-gradle-wrapper \
+    set -eux; \
     chmod +x gradlew; \
     ./gradlew --no-daemon --parallel shadowJars -PpluginPrefix="${PLUGIN_PREFIX}"; \
     mkdir -p /out; \

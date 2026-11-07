@@ -4,7 +4,9 @@ WORKDIR /src/plugins
 
 COPY plugins/ ./
 
-RUN set -eux; \
+RUN --mount=type=cache,target=/root/.gradle/caches,id=misplease-gradle-caches \
+    --mount=type=cache,target=/root/.gradle/wrapper,id=misplease-gradle-wrapper \
+    set -eux; \
     chmod +x gradlew; \
     ./gradlew --no-daemon --parallel shadowJars; \
     mkdir -p /out; \
