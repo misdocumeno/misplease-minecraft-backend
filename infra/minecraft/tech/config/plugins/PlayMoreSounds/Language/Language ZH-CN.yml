@@ -1,0 +1,338 @@
+#语言ZH-CN
+#译者：秋风残叶
+Version: '4.2'
+
+Addons:
+  Download:
+    Error:
+      Not Found: '&cPlayMoreSounds v<version> 的附属未找到'
+      Subtitle: '&7出现错误'
+      Title: '&4&l警告！'
+      Unknown: '&c下载附属包时出现未知错误！'
+    Downloading:
+      Already Exists: '&7已找到一个附属包，将其从临时文件夹中删除并下载最新版本...'
+      Subtitle:
+        Files: '&6附属文件...'
+        Info: '&6附属信息...'
+      Title: '&c下载中'
+      Unsupported Version: '&7最新版本附属已经下载，但貌似并不支持你当前版本的 PlayMoreSounds ，尝试下载适用你当前版本的附属...'
+    Success:
+      Subtitle: '&7最新版附属已下载'
+      Title: '&2成功'
+  Error:
+    Blocked: '&c附属正在安装, 请等待安装结束以打开附属管理菜单'
+    Not Found: '&c附属 &f<addon>&c 未找到，请使用 &7&n/<label> addon list&c 列出所有可用附属'
+  Install:
+    Error: '&c安装附属 &4<addon>&c 时出现未知错误.'
+    Installed: '&7<addon>&7 已安装'
+    Success: '&a附属 <addon>&a 已成功安装，请重启服务器'
+  Inventory:
+    Title:
+      Default: '&9&l已安装附属:'
+      Empty: '&c&l未找到附属'
+      Installer: '&2&l安装附属:'
+    Items:
+      Addon:
+        Display Name: '&a&l<name>'
+        Lore: >-
+          &7作者:&8 <authors>
+          <line>&7描述:&8 <description>
+          <line>&7版本:&8 <version>
+          <line>&c点击将其&4&n&l卸载&c.
+        To be uninstalled lore: >-
+          &7作者:&8 <authors>
+          <line>&7描述:&8 <description>
+          <line>&7版本:&8 <version>
+          <line>&f点击&7&n&l取消卸载&f.
+      Done:
+        Display Name: '&2&l完成'
+        Lore: '&7点击退出'
+      Info:
+        Display Name: '&d&l信息'
+        Lore: '&7已安装 <addons> 附属'
+      Install:
+        Display Name: '&2&l安装附属'
+        Lore: ' &7点击此处从<line>&7PlayMoreSounds'' 的GitHub上下载最新附属'
+      Next Page:
+        Display Name: '&7&l下一页'
+        Lore: '&7点击传送至页 <to>.'
+      Previous Page:
+        Display Name: '&7&l上一页'
+        Lore: '&7点击传送至页 <to>.'
+  List:
+    Header: '&7PlayMoreSounds 已安装附属:'
+    Separator: '&f, '
+  Start:
+    Error:
+      Already Started: '&c附属 <addon> 已启用'
+    Success: '&a附属 <addon> 已成功启用'
+  Stop:
+    Error:
+      Already Stopped: '&c附属 <addon> 已停用'
+    Success: '&a附属 <addon> 已成功停用'
+  Uninstall:
+    Cancel: '&a附属 <addon> 的卸载已被取消'
+    Confirmation:
+      Chat: '&7请输入 &f/<label> confirm&7 确认卸载 <addon> 附属'
+      Description: '卸载 <addon> 附属'
+      Title: '&9&l卸载 &9<addon>&l?'
+    Error:
+      Dependants:
+        Plural: '&c附属 <addon> 无法被卸载，因为其为附属 &f<dependants>&c 的前置，你需要首先把这些附属卸载掉'
+        Singular: '&c附属 <addon> 无法被卸载，因为其为附属 &f<dependants>&c 的前置，你需要首先把这个附属卸载掉'
+    Success: '&a附属 <addon> 在下次关服重启时将被卸载'
+
+Confirm:
+  Error:
+    Nothing Pending: '&c无待确认项目'
+    Not Found: '&cID为 &7<id>&c 的确认信息未找到，请输入 &7&n/<label> list&c 查看所有可用确认信息'
+  Inventory:
+    Items:
+      Cancel:
+        Display Name: '&4&l取消'
+        Lore: '&c点击取消'
+      Confirm:
+        Display Name: '&2&l确认'
+        Lore: '&a点击确认'
+  List:
+    Confirmation: ' &f<id> &7- <description>'
+    Header: '&8待确认列表:'
+
+Description:
+  Header: '&6&m------------&6[&9PlayMoreSounds v<version>&6]&m------------'
+  Help: '&6请输入 "&7&n/<label> help&6" 查看指令列表'
+  No Permission: '&6你没有权限'
+
+Disc:
+  Error:
+    Not Found: '&c找不到ID为 "&7<id>&c" 的光盘'
+  Success: '&7将光盘 &f<id>&7 赋予 &f<target>'
+
+General:
+  And: 和
+  Description: 描述
+  Everyone: 所有人
+  Id: id
+  Invalid Arguments: '&c错误的指令参数! 请输入 "&7/&n<label> <label2> <args>&c".'
+  Name: 名称
+  No Permission: '&4你没有权限'
+  Nobody Online: '&c没有在线玩家'
+  Not A Number: '&c输入值 "&7<number>&c" 不是一个合法数字'
+  Not A Player: '&c只有玩家可以这么做'
+  Player: 玩家
+  Player Not Found: '&c玩家 "&7<player>&c" 未找到'
+  Prefix: '&6[&9PlayMoreSounds&6] '
+  Target: 目标
+  Unknown Command: '&c未知指令，请使用 "&7&n/<label> help&c" 获得帮助'
+  World: 世界
+  You: 你
+
+Help:
+  Addons: |-
+    &e/<label> addons
+    &7 > 打开GUI并显示附属安装相关信息
+  Check: |-
+    &e/<label> check [目标]
+    &7 > 检查声音的开启/关闭状态
+  Confirm: |-
+    &e/<label> confirm [数|页]
+    &7 > 确认
+  Disc: |-
+    &e/<label> disc <ID> [目标]
+    &7 > 提供配置的自定义光盘
+  Footer: '查看更多帮助请输入 &7&n/<label> help <next>'
+  Header: 'PlayMoreSounds 指令列表 (页 <page> / <totalPages>):'
+  Help: |-
+    &e/<label> help [指令]
+    &7 > 指令描述
+  List: |-
+    &e/<label> list [页] [--gui]
+    &7 > 此版本允许的音效列表
+  Play: |-
+    &e/<label> play <音效> [目标] [音量] [音调]
+    &7 > 播放音效
+  Region: |-
+    &e/<label> region <create|info|list|remove|rename|set|teleport|wand>
+    &7 > 区域相关指令
+  Reload: |-
+    &e/<label> reload
+    &7 > 重载插件
+  Stop Sound: |-
+    &e/<label> stopsound [目标] [音效]
+    &7 > 停止当前播放的声音
+  Toggle: |-
+    &e/<label> toggle [目标] [on|off]
+    &7 > 启用/禁用音效
+  Update: |-
+    &e/<label> update [download] [--force]
+    &7 > 点击下载更新
+
+List:
+  Chat:
+    Alternate Color: '&8'
+    Color: '&e'
+    Error:
+      Not Exists: '&c页码 &7<page>&c 不存在，最大页码: <totalpages>.'
+    Footer: '&f&l - &a查看更多音效请使用 "&f/&n<label> list <page>&a"'
+    Header: '&a所有可用音效列表 [页 <page> / <totalpages>]:'
+    Separator: '&f, '
+    Sound Tooltip: '&5点击播放 &d<sound>'
+  Inventory:
+    Items:
+      Next Page:
+        Display Name: '&7&l下一页'
+        Lore: ' 点击翻页'
+      Previous Page:
+        Display Name: '&7&l上一页'
+        Lore: ' 点击翻页'
+      Sound:
+        Display Name: '&d&n<sound>'
+        Lore: ' 点击播放'
+      Stop Sound:
+        Display Name: '&6&l停止音效'
+        Lore: ' 停止当前播放'
+    Title: '&8音效列表 页 &c<page>&8 / &c<totalpages>&8'
+  Page: 页
+
+Play:
+  Error:
+    Invalid Sound: '&c声音名 "&7<sound>&c" 名称不合法'
+    Not A Section: '&c文件 &7<file>&c &c里的设置项 "&7<section>&c" 不是一个合法音效名称'
+    Unauthorized: '&c无法打开此文件夹'
+    Unavailable: '&c声音名 <sound> 不适用于当前Minecraft版本'
+  Pitch: 音调
+  Sound: 音效
+  Success:
+    Config: '&7播放音效： &f<sound>&7 来自文件： &f<file>&7 对应玩家： &f<player>&7.'
+    Default: '&7播放音效： &f<sound>&7 音量： &f<volume>&7 音调： &f<pitch>&7 对应玩家： &f<player>&7.'
+  Volume: 音量
+
+Region:
+  Create:
+    Default Description: 声音播放区域
+    Error:
+      Already Exists: '&c此名称已被占用'
+      Default: '&c创建区域 "&7<name>&c" 时失败.'
+      Different Worlds: '&c选区不在同一个世界内'
+      Max Area: '&c选区过大，边长不得超过 <max> 方块'
+      Max Regions: '&c无法创建超过 <max> 个区域'
+      Not Selected: '&c您尚未选择坐标！请输入 &7&n/<label> <label2> wand&c 来获得区域选择工具！'
+    Success: '&a区域 &7<name>&a 已创建'
+  General:
+    Error:
+      Illegal Characters: '&c区域名称只支持英文+数字组合.'
+      Max Name Characters: '&c区域名称不得超过 <max> 个字符'
+      Not Found:
+        Name: '&c区域未找到，请使用 &7/<label> <label2> list&c 查询区域列表'
+        UUID: '&c区域UUID未找到，请使用 &7/<label> <label2> list&c 查询区域列表'
+      Save: '&c保存区域 <name> 时出现错误，请联系管理员'
+  Info:
+    Creation Date: '&7创建日期:&f <date>'
+    Description: '&7描述:&f <description>'
+    Error:
+      No Regions: '&7这里没有音效区域'
+    Header: '&8区域信息 &f<name>&8:'
+    Id: '&7UUID:&f <uuid>'
+    Owner: '&7创建者:&f <owner>'
+    World: '&7世界:&f <world>'
+  List:
+    Error:
+      No Regions: '&c<targets> 没有区域'
+      Not Exists: '&c页码 &7<page>&c 不存在，最大页码: <totalPages>.'
+    Footer: '&8请输入 &7/<label> <label2> <label3> <label4> <next>&8 查看其它区域'
+    Header:
+      Default: '&8你的区域 [页 <page> / <totalPages>]:'
+      Player: '&8<targets>的区域 [页 <page> / <totalPages>]:'
+    Region: '&7- <uuid>: &f<name>'
+  Region: 区域
+  Remove:
+    Confirm: '&a请输入 &7/<label> confirm&a 确认删除区域 &7<region>&a.'
+    Description: 删除区域 <region>
+    Success: '&a区域 &7<region>&a 已删除'
+  Rename:
+    Error:
+      Already Exists: '&c该名字已被占用'
+      Same: '&c新名字需要与原名字不同'
+    New Name: 新名字
+    Success: '&a区域 <region> 已更名为 &7<newName>&a.'
+  Select:
+    Error:
+      Overlap: '&c选区内已经有区域了！请检查选区！'
+  Set:
+    Description:
+      Error:
+        Max Characters: '&c区域描述不可以超过 100 字符'
+      Success: '&a区域 <region> 的描述已设置为 &7<description>&a.'
+    Select:
+      Error:
+        Not A World: '&c输入参数 &7<value>&c 不是一个合法世界名'
+      Position:
+        First: '&6第一个点已选择! 世界: &e<w>&6, X: &e<x>&6, Y: &e<y>&6, Z: &e<z>&6.'
+        Second: '&6第二个点已选择! 世界: &e<w>&6, X: &e<x>&6, Y: &e<y>&6, Z: &e<z>&6.'
+  Teleport:
+    Success: '&a已传送至区域 <region>.'
+  Wand:
+    Error:
+      Config: '&c配置文件没有设定完成，无法获得区域选择工具，请检查配置文件'
+    Success: '&6区域选择工具: 左键点击选择第一个点，右键选择第二个点'
+
+Reload:
+  Error: '&c加载配置时出现错误，更多音效插件已强制关闭，请检查配置'
+  Success: '&a插件已重载 汉化 by 秋风残叶'
+
+Resource Packs:
+  Error: '&c请求 <player> 下载材质包时出现错误'
+  Download Failed:
+    Failed: '&c材质包下载失败，想体验本服务器全部玩法请尝试重新登录并重新下载该材质包，若还是无法下载，请联系服务器管理员。'
+    Administrator: '&c玩家 <player> 尝试进入服务器但下载材质包失败，可输入 &7&n/pms confirm&c 来让玩家跳过材质包下载环节进入服务器'
+    Confirmation: '允许 <player> 进服'
+  Kick Message:
+    Declined: '&c你必须下载材质包才能进服游戏'
+    Download Fail: '&c材质包下载失败，请尝试重新登录'
+  Request Message: '&e请下载材质包后继续'
+
+Stop Sound:
+  Success:
+    All: '&7停止所有正在播放到 &f<target>&7 的声音'
+    Default: '&7停止从 &f<sounds>&7 到 &f<target>&7 播放声音'
+
+Toggle:
+  Check:
+    Disabled:
+      Default: '&c该音效已禁用'
+      Player: '&c玩家 &f<player>&c 已禁用'
+    Enabled:
+      Default: '&a该音效已启用'
+      Player: '&a玩家 &f<player>&a 的音效已启用'
+  Disabled:
+    Default: '&c音效已关闭'
+    Player: '&c已将 &f<target>&c 的音效关闭!'
+  Enabled:
+    Default: '&a音效已打开!'
+    Player: '&a已将 &f<target>&a 的音效打开!'
+
+Update:
+  Available: '&2PlayMoreSounds v<version> 新版本已可用，建议输入 &7/<label> update download&2 来下载新版本'
+  Check: '&e检查更新...'
+  Download:
+    Checking: '&7检查插件更新...'
+    Confirmation:
+      Not Latest:
+        Deleted: '&a旧下载版本的 PlayMoreSounds 已删除'
+        Description: '删除旧版本的插件更新下载文件'
+      Not Supported:
+        Deleted: '&a不支持版本的 PlayMoreSounds 已删除'
+        Description: '删除不支持版本的插件更新下载文件'
+    Deleted Downloaded: '&7已找到一个已下载的更新，正在删除它并重新下载'
+    Downloading:
+      Default: '&7插件更新可用，正在下载...'
+      Forcefully: '&7正在下载最新版本的 PlayMoreSounds...'
+    Error:
+      Not Latest: '&c你已下载的 PlayMoreSounds 插件版本 &f<downloaded>&c 比当前安装的版本: &f<current>&c 还要旧，请输入 &f&n/pms confirm&c 将此旧版本删除'
+      Not Supported: '&c你已下载的插件版本是为 Spigot &f<apiversion>&c 准备的，而你运行的是 Spigot &f<current>&c. 如果你坚持安装, PlayMoreSounds 将停止运行，请输入 &f&n/pms confirm&c 来将不支持版本的插件删除'
+    Success: '&aPlayMoreSounds v<version> 已成功下载，将在下次关服重启时自动安装'
+  Error:
+    Default: '&c更新失败，请检查网络'
+    Offline: '&c您当前未连接网络，或者您的防火墙拦截了联网请求，更新失败'
+    Timeout: '&c连接超时，请检查网络'
+  Not Available: '&e没有可用更新'

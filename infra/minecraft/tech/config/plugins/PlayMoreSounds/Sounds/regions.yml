@@ -1,0 +1,64 @@
+# Set a sound to play when you enter, exit or stand on a specific region.
+#
+# Sample:
+# (Take a note that this is a sample and the sounds may not be available
+# on your MC version.)
+#
+#PlayMoreSounds: # The region plugin.
+#  Spawn: # The region name, replace 'Spawn' with the name of your region.
+#    Enter: # When a player enters this region.
+#      Cancellable: true
+#      Enabled: true
+#      Stop On Exit:
+#        Enabled: true # If enabled, the sound will be stopped when the player leaves the region.
+#        Delay: 20 # The time to wait before stopping the sound.
+#      Prevent Default Sound: true # If enabled, Region Enter sound in sounds.yml won't be played.
+#      Sounds:
+#        '0':
+#          Delay: 0
+#          Options:
+#            Radius: 0
+#          Pitch: 1
+#          Sound: BLOCK_NOTE_BLOCK_PLING
+#          Volume: 10
+#    Leave: # When a player exits this region.
+#      Cancellable: true
+#      Enabled: true
+#      Prevent Default Sound: true # If enabled, Region Leave sound in sounds.yml won't be played.
+#      Sounds:
+#        '0':
+#          Delay: 0
+#          Options:
+#            Radius: 0
+#          Pitch: 1
+#          Sound: BLOCK_NOTE_BLOCK_BASS
+#          Volume: 10
+#    Loop: # When a player enters the region, a loop will be triggered and play.
+#      Cancellable: true
+#      Delay: 0 # Time in ticks to wait to start the loop once the player enters the region.
+#      Enabled: true
+#      Period: 100 # Time in tick the loop will wait until playing the sound again.
+#      # If you have a long song playing, when the player leaves this region, the song
+#      #will be stopped instead of playing until the end. This setting applies to sounds only,
+#      #the loop function is stopped automatically.
+#      Stop On Exit:
+#        Delay: 10
+#        Enabled: true
+#      Prevent Other Sounds:
+#        Enter Sound: true # If enabled, Enter sound in regions.yml won't be played.
+#        Default Sound: true # If enabled, Region Enter sound in sounds.yml won't be played.
+#      Sounds:
+#        '0':
+#          Delay: 0
+#          Options:
+#            Radius: 0
+#          Pitch: 1
+#          Sound: BLOCK_NOTE_BLOCK_BASS
+#          Volume: 10
+#
+# You can only play sounds in PMS native regions. To play to other plugins, search for compatibility
+#addons on https://www.spigotmc.org/resources/37429/
+#
+# More information about sounds on sounds.yml.
+
+Version: '4.0.2'

@@ -1,0 +1,15 @@
+# Set a sound to play when a player say a specific word/sentence in chat.
+#
+#pling: = The word/sentence that is said on chat.
+#  Cancellable: true
+#  Enabled: true
+#  Sounds:
+#    '0':
+#      Options:
+#        Radius:
+#          Range: -1
+#      Pitch: 1
+#      Sound: BLOCK_NOTE_BLOCK_PLING
+#      Volume: 10
+#
+# More information about sounds on sounds.yml

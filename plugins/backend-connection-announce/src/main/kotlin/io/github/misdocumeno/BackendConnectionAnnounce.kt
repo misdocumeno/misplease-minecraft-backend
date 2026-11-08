@@ -5,7 +5,6 @@ import io.github.misdocumeno.infra.paper.ConnectionEventListener
 import io.github.misdocumeno.infra.paper.PaperAuthEventHandler
 import io.github.misdocumeno.infra.redis.RedisAuthAdapter
 import io.github.misdocumeno.infra.redis.RedisAuthListener
-import io.github.misdocumeno.infra.redis.RedisAuthenticatedRepository
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulRedisConnection
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection
@@ -37,8 +36,7 @@ class BackendConnectionAnnounce : JavaPlugin() {
             }
         }
 
-        val authRepo = RedisAuthenticatedRepository(connection)
-        val handler = PaperAuthEventHandler(server, authRepo)
+        val handler = PaperAuthEventHandler(this, server, connection)
         val adapter = RedisAuthAdapter(handler, json)
 
         RedisAuthListener(connectionPubSub, adapter).start()

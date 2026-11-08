@@ -4,11 +4,9 @@ import io.github.misdocumeno.domain.ChatAudience
 import io.github.misdocumeno.infra.paper.PaperChatBroadcastHandler
 import io.github.misdocumeno.infra.paper.PaperChatListener
 import io.github.misdocumeno.infra.paper.PaperChatRenderer
-import io.github.misdocumeno.infra.paper.PaperUsernameRepository
-import io.github.misdocumeno.infra.redis.RedisAuthenticatedRepository
 import io.github.misdocumeno.infra.redis.RedisChatBroadcastAdapter
-import io.github.misdocumeno.infra.redis.RedisChatIntentPublisher
 import io.github.misdocumeno.infra.redis.RedisChatBroadcastListener
+import io.github.misdocumeno.infra.redis.RedisChatIntentPublisher
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulRedisConnection
 import kotlinx.serialization.json.Json
@@ -39,10 +37,7 @@ class BackendChatAdapterPlugin : JavaPlugin() {
             }
         }
 
-        val usernames = PaperUsernameRepository()
-        val authRepo = RedisAuthenticatedRepository(connection, usernames)
-
-        val renderer = PaperChatRenderer(server, authRepo)
+        val renderer = PaperChatRenderer(this, server, connection)
         val broadcastHandler = PaperChatBroadcastHandler(renderer)
         val redisAdapter = RedisChatBroadcastAdapter(broadcastHandler, json)
 

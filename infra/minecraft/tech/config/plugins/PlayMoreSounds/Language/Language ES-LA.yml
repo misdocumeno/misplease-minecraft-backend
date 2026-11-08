@@ -1,0 +1,338 @@
+#Idioma ES-LA
+#Traductor: Epicnicity322
+Version: '4.2'
+
+Addons:
+  Download:
+    Error:
+      Not Found: '&cNo se encontraron addons para PlayMoreSounds v<version>.'
+      Subtitle: '&7Algo salió mal'
+      Title: '&4&lError'
+      Unknown: '&cSe produjo un error desconocido al descargar addons.'
+    Downloading:
+      Already Exists: '&7Ya se ha descargado un zip de addons antes, eliminando y descargando el más reciente.'
+      Subtitle:
+        Files: '&6Archivos de addons...'
+        Info: '&6Información de addons...'
+      Title: '&cDescargando'
+      Unsupported Version: '&7Se han descargado los últimos addons, pero parece que no son compatibles con la versión actual de PlayMoreSounds, descargando addons hechos para la versión actual...'
+    Success:
+      Subtitle: '&7Últimos addons descargados'
+      Title: '&2Éxito'
+  Error:
+    Blocked: '&cSe están instalando addons, espere hasta que finalice el proceso de instalación antes de abrir el inventario de administración de addons.'
+    Not Found: '&cAddon llamado &f<addon>&c no encontrado. Use &7&n/<label> addon list&c para enumerar todos los addons.'
+  Install:
+    Error: '&cAlgo salió mal al instalar el addon &4<addon>&c.'
+    Installed: '&7<addon>&7 fue instalado.'
+    Success: '&aAddon <addon>&a se ha instalado correctamente, reinicie su servidor para que se cargue.'
+  Inventory:
+    Title:
+      Default: '&9&lAddons Instalados:'
+      Empty: '&c&lAddons no encontrados'
+      Installer: '&2&lInstalar Addons:'
+    Items:
+      Addon:
+        Display Name: '&a&l<name>'
+        Lore: >-
+          &7Autor(es):&8 <authors>
+          <line>&7Descripción:&8 <description>
+          <line>&7Versión:&8 <version>
+          <line>&cHaga clic para &4&n&ldesinstalar&c.
+        To be uninstalled lore: >-
+          &7Autor(es):&8 <authors>
+          <line>&7Descripción:&8 <description>
+          <line>&7Versión:&8 <version>
+          <line>&fHaga clic para &7&n&lcancelar la desinstalación&f.
+      Done:
+        Display Name: '&2&lHecho'
+        Lore: '&7Haga clic para salir.'
+      Info:
+        Display Name: '&d&lInformación'
+        Lore: '&7Tiene <addons> addons instalados.'
+      Install:
+        Display Name: '&2&lInstalar Addons'
+        Lore: ' &7Haga clic para descargar los últimos addons<line>de GitHub de PlayMoreSounds.'
+      Next Page:
+        Display Name: '&7&lPágina Siguiente'
+        Lore: '&7Haga clic para ir a la página <to>.'
+      Previous Page:
+        Display Name: '&7&lPágina Anterior'
+        Lore: '&7Haga clic para ir a la página <to>.'
+  List:
+    Header: '&7Addons instalados en PlayMoreSounds:'
+    Separator: '&f, '
+  Start:
+    Error:
+      Already Started: '&cAddon <addon> ya se ha iniciado.'
+    Success: '&aAddon <addon> inició con éxito.'
+  Stop:
+    Error:
+      Already Stopped: '&cAddon <addon> ya ha sido detenido.'
+    Success: '&aAddon <addon> se detuvo con éxito.'
+  Uninstall:
+    Cancel: '&aAddon <addon> &7&nya no&a se desinstalará.'
+    Confirmation:
+      Chat: '&Escriba &f/<label> confirm&7 para confirmar la desinstalación del addon <addon>.'
+      Description: 'Desinstalar addon <addon>'
+      Title: '&9&l¿Desinstalar &9<addon>&l?'
+    Error:
+      Dependants:
+        Plural: '&cAddon <addon> no se puede desinstalar porque es una dependencia de los addons &f<dependants>&c. Desinstale esos complementos antes de este.'
+        Singular: '&cAddon <addon> no se puede desinstalar porque es una dependencia del addon &f<dependants>&c. Desinstala ese complemento antes de este.'
+    Success: '&aAddon <addon> &4&nserá&a desinstalado cuando el servidor se apaga o se reinicia.'
+
+Confirm:
+  Error:
+    Nothing Pending: '&cNo hay nada pendiente de confirmar.'
+    Not Found: '&cNo se encontró una confirmación con id &7<id>&c. Use &7&n/<label> list&c para ver las confirmaciones pendientes.'
+  Inventory:
+    Items:
+      Cancel:
+        Display Name: '&4&lCancelar'
+        Lore: '&cHaga clic para cancelar la operación.'
+      Confirm:
+        Display Name: '&2&lConfirmar'
+        Lore: '&aHaga clic para confirmar la operación.'
+  List:
+    Confirmation: ' &f<id> &7- <description>'
+    Header: '&8Lista de confirmaciones pendientes:'
+
+Description:
+  Header: '&6&m------------&6[&9PlayMoreSounds v<version>&6]&m------------'
+  Help: '&6Use "&7&n/<label> help&6" para ver la lista de comandos.'
+  No Permission: '&6No tiene permiso para usar ningún comando.'
+
+Disc:
+  Error:
+    Not Found: '&cNo se encontró un disco con el ID "&7<id>&c".'
+  Success: '&7Dando el disco &f<id>&7 a &f<target>&7.'
+
+General:
+  And: y
+  Description: descripción
+  Everyone: Todos
+  Id: id
+  Invalid Arguments: '&c¡Sintaxis de comando incorrecta! Use "&7/&n<label> <label2> <args>&c".'
+  Name: nombre
+  No Permission: '&4¡No tienes permiso para hacer esto!'
+  Nobody Online: '&cNo hay jugadores en línea en el servidor.'
+  Not A Number: '&c¡El valor "&7<number>&c" no es un número válido!'
+  Not A Player: '&cDebes ser un jugador para hacer esto.'
+  Player: jugador
+  Player Not Found: '&cEl jugador "&7<player>&c" no fue encontrado.'
+  Prefix: '&6[&9PlayMoreSounds&6] '
+  Target: objetivo
+  Unknown Command: '&cComando desconocido. Use "&7&n/<label> help&c" para ver la lista de comandos disponibles para usted.'
+  World: mundo
+  You: Tú
+
+Help:
+  Addons: |-
+    &e/<label> addons
+    &7 > Abre una GUI que le ayuda a instalar addons.
+  Check: |-
+    &e/<label> check [objetivo]
+    &7 > Comprueba se sonidos están activados.
+  Confirm: |-
+    &e/<label> confirm [id|page]
+    &7 > Confirma algo.
+  Disc: |-
+    &e/<label> disc <id> [objetivo]
+    &7 > Da un disco personalizado configurado.
+  Footer: 'Ver más comandos con &7&n/<label> help <next>'
+  Header: 'Comandos de PlayMoreSounds (Página <page> de <totalPages>):'
+  Help: |-
+    &e/<label> help [comando]
+    &7 > Muestra la descripción de los comandos.
+  List: |-
+    &e/<label> list [página] [--gui]
+    &7 > Muestra los sonidos disponibles en su versión.
+  Play: |-
+    &e/<label> play <sonido> [objetivo] [vol] [tom]
+    &7 > Reproduce un sonido.
+  Region: |-
+    &e/<label> region <create|info|list|remove|rename|set|teleport|wand>
+    &7 > Comando de regiones.
+  Reload: |-
+    &e/<label> reload
+    &7 > Recargar configuraciones y eventos.
+  Stop Sound: |-
+    &e/<label> stopsound [objetivo] [sonidos]
+    &7 > Detiene los sonidos que están reproduciendo.
+  Toggle: |-
+    &e/<label> toggle [objetivo] [on|off]
+    &7 > Habilita o deshabilita la reproducción de sonidos.
+  Update: |-
+    &e/<label> update [download] [--force]
+    &7 > Comprueba y descarga actualizaciones.
+
+List:
+  Chat:
+    Alternate Color: '&8'
+    Color: '&e'
+    Error:
+      Not Exists: '&c¡La página &7<page>&c no existe! Max: <totalpages>.'
+    Footer: '&f&l - &aVer más sonidos con "&f/&n<label> list <page>&a"'
+    Header: '&aLista de sonidos disponibles [Página <page> de <totalpages>]:'
+    Separator: '&f, '
+    Sound Tooltip: '&5Haz clic para reproducir<line> el sonido &d<sound>'
+  Inventory:
+    Items:
+      Next Page:
+        Display Name: '&7&lPágina siguiente'
+        Lore: ' Haga clic para ir a la página siguiente.'
+      Previous Page:
+        Display Name: '&7&lPágina anterior'
+        Lore: ' Haga clic para volver a la página anterior.'
+      Sound:
+        Display Name: '&d&n<sound>'
+        Lore: ' Haga clic para reproducir ese sonido.'
+      Stop Sound:
+        Display Name: '&6&lDetener Sonidos'
+        Lore: ' Detiene todos los sonidos que se<line> están reproduciendo actualmente.'
+    Title: '&8Lista de sonidos, página &c<page>&8 de &c<totalpages>&8'
+  Page: página
+
+Play:
+  Error:
+    Invalid Sound: '&cEl valor "&7<sound>&c" tiene caracteres de sonido no válidos.'
+    Not A Section: '&c¡La sección "&7<section>&c" en el archivo &7<file>&c no es un sonido valido!'
+    Unauthorized: '&c¡No puedes ingresar a esa carpeta!'
+    Unavailable: '&cEl sonido <sound> no está disponible en esta versión de Minecraft.'
+  Pitch: tono
+  Sound: sonido
+  Success:
+    Config: '&7Tocando el sonido &f<sound>&7 del archivo &f<file>&7 a &f<player>&7.'
+    Default: '&7Tocando el sonido &f<sound>&7 con volumen &f<volume>&7 y tono &f<pitch>&7 a &f<player>&7.'
+  Volume: volumen
+
+Region:
+  Create:
+    Default Description: Una región de reproducción de sonido.
+    Error:
+      Already Exists: '&cEste nombre ya se ha utilizado, elija otro.'
+      Default: '&cAlgo salió mal al crear la región "&7<name>&c".'
+      Different Worlds: '&c¡Tus selecciones están en mundos diferentes!'
+      Max Area: '&cEl área seleccionada excede el máximo de <max> bloques.'
+      Max Regions: '&cNo puede crear más de <max> regiones.'
+      Not Selected: '&cNo ha seleccionado ninguna posición, use &7&n/<label> <label2> wand&c para obtener la herramienta de selección.'
+    Success: '&aLa región &7<name>&a se creó con éxito.'
+  General:
+    Error:
+      Illegal Characters: '&cLos nombres de región solo pueden tener caracteres alfanuméricos.'
+      Max Name Characters: '&cLos nombres de región no pueden tener más de <max> caracteres.'
+      Not Found:
+        Name: '&cNo se encontró ninguna región con ese nombre. Use &7/<label> <label2> list&c para ver la lista de regiones.'
+        UUID: '&cNo se encontró ninguna región con este UUID. Use &7/<label> <label2> list&c para ver la lista de regiones.'
+      Save: '&cAlgo salió mal al guardar la región <name>.'
+  Info:
+    Creation Date: '&7Fecha de creación:&f <date>'
+    Description: '&7Descripción:&f <description>'
+    Error:
+      No Regions: '&7No hay regiones en esa ubicación.'
+    Header: '&8Información de la región &f<name>&8:'
+    Id: '&7UUID:&f <uuid>'
+    Owner: '&7Propietario:&f <owner>'
+    World: '&7Mundo:&f <world>'
+  List:
+    Error:
+      No Regions: '&c<targets> no tiene regiones.'
+      Not Exists: '&c¡La página &7<page>&c no existe! Max: <totalPages>.'
+    Footer: '&8Use &7/<label> <label2> <label3> <label4> <next>&8 para ver más regiones.'
+    Header:
+      Default: '&8Sus regiones [Página <page> de <totalPages>]:'
+      Player: '&8Regiones de <targets> [Página <page> de <totalPages>]:'
+    Region: '&7- <uuid>: &f<name>'
+  Region: región
+  Remove:
+    Confirm: '&aUse &7/<label> confirm&a para confirmar la eliminación de la región &7<region>&a.'
+    Description: Eliminar la región <region>
+    Success: '&aLa región &7<region>&a ha sido eliminado exitosamente.'
+  Rename:
+    Error:
+      Already Exists: '&cEl nuevo nombre ya se ha utilizado, elija otro.'
+      Same: '&cEl nuevo nombre no es diferente del anterior.'
+    New Name: nuevo nombre
+    Success: '&aLa región <region> ha sido renombrado a &7<newName>&a.'
+  Select:
+    Error:
+      Overlap: '&c¡Una región ya existente está en esa ubicación!'
+  Set:
+    Description:
+      Error:
+        Max Characters: '&cLas descripciones de región no pueden tener más de 100 caracteres.'
+      Success: '&aDescripción de la región <region> se estableció en &7<description>&a.'
+    Select:
+      Error:
+        Not A World: '&cEl valor &7<value>&c no es un mundo válido.'
+      Position:
+        First: '&6¡Primera posición seleccionada! Mundo: &e<w>&6, X: &e<x>&6, Y: &e<y>&6, Z: &e<z>&6.'
+        Second: '&6¡Segunda posición seleccionada! Mundo: &e<w>&6, X: &e<x>&6, Y: &e<y>&6, Z: &e<z>&6.'
+  Teleport:
+    Success: '&aHas sido teletransportado a la región <region>.'
+  Wand:
+    Error:
+      Config: '&cLe faltan configuraciones en su configuración. No se pudo crear la herramienta de selección.'
+    Success: '&6Herramienta de selección: Clic-izquierdo selecciona la primera posición y clic-derecho selecciona la segunda posición.'
+
+Reload:
+  Error: '&cAlgo salió mal al recargar la configuración. PlayMoreSounds debe desactivarse de inmediato.'
+  Success: '&7Configuración recargada.'
+
+Resource Packs:
+  Error: '&cAlgo salió mal al preguntarle al jugador <player> que descargue el paquete de texturas. Por favor, intente con otra URL.'
+  Download Failed:
+    Failed: '&cLa descarga de la textura falló. Si desea la experiencia completa de este servidor, vuelva a iniciar sesión para intentar la descarga nuevamente. Si el error persiste, póngase en contacto con un administrador.'
+    Administrator: '&cEl jugador <player> intentó unirse pero no pudo descargar la textura. Escriba &7&n/pms confirm&c para permitir que este jugador se una sin una textura.'
+    Confirmation: 'Permitir que <player> se una'
+  Kick Message:
+    Declined: '&cDebes estar usando una textura para jugar en ese servidor.'
+    Download Fail: '&cAlgo salió mal al descargar la textura. Intente descargar iniciando sesión nuevamente.'
+  Request Message: '&eDescargue la textura para continuar.'
+
+Stop Sound:
+  Success:
+    All: '&7Se han detenido todos los sonidos de &f<target>&7.'
+    Default: '&7Se detuvieron los sonidos de &f<sounds>&7 para &f<target>&7.'
+
+Toggle:
+  Check:
+    Disabled:
+      Default: '&cTus sonidos están desactivados.'
+      Player: '&cLos sonidos de &f<target>&c están desactivados.'
+    Enabled:
+      Default: '&aTus sonidos están activados.'
+      Player: '&aLos sonidos de &f<target>&c están activados.'
+  Disabled:
+    Default: '&c¡Tus sonidos han sido desactivados!'
+    Player: '&c¡Los sonidos de &f<target>&c han sido desactivados!'
+  Enabled:
+    Default: '&a¡Tus sonidos han sido activados!'
+    Player: '&a¡Los sonidos de &f<target>&a han sido desactivados!'
+
+Update:
+  Available: '&2PlayMoreSounds v<version> está disponible. Descargue la última versión en spigotmc.org.'
+  Check: '&eBuscando actualizaciones...'
+  Download:
+    Checking: '&7Verificando si existe alguna actualización disponible para descargar...'
+    Confirmation:
+      Not Latest:
+        Deleted: '&aLa versión inferior que fue descargada ha sido eliminada.'
+        Description: 'Eliminar la actualización que tiene una versión inferior.'
+      Not Supported:
+        Deleted: '&aLa actualización no compatible de PlayMoreSounds fue eliminada.'
+        Description: 'Eliminar la actualización no compatible.'
+    Deleted Downloaded: '&7Ya se encontró una descarga de una actualización. Borrándolo y volviendo a descargar.'
+    Downloading:
+      Default: '&7Se ha encontrado una actualización y se está descargando.'
+      Forcefully: '&7Descargando la última versión de PlayMoreSounds...'
+    Error:
+      Not Latest: '&cHa descargado PlayMoreSounds de versión &f<downloaded>&c, que es anterior a la versión instalada actualmente: &f<current>&c. Use &f&n/pms confirm&c para eliminar la versión anterior.'
+      Not Supported: '&cLa actualización descargada fue desarrollada para Spigot &f<apiversion>&c y estás usando &f<current>&c. Si continúa con la instalación de esta versión, PlayMoreSounds dejará de funcionar en su servidor. Use &f&n/pms confirm&c para eliminar la versión no compatible.'
+    Success: '&aPlayMoreSounds v<version> se ha descargado con éxito y se instalará la próxima vez que reinicie su servidor.'
+  Error:
+    Default: '&cAlgo salió mal al usar el actualizador.'
+    Offline: '&cEstá desconectado o spigot.org está caído.'
+    Timeout: '&cTomó demasiado tiempo para establecer una conexión.'
+  Not Available: '&eNo hay actualizaciones disponibles.'

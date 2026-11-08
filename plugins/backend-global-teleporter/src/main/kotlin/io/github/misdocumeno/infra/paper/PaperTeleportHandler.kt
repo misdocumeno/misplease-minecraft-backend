@@ -25,6 +25,16 @@ class PaperTeleportHandler(
             return
         }
 
+        // Pub/sub arrives off the main thread; Bukkit world/player access must not.
+        val run = Runnable { handleOnMain(event) }
+        if (Bukkit.isPrimaryThread()) {
+            run.run()
+        } else {
+            Bukkit.getScheduler().runTask(plugin, run)
+        }
+    }
+
+    private fun handleOnMain(event: TeleportRequest) {
         val world = Bukkit.getWorld(event.location.world) ?: return plugin.logger.severe(
             "[GlobalTeleported] Teleport requested for player ${event.username} " +
                     "to world '${event.location.world}' but it doesn't exist."
@@ -49,13 +59,13 @@ class PaperTeleportHandler(
         ).thenRun {
             if (event.feedback == null) return@thenRun
             Bukkit.getScheduler().runTask(plugin) { ->
-                val player = Bukkit.getPlayer(event.username) ?: return@runTask
+                val online = Bukkit.getPlayer(event.username) ?: return@runTask
                 val feedback = event.feedback
-                feedback.chat?.let { player.sendMessage(mm.deserialize(it)) }
+                feedback.chat?.let { online.sendMessage(mm.deserialize(it)) }
                 feedback.title?.let {
                     val title = mm.deserialize(it.title)
                     val subtitle = it.subtitle?.let { sub -> mm.deserialize(sub) }
-                    player.showTitle(
+                    online.showTitle(
                         Title.title(
                             title,
                             subtitle ?: Component.empty(),
@@ -69,7 +79,7 @@ class PaperTeleportHandler(
                 }
                 feedback.sound?.let { soundFeedback ->
                     runCatching { Sound.valueOf(soundFeedback.sound) }.getOrNull()?.let { sound ->
-                        player.playSound(player.location, sound, soundFeedback.volume, soundFeedback.pitch)
+                        online.playSound(online.location, sound, soundFeedback.volume, soundFeedback.pitch)
                     }
                 }
             }

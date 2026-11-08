@@ -12,6 +12,8 @@ class RedisAuthenticatedRepository(
 
     override fun isAuthenticated(uuid: Uuid): Boolean {
         val username = usernames.getUsername(uuid) ?: return false
+        // Single check on the pub/sub worker; Velocity has no main tick to stall.
+        // Prefer SISMEMBER over scanning the set for one username.
         return connection.sync().sismember("game-sessions:authenticated", username)
     }
 }

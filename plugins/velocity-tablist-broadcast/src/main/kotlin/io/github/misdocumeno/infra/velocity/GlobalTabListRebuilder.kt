@@ -3,16 +3,25 @@ package io.github.misdocumeno.infra.velocity
 import com.velocitypowered.api.proxy.Player
 import com.velocitypowered.api.proxy.ProxyServer
 import com.velocitypowered.api.proxy.player.TabListEntry
-import io.github.misdocumeno.domain.AuthenticatedRepository
+import io.lettuce.core.api.StatefulRedisConnection
 import net.kyori.adventure.text.Component
 
 class GlobalTabListRebuilder(
     private val proxy: ProxyServer,
-    private val authRepo: AuthenticatedRepository,
+    private val connection: StatefulRedisConnection<String, String>,
 ) {
 
     fun rebuildGlobalTabList() {
-        val authed = proxy.allPlayers.filter { authRepo.isAuthenticated(it.username) }
+        connection.async().smembers(AUTH_SET).whenComplete { names, error ->
+            if (error != null) {
+                return@whenComplete
+            }
+            rebuildWith(names.orEmpty())
+        }
+    }
+
+    private fun rebuildWith(authenticatedNames: Set<String>) {
+        val authed = proxy.allPlayers.filter { it.username in authenticatedNames }
 
         authed.forEach { viewer ->
             val here = serverName(viewer)
@@ -59,4 +68,8 @@ class GlobalTabListRebuilder(
 
     private fun serverName(player: Player): String? =
         player.currentServer.orElse(null)?.serverInfo?.name
+
+    companion object {
+        private const val AUTH_SET = "game-sessions:authenticated"
+    }
 }

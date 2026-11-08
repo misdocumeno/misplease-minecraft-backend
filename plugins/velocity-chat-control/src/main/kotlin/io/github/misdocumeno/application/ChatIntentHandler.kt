@@ -21,7 +21,7 @@ class ChatIntentHandler(
         val rendered = formatter.format(intent)
 
         broadcaster.broadcast(
-            ChatBroadcast(intent.messageId, audience, rendered)
+            ChatBroadcast(intent.messageId, intent.senderUUID, audience, rendered)
         )
     }
 }

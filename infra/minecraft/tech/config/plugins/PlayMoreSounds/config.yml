@@ -1,0 +1,138 @@
+####################################################################################################
+##  PlayMoreSounds Configuration v4.2
+##
+## PlayMoreSounds configuration about general stuff like commands and regions, if you are looking
+##for event sounds, check sounds.yml. If you are looking for situational sounds, check the folder
+##'Sounds'.
+##
+## If you have any questions about PlayMoreSounds join the discord: https://discord.gg/eAHPbc3
+####################################################################################################
+
+# The version of this configuration, each configuration has one of this. If the version is too old
+#the configuration will be renamed to "outdated config.yml" and a new one will be generated so you
+#don't lose your properties and can update each property manually.
+Version: '4.2'
+
+# Available languages: EN_US, ES_LA, PT_BR, ZH_CN
+Language: EN_US
+
+# A simple halloween event, disable if you find it annoying.
+Halloween Event: true
+
+Resource Packs:
+  # Request player to download a resource pack on join.
+  Request: false
+  # The URL of the resource pack. Must be a direct link.
+  URL: ''
+  # The sha1 hash sum of the resource pack. This is optional, but it makes so players download the resource only the first
+  #time they join the server, increasing resource pack load time.
+  # To generate a sha1 hash sum, drop your pack at http://onlinemd5.com/ and select "SHA1" then paste the checksum here.
+  Hash: ''
+  # If a player denies the download, this player will be kicked immediately.
+  # Players with the permission 'playmoresounds.resourcepacker.force.bypass' will be able to join even if Force is enabled.
+  Force:
+    Enabled: true
+    # Should the player be kicked even if the download of the resource pack is accepted but fails?
+    Even If Download Fail: true
+    # Admins online will be prompted to type "/pms confirm" to allow this player to join without a resource pack
+    #in case the player is trying to join but failing to download the resource pack multiple times.
+    # Only admins with the permission 'playmoresounds.resourcepacker.administrator' will be able to do this.
+    Alert Fail: true
+
+# Sound Regions configuration:
+Sound Regions:
+  # The border particles of "/pms region info"
+  Border:
+    # A limit of how many players can see borders at once, for performance.
+    Max Showing Borders: 30
+    # The time in ticks of how long the border should be shown.
+    Showing Time: 140
+  # The max area in m³ a region can have.
+  # Use permission 'playmoresounds.region.create.unlimited.area' to bypass.
+  Max Area: 15625
+  # The max characters a region name can have.
+  Max Name Characters: 20
+  # The max regions a single player can have.
+  # Use permission 'playmoresounds.region.create.unlimited.regions' to bypass.
+  Max Regions: 5
+  # The region selection tool properties.
+  Wand:
+    Name: '&6&l&nRegion Selection Tool'
+    Glowing: true
+    Material: FEATHER
+
+# Update scheduler
+Updater:
+  Enabled: true
+  # If false updater messages will only be logged when an update is available.
+  Log: false
+  # Updates will be checked every 144000 ticks or 1 hour.
+  Period: 144000
+
+# Properties of "/pms list" command.
+List:
+  # Properties for chat list.
+  Chat:
+    Max Per Page: 10
+  # Properties for sound list GUI.
+  Inventory:
+    Items:
+      Next Page:
+        Material: SPECTRAL_ARROW
+        Glowing: false
+      Stop Sound:
+        Material: BARRIER
+        Glowing: true
+      Previous Page:
+        Material: SPECTRAL_ARROW
+        Glowing: false
+      Sound:
+        # The item will be picked sequentially from this list for each sound.
+        Material:
+        - MUSIC_DISC_13
+        - MUSIC_DISC_CAT
+        - MUSIC_DISC_CHIRP
+        - MUSIC_DISC_BLOCKS
+        - MUSIC_DISC_FAR
+        - MUSIC_DISC_MALL
+        - MUSIC_DISC_MELLOHI
+        - MUSIC_DISC_STAL
+        - MUSIC_DISC_STRAD
+        - MUSIC_DISC_WARD
+        - MUSIC_DISC_WAIT
+        Glowing: false
+    # How many rows of sounds should the inventory have per page.
+    Rows Per Page: 4
+
+Addons:
+  # Configuration for addon management and installer inventories.
+  Inventory:
+    Items:
+      Addon:
+        Material: IRON_BLOCK
+        Glowing: false
+      Done:
+        Material: GREEN_WOOL
+        Glowing: false
+      Info:
+        Material: PAPER
+        Glowing: false
+      Install:
+        Material: EMERALD_BLOCK
+        Glowing: true
+      Next Page:
+        Material: ARROW
+        Glowing: false
+      Previous Page:
+        Material: ARROW
+        Glowing: false
+
+Confirm:
+  Inventory:
+    Items:
+      Cancel:
+        Material: RED_WOOL
+        Glowing: false
+      Confirm:
+        Material: GREEN_WOOL
+        Glowing: false

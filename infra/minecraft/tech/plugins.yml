@@ -27,3 +27,7 @@ plugins:
   - name: GriefPrevention
     source: modrinth
     slug: griefprevention
+  # QoL audio only (tech: chat ping by default; keep other events off — see pending).
+  - name: PlayMoreSounds
+    source: github
+    repo: chrisrnj/PlayMoreSounds

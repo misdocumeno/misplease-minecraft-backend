@@ -53,7 +53,7 @@ class VelocityTabListBroadcastPlugin @Inject constructor(
         }
 
         val authRepo = RedisAuthenticatedRepository(connection)
-        val rebuilder = GlobalTabListRebuilder(proxy, authRepo)
+        val rebuilder = GlobalTabListRebuilder(proxy, connection)
         val handler = VelocityAuthEventHandler(rebuilder)
         val adapter = RedisAuthAdapter(handler, json)
         RedisAuthListener(connectionPubSub, adapter).start()
