@@ -25,7 +25,7 @@ class BackendLocationResolverPlugin : JavaPlugin() {
         }
 
         val handler = PaperLocationHandler()
-        val adapter = RedisLocationAdapter(this, handler, connection, json)
+        val adapter = RedisLocationAdapter(handler, connection, json)
         RedisLocationListener(connectionPubSub, adapter).start()
     }
 

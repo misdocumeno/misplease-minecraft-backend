@@ -4,11 +4,13 @@ import io.github.misdocumeno.application.LocationHandler
 import io.github.misdocumeno.domain.model.LocationRequest
 import io.lettuce.core.api.StatefulRedisConnection
 import kotlinx.serialization.json.Json
-import org.bukkit.Bukkit
-import org.bukkit.plugin.Plugin
 
+/**
+ * Location is read-only entity state. On Paper (non-Folia) that is acceptable off the
+ * main thread; hopping to main would only add scheduling latency to every /tpahere RPC.
+ * Publish stays async so we never block the Redis pub/sub worker on the network round-trip.
+ */
 class RedisLocationAdapter(
-    private val plugin: Plugin,
     private val handler: LocationHandler,
     private val connection: StatefulRedisConnection<String, String>,
     private val json: Json,
@@ -23,13 +25,10 @@ class RedisLocationAdapter(
             return
         }
 
-        // Player location must be read on the main thread; reply stays async.
-        Bukkit.getScheduler().runTask(plugin) { ->
-            val response = handler.handle(request) ?: return@runTask
-            connection.async().publish(
-                "player:location:response:rpc",
-                json.encodeToString(response),
-            )
-        }
+        val response = handler.handle(request) ?: return
+        connection.async().publish(
+            "player:location:response:rpc",
+            json.encodeToString(response),
+        )
     }
 }

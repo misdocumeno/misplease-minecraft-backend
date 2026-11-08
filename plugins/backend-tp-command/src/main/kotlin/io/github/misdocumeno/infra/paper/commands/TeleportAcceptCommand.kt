@@ -6,6 +6,7 @@ import io.github.misdocumeno.application.UsernameRepository
 import io.github.misdocumeno.domain.model.TeleportAskType
 import io.github.misdocumeno.infra.paper.TeleportMessages
 import io.github.misdocumeno.infra.paper.globalLocation
+import io.github.misdocumeno.infra.paper.runSync
 import io.lettuce.core.api.sync.RedisCommands
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.TimeoutCancellationException
@@ -15,8 +16,10 @@ import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
+import org.bukkit.plugin.Plugin
 
 class TeleportAcceptCommand(
+    private val plugin: Plugin,
     private val usernames: UsernameRepository,
     private val locations: GlobalLocationResolver,
     private val teleporter: Teleporter,
@@ -30,51 +33,45 @@ class TeleportAcceptCommand(
             messages.playerOnly(sender)
             return true
         }
-
         if (args.size > 1) return false
 
-        val requests = getPendingRequests(sender.name)
-
-        if (requests.isEmpty()) {
-            messages.noRequestsAccept(sender)
-            return true
-        }
-
-        if (args.isEmpty()) {
-            if (requests.size > 1) {
-                messages.specifyAccept(sender)
-                return true
+        val target = sender.name
+        val arg = args.firstOrNull()
+        scope.launch {
+            val requests = getPendingRequests(target)
+            plugin.runSync {
+                if (!sender.isOnline) return@runSync
+                when {
+                    requests.isEmpty() -> messages.noRequestsAccept(sender)
+                    arg == null && requests.size > 1 -> messages.specifyAccept(sender)
+                    arg == null -> {
+                        val (requester, type) = requests.first()
+                        performTeleport(requester, sender, type)
+                        scope.launch { clearRequest(requester, target) }
+                        messages.accepted(sender, requester)
+                    }
+                    arg == "*" -> {
+                        messages.acceptedAll(sender)
+                        requests.forEach { (requester, type) ->
+                            performTeleport(requester, sender, type)
+                            scope.launch { clearRequest(requester, target) }
+                        }
+                    }
+                    else -> {
+                        val requester =
+                            usernames.findCaseInsensitive(arg) ?: usernames.findPartial(arg) ?: arg
+                        val request = requests.find { (name) -> name == requester }
+                        if (request == null) {
+                            messages.noRequestFrom(sender, requester)
+                        } else {
+                            performTeleport(request.first, sender, request.second)
+                            scope.launch { clearRequest(requester, target) }
+                            messages.accepted(sender, requester)
+                        }
+                    }
+                }
             }
-
-            val (requester, type) = requests.first()
-            performTeleport(requester, sender, type)
-            clearRequest(requester, sender.name)
-            messages.accepted(sender, requester)
-            return true
         }
-
-        if (args.first() == "*") {
-            messages.acceptedAll(sender)
-            requests.forEach { (requester, type) ->
-                performTeleport(requester, sender, type)
-                clearRequest(requester, sender.name)
-            }
-            return true
-        }
-
-        val requester =
-            usernames.findCaseInsensitive(args.first()) ?: usernames.findPartial(args.first()) ?: args.first()
-
-        val request = requests.find { (it) -> it == requester }
-
-        if (request == null) {
-            messages.noRequestFrom(sender, requester)
-            return true
-        }
-
-        performTeleport(request.first, sender, request.second)
-        clearRequest(requester, sender.name)
-        messages.accepted(sender, requester)
         return true
     }
 
@@ -94,18 +91,17 @@ class TeleportAcceptCommand(
             TeleportAskType.TPA -> {
                 teleporter.teleport(requester, receiver.globalLocation, feedback)
             }
-
             TeleportAskType.TPA_HERE -> {
                 scope.launch {
                     try {
                         locations.getPlayerLocation(requester)
                     } catch (_: TimeoutCancellationException) {
-                        messages.busy(receiver)
+                        plugin.runSync { if (receiver.isOnline) messages.busy(receiver) }
                         return@launch
                     }?.let {
                         teleporter.teleport(receiver.name, it, feedback)
-                    } ?: run {
-                        messages.playerNotFound(receiver, requester)
+                    } ?: plugin.runSync {
+                        if (receiver.isOnline) messages.playerNotFound(receiver, requester)
                     }
                 }
             }

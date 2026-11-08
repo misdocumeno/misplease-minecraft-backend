@@ -4,6 +4,7 @@ import io.github.misdocumeno.application.GlobalLocationResolver
 import io.github.misdocumeno.application.Teleporter
 import io.github.misdocumeno.application.UsernameRepository
 import io.github.misdocumeno.infra.paper.TeleportMessages
+import io.github.misdocumeno.infra.paper.runSync
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
@@ -12,8 +13,10 @@ import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
+import org.bukkit.plugin.Plugin
 
 class TeleportCommand(
+    private val plugin: Plugin,
     private val usernames: UsernameRepository,
     private val locations: GlobalLocationResolver,
     private val teleporter: Teleporter,
@@ -52,17 +55,19 @@ class TeleportCommand(
             val destination = try {
                 locations.getPlayerLocation(targetName)
             } catch (_: TimeoutCancellationException) {
-                messages.busy(sender)
+                plugin.runSync { messages.busy(sender) }
                 return@launch
             }
 
             if (destination == null) {
-                messages.playerNotFound(sender, targetName)
+                plugin.runSync { messages.playerNotFound(sender, targetName) }
                 return@launch
             }
 
-            messages.teleportingPlayer(sender, toMoveName)
-            teleporter.teleport(toMoveName, destination, messages.arrivalFeedback(sender))
+            plugin.runSync {
+                messages.teleportingPlayer(sender, toMoveName)
+                teleporter.teleport(toMoveName, destination, messages.arrivalFeedback(sender))
+            }
         }
 
         return true

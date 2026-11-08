@@ -4,16 +4,22 @@ import io.github.misdocumeno.application.UsernameRepository
 import io.github.misdocumeno.domain.model.TeleportAskNotification
 import io.github.misdocumeno.domain.model.TeleportAskType
 import io.github.misdocumeno.infra.paper.TeleportMessages
+import io.github.misdocumeno.infra.paper.runSync
 import io.lettuce.core.SetArgs
 import io.lettuce.core.api.sync.RedisCommands
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
+import org.bukkit.plugin.Plugin
 
 class TeleportAskHereCommand(
+    private val plugin: Plugin,
+    private val scope: CoroutineScope,
     private val usernames: UsernameRepository,
     private val redis: RedisCommands<String, String>,
     private val json: Json,
@@ -41,24 +47,32 @@ class TeleportAskHereCommand(
             return true
         }
 
-        val asked =
-            redis.set(
-                "tpa:request:${sender.name}:$toAskName",
-                TeleportAskType.TPA_HERE.name,
-                SetArgs.Builder.nx().ex(60)
-            )
+        val from = sender.name
+        scope.launch {
+            val asked =
+                redis.set(
+                    "tpa:request:$from:$toAskName",
+                    TeleportAskType.TPA_HERE.name,
+                    SetArgs.Builder.nx().ex(60)
+                )
 
-        if (asked != "OK") {
-            messages.tpaAlready(sender, toAskName)
-            return true
+            if (asked != "OK") {
+                plugin.runSync {
+                    if (sender.isOnline) messages.tpaAlready(sender, toAskName)
+                }
+                return@launch
+            }
+
+            redis.sadd("tpa:requests:$toAskName", from)
+            redis.sadd("tpa:outgoing_requests:$from", toAskName)
+
+            val notification = TeleportAskNotification(from, toAskName, TeleportAskType.TPA_HERE)
+            redis.publish("tpa:request", json.encodeToString(notification))
+
+            plugin.runSync {
+                if (sender.isOnline) messages.tpaSent(sender, toAskName)
+            }
         }
-
-        redis.sadd("tpa:requests:$toAskName", sender.name)
-        redis.sadd("tpa:outgoing_requests:${sender.name}", toAskName)
-
-        val notification = TeleportAskNotification(sender.name, toAskName, TeleportAskType.TPA_HERE)
-        redis.publish("tpa:request", json.encodeToString(notification))
-        messages.tpaSent(sender, toAskName)
 
         return true
     }

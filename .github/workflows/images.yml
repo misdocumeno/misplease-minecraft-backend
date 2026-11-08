@@ -1,5 +1,8 @@
 # Prod pipeline: push to main (paths) or manual dispatch → build, smoke, push GHCR.
 # Hosts never build: docker compose -f docker-compose.prod.yml pull && up -d
+#
+# BuildKit cache speeds unchanged layers, but each matrix cell still pays
+# materialize + smoke. A paths-filter job skips cells that cannot be affected.
 name: images
 
 on:
@@ -29,13 +32,114 @@ on:
 permissions:
   contents: read
   packages: write
+  pull-requests: read
 
 env:
   # Push images on main builds and manual runs; PRs only load+smoke locally on the runner.
   PUSH_IMAGES: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
 
 jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    outputs:
+      auth: ${{ steps.resolve.outputs.auth }}
+      servers_json: ${{ steps.resolve.outputs.servers_json }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        if: github.event_name != 'workflow_dispatch'
+        with:
+          filters: |
+            auth:
+              - 'services/auth/**'
+            shared:
+              - 'docker/**'
+              - 'docker-compose.yml'
+              - 'docker-compose.prod.yml'
+              - 'tools/plugin-lock/**'
+              - '.github/workflows/images.yml'
+            plugins_all:
+              - 'plugins/buildSrc/**'
+              - 'plugins/gradle/**'
+              - 'plugins/settings.gradle.kts'
+              - 'plugins/build.gradle.kts'
+              - 'plugins/gradle.properties'
+              - 'plugins/libs.versions.toml'
+              - 'plugins/gradle/libs.versions.toml'
+            plugins_backend:
+              - 'plugins/backend-*/**'
+            plugins_velocity:
+              - 'plugins/velocity-*/**'
+            main:
+              - 'infra/minecraft/main/**'
+            tech:
+              - 'infra/minecraft/tech/**'
+            velocity:
+              - 'infra/velocity/**'
+
+      - id: resolve
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            auth=true
+            main=true
+            tech=true
+            velocity=true
+          else
+            f_auth='${{ steps.filter.outputs.auth }}'
+            f_shared='${{ steps.filter.outputs.shared }}'
+            f_plugins_all='${{ steps.filter.outputs.plugins_all }}'
+            f_plugins_backend='${{ steps.filter.outputs.plugins_backend }}'
+            f_plugins_velocity='${{ steps.filter.outputs.plugins_velocity }}'
+            f_main='${{ steps.filter.outputs.main }}'
+            f_tech='${{ steps.filter.outputs.tech }}'
+            f_velocity='${{ steps.filter.outputs.velocity }}'
+
+            # Shared docker/lock/workflow or Gradle root → every image.
+            if [[ "$f_shared" == "true" || "$f_plugins_all" == "true" ]]; then
+              auth=true
+              main=true
+              tech=true
+              velocity=true
+            else
+              auth=false
+              main=false
+              tech=false
+              velocity=false
+              [[ "$f_auth" == "true" ]] && auth=true
+              [[ "$f_plugins_backend" == "true" || "$f_main" == "true" ]] && main=true
+              [[ "$f_plugins_backend" == "true" || "$f_tech" == "true" ]] && tech=true
+              [[ "$f_plugins_velocity" == "true" || "$f_velocity" == "true" ]] && velocity=true
+            fi
+          fi
+
+          cells=()
+          if [[ "$main" == "true" ]]; then
+            cells+=('{"name":"main","lock":"infra/minecraft/main/plugins-lock.yml","prefix":"backend-","kind":"server","config":"infra/minecraft/main/config","runtime_java":"25","smoke":true}')
+          fi
+          if [[ "$tech" == "true" ]]; then
+            cells+=('{"name":"tech","lock":"infra/minecraft/tech/plugins-lock.yml","prefix":"backend-","kind":"server","config":"infra/minecraft/tech/config","runtime_java":"25","smoke":true}')
+          fi
+          if [[ "$velocity" == "true" ]]; then
+            cells+=('{"name":"velocity","lock":"infra/velocity/plugins-lock.yml","prefix":"velocity-","kind":"proxy","config":"infra/velocity/config","runtime_java":"25","smoke":true}')
+          fi
+
+          if ((${#cells[@]})); then
+            servers_json="[$(IFS=,; echo "${cells[*]}")]"
+          else
+            servers_json='[]'
+          fi
+
+          echo "auth=$auth" >> "$GITHUB_OUTPUT"
+          echo "servers_json=$servers_json" >> "$GITHUB_OUTPUT"
+          echo "Resolved auth=$auth servers=$servers_json"
+
   auth:
+    needs: changes
+    if: needs.changes.outputs.auth == 'true'
     # Pin major runner image (not ubuntu-latest — that already jumped to 26.04).
     runs-on: ubuntu-24.04
     steps:
@@ -61,32 +165,13 @@ jobs:
           cache-to: type=gha,mode=max,scope=auth
 
   servers:
+    needs: changes
+    if: needs.changes.outputs.servers_json != '[]'
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - name: main
-            lock: infra/minecraft/main/plugins-lock.yml
-            prefix: backend-
-            kind: server
-            config: infra/minecraft/main/config
-            runtime_java: "25"
-            smoke: true
-          - name: tech
-            lock: infra/minecraft/tech/plugins-lock.yml
-            prefix: backend-
-            kind: server
-            config: infra/minecraft/tech/config
-            runtime_java: "25"
-            smoke: true
-          - name: velocity
-            lock: infra/velocity/plugins-lock.yml
-            prefix: velocity-
-            kind: proxy
-            config: infra/velocity/config
-            runtime_java: "25"
-            smoke: true
+        include: ${{ fromJson(needs.changes.outputs.servers_json) }}
     steps:
       - uses: actions/checkout@v4
 

@@ -5,7 +5,7 @@ import io.github.misdocumeno.domain.AuthenticatedRepository
 import io.github.misdocumeno.domain.model.GlobalLocation
 import io.github.misdocumeno.domain.model.LocationRequest
 import io.github.misdocumeno.domain.model.LocationResponse
-import io.lettuce.core.api.sync.RedisCommands
+import io.lettuce.core.api.StatefulRedisConnection
 import io.lettuce.core.pubsub.RedisPubSubAdapter
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection
 import kotlinx.coroutines.CompletableDeferred
@@ -17,15 +17,15 @@ import kotlin.uuid.Uuid
 
 class RedisLocationResolver(
     private val authenticated: AuthenticatedRepository,
-    private val connection: StatefulRedisPubSubConnection<String, String>,
-    private val redis: RedisCommands<String, String>,
+    private val connectionPubSub: StatefulRedisPubSubConnection<String, String>,
+    private val connection: StatefulRedisConnection<String, String>,
     private val json: Json,
 ) : GlobalLocationResolver {
 
     private val pending = ConcurrentHashMap<Uuid, CompletableDeferred<LocationResponse>>()
 
     fun start() {
-        connection.apply {
+        connectionPubSub.apply {
             addListener(object : RedisPubSubAdapter<String, String>() {
                 override fun message(channel: String, message: String) {
                     if (channel == "player:location:response:rpc") {
@@ -52,10 +52,8 @@ class RedisLocationResolver(
         pending[requestId] = deferred
 
         val request = LocationRequest(requestId, username)
-        redis.publish("player:location:request:rpc", json.encodeToString(request))
+        connection.async().publish("player:location:request:rpc", json.encodeToString(request))
 
-        // this can only time out rarely, when a player is moving
-        // between servers, and none of them responds with the location
         return try {
             withTimeout(3000L) {
                 deferred.await().location

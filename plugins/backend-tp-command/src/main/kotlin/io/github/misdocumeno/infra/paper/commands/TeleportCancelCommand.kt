@@ -3,14 +3,20 @@ package io.github.misdocumeno.infra.paper.commands
 import io.github.misdocumeno.application.UsernameRepository
 import io.github.misdocumeno.domain.model.TeleportAskType
 import io.github.misdocumeno.infra.paper.TeleportMessages
+import io.github.misdocumeno.infra.paper.runSync
 import io.lettuce.core.api.sync.RedisCommands
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabCompleter
 import org.bukkit.entity.Player
+import org.bukkit.plugin.Plugin
 
 class TeleportCancelCommand(
+    private val plugin: Plugin,
+    private val scope: CoroutineScope,
     private val usernames: UsernameRepository,
     private val redis: RedisCommands<String, String>,
     private val messages: TeleportMessages,
@@ -21,44 +27,39 @@ class TeleportCancelCommand(
             messages.playerOnly(sender)
             return true
         }
-
         if (args.size > 1) return false
 
-        val outgoing = getPendingOutgoingRequests(sender.name)
-
-        if (outgoing.isEmpty()) {
-            messages.noRequestsCancel(sender)
-            return true
-        }
-
-        if (args.isEmpty()) {
-            if (outgoing.size > 1) {
-                messages.specifyCancel(sender)
-                return true
+        val requester = sender.name
+        val arg = args.firstOrNull()
+        scope.launch {
+            val requests = getOutgoingRequests(requester)
+            plugin.runSync {
+                if (!sender.isOnline) return@runSync
+                when {
+                    requests.isEmpty() -> messages.noRequestsCancel(sender)
+                    arg == null && requests.size > 1 -> messages.specifyCancel(sender)
+                    arg == null -> {
+                        val (target) = requests.first()
+                        scope.launch { clearRequest(requester, target) }
+                        messages.cancelled(sender, target)
+                    }
+                    arg == "*" -> {
+                        messages.cancelledAll(sender)
+                        scope.launch { requests.forEach { (target) -> clearRequest(requester, target) } }
+                    }
+                    else -> {
+                        val target =
+                            usernames.findCaseInsensitive(arg) ?: usernames.findPartial(arg) ?: arg
+                        if (requests.none { (name) -> name == target }) {
+                            messages.noRequestTo(sender, target)
+                        } else {
+                            scope.launch { clearRequest(requester, target) }
+                            messages.cancelled(sender, target)
+                        }
+                    }
+                }
             }
-
-            val (target) = outgoing.first()
-            clearRequest(sender.name, target)
-            messages.cancelled(sender, target)
-            return true
         }
-
-        if (args.first() == "*") {
-            messages.cancelledAll(sender)
-            outgoing.forEach { (target) -> clearRequest(sender.name, target) }
-            return true
-        }
-
-        val target =
-            usernames.findCaseInsensitive(args.first()) ?: usernames.findPartial(args.first()) ?: args.first()
-
-        if (!outgoing.any { (it) -> it == target }) {
-            messages.noRequestTo(sender, target)
-            return true
-        }
-
-        clearRequest(sender.name, target)
-        messages.cancelled(sender, target)
         return true
     }
 
@@ -66,13 +67,13 @@ class TeleportCancelCommand(
         sender: CommandSender, command: Command, label: String, args: Array<out String>,
     ): List<String>? {
         return if (sender is Player && args.size == 1) {
-            getPendingOutgoingRequests(sender.name).map { (target) -> target }
+            getOutgoingRequests(sender.name).map { (target) -> target }
         } else {
             null
         }
     }
 
-    private fun getPendingOutgoingRequests(requester: String): List<Pair<String, TeleportAskType>> {
+    private fun getOutgoingRequests(requester: String): List<Pair<String, TeleportAskType>> {
         return redis.smembers("tpa:outgoing_requests:$requester").mapNotNull { target ->
             redis.get("tpa:request:$requester:$target")?.let {
                 target to TeleportAskType.valueOf(it)
