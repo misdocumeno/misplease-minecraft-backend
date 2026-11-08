@@ -15,6 +15,7 @@ settings:
   permissions-file: permissions.yml
   update-folder: update
   plugin-profiling: false
+  # Behind Velocity every join shares the proxy IP; 4000ms throttle breaks transfers.
   connection-throttle: -1
   query-plugins: true
   deprecated-verbose: default
