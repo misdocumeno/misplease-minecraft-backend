@@ -10,6 +10,7 @@ import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryOpenEvent
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent
 import org.bukkit.event.player.PlayerCommandPreprocessEvent
+import org.bukkit.event.player.PlayerCommandSendEvent
 import org.bukkit.event.player.PlayerDropItemEvent
 import org.bukkit.event.player.PlayerInteractAtEntityEvent
 import org.bukkit.event.player.PlayerInteractEvent
@@ -44,6 +45,14 @@ class BlockEventListener(private val sessionManager: SessionManager) : Listener 
         if (session.snapshot().authState != AuthState.AUTHENTICATED && event.message.split(' ').first() != "/login") {
             event.isCancelled = true
         }
+    }
+
+    /** Hide every command from tab-complete except /login until authenticated. */
+    @EventHandler
+    fun onCommandSend(event: PlayerCommandSendEvent) {
+        val session = sessionManager.get(event.player.uniqueId) ?: return
+        if (session.snapshot().authState == AuthState.AUTHENTICATED) return
+        event.commands.removeIf { it != "login" }
     }
 
     @EventHandler
