@@ -192,6 +192,7 @@ plugins:
   - name: BetterWarps
     source: github
     repo: misdocumeno/BetterWarps
+    version: v0.1.1
   - name: BiomePrinter
     source: github
     repo: misdocumeno/BiomePrinter
@@ -210,6 +211,10 @@ plugins:
   - name: NoSlimesInMisPark
     source: github
     repo: misdocumeno/NoSlimesInMisPark
+  - name: OpenInv
+    source: github
+    repo: misdocumeno/OpenInv
+    version: v0.1.0
   - name: PermissionShops
     source: github
     repo: misdocumeno/PermissionShops

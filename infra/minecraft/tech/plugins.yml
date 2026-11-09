@@ -30,3 +30,7 @@ plugins:
   - name: GriefPrevention
     source: modrinth
     slug: griefprevention
+  - name: OpenInv
+    source: github
+    repo: misdocumeno/OpenInv
+    version: v0.1.0

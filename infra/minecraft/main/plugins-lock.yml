@@ -1169,10 +1169,10 @@ plugins:
     sha256: 76ce40194de1c923683fadf9ea5d2d16bf440c609a4b1ade4dba932b47c0bf07
   - name: BetterWarps
     source: github
-    version: v0.1.0
+    version: v0.1.1
     filename: BetterWarps-1.0-SNAPSHOT.jar
-    url: https://api.github.com/repos/misdocumeno/BetterWarps/releases/tags/v0.1.0
-    sha256: 17444e86ec2c811e25ea75f4a87b2865febdda4f58068e01b3f71f8c7a34b8aa
+    url: https://api.github.com/repos/misdocumeno/BetterWarps/releases/tags/v0.1.1
+    sha256: 901f7ad054c9d097acefb7434b8dc39d3540113b386408994c1234792cf05bc0
   - name: BiomePrinter
     source: github
     version: v0.1.1
@@ -1275,3 +1275,9 @@ plugins:
     filename: WorldGamerules-0.1.0.jar
     url: https://api.github.com/repos/misdocumeno/WorldGamerules/releases/tags/v0.1.0
     sha256: ac83f29023ece2479f7855ac2bc6cbc89eff7b824df896651e33202280ca31e2
+  - name: OpenInv
+    source: github
+    version: v0.1.0
+    filename: OpenInv-0.1.0.jar
+    url: https://api.github.com/repos/misdocumeno/OpenInv/releases/tags/v0.1.0
+    sha256: 76d342cdc71416959008bde236248c7935985f81ac9656f2ce268b4d0b553b83
