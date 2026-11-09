@@ -12,7 +12,7 @@ plugins:
     source: github
     version: 3.9.0
     filename: ActionHealth-3.9.0-all.jar
-    url: https://api.github.com/repos/zeshan321/ActionHealth/releases/assets/608062381
+    url: https://api.github.com/repos/zeshan321/ActionHealth/releases/tags/3.9.0
     sha256: ac617b07cb5fcbded7c64f58a113d8d543997393b27254ec27950a09df334ee8
   - name: DeathCoordinates
     source: spiget
@@ -24,7 +24,7 @@ plugins:
     source: github
     version: 2.22.0
     filename: EssentialsX-2.22.0.jar
-    url: https://api.github.com/repos/EssentialsX/Essentials/releases/assets/434509586
+    url: https://api.github.com/repos/EssentialsX/Essentials/releases/tags/2.22.0
     sha256: bda4685105977fca2e209820a9f0ad24275bd103390a03236f38e59bfdac58e6
   - name: FastAsyncWorldEdit
     source: modrinth

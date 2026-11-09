@@ -12,13 +12,13 @@ plugins:
     source: github
     version: 3.9.0
     filename: ActionHealth-3.9.0-all.jar
-    url: https://api.github.com/repos/zeshan321/ActionHealth/releases/assets/608062381
+    url: https://api.github.com/repos/zeshan321/ActionHealth/releases/tags/3.9.0
     sha256: ac617b07cb5fcbded7c64f58a113d8d543997393b27254ec27950a09df334ee8
   - name: AdvancedRegionMarket
     source: github
     version: 3.5.5
     filename: advancedregionmarket-3.5.5.jar
-    url: https://api.github.com/repos/alex9849/advanced-region-market/releases/assets/233706953
+    url: https://api.github.com/repos/alex9849/advanced-region-market/releases/tags/3.5.5
     sha256: a6a43ab319c62e360d5b8d720756111398a34aefc5277d973f369253944e484a
   - name: AutoSellChests
     source: hangar
@@ -135,31 +135,31 @@ plugins:
     source: github
     version: 2.22.0
     filename: EssentialsX-2.22.0.jar
-    url: https://api.github.com/repos/EssentialsX/Essentials/releases/assets/434509586
+    url: https://api.github.com/repos/EssentialsX/Essentials/releases/tags/2.22.0
     sha256: bda4685105977fca2e209820a9f0ad24275bd103390a03236f38e59bfdac58e6
   - name: EssentialsXChat
     source: github
     version: 2.22.0
     filename: EssentialsXChat-2.22.0.jar
-    url: https://api.github.com/repos/EssentialsX/Essentials/releases/assets/434509638
+    url: https://api.github.com/repos/EssentialsX/Essentials/releases/tags/2.22.0
     sha256: e5b0211f98af1eaba712d9294997639a39209db1fc842394a0923820073ec65a
   - name: EssentialsXProtect
     source: github
     version: 2.22.0
     filename: EssentialsXProtect-2.22.0.jar
-    url: https://api.github.com/repos/EssentialsX/Essentials/releases/assets/434509630
+    url: https://api.github.com/repos/EssentialsX/Essentials/releases/tags/2.22.0
     sha256: a287f310c6e321dac977ca17d02df71bcf79a6d37535215491050c090faa6eec
   - name: EssentialsXSpawn
     source: github
     version: 2.22.0
     filename: EssentialsXSpawn-2.22.0.jar
-    url: https://api.github.com/repos/EssentialsX/Essentials/releases/assets/434509625
+    url: https://api.github.com/repos/EssentialsX/Essentials/releases/tags/2.22.0
     sha256: dd5377c4c921b9b67814209f4f6646ffbb959729003e721ec5e63c47c7c010b8
   - name: GSit
     source: github
     version: 3.8.0
     filename: GSit-3.8.0.jar
-    url: https://api.github.com/repos/gecolay/GSit/releases/assets/711223148
+    url: https://api.github.com/repos/gecolay/GSit/releases/tags/3.8.0
     sha256: 669820b42047eac476ec754142c682dca4f396e0b84f178e7959cf236e64cc4a
   - name: Multiverse-Inventories
     source: modrinth
@@ -427,7 +427,7 @@ plugins:
     source: github
     version: v26.3.6-ce
     filename: Dynmap-CE-3.x-Dev-spigot.jar
-    url: https://api.github.com/repos/misdocumeno/dynmap/releases/assets/725717602
+    url: https://api.github.com/repos/misdocumeno/dynmap/releases/tags/v26.3.6-ce
     sha256: 78f6d7a60ebcc5c491fc154df7ae01f81a82278fc678d73ab8cae693f56afcee
   - name: LuckPerms
     source: modrinth
@@ -633,7 +633,7 @@ plugins:
     source: github
     version: v26.3.6
     filename: RoseStacker.jar
-    url: https://api.github.com/repos/misdocumeno/RoseStacker/releases/assets/725716866
+    url: https://api.github.com/repos/misdocumeno/RoseStacker/releases/tags/v26.3.6
     sha256: 17feb9e5910a5561451f12d194f3a6dce31721de7da2122e8fa0d15c1a40a5c4
   - name: SimpleScore
     source: modrinth
@@ -782,13 +782,13 @@ plugins:
     source: github
     version: 1.7.3
     filename: Vault.jar
-    url: https://api.github.com/repos/MilkBowl/Vault/releases/assets/22988910
+    url: https://api.github.com/repos/MilkBowl/Vault/releases/tags/1.7.3
     sha256: a6b5ed97f43a5cf5bbaf00a7c8cd23c5afc9bd003f849875af8b36e6cf77d01d
   - name: TabList
     source: github
     version: v5.7.7
     filename: TabList-bukkit-v5.7.7.jar
-    url: https://api.github.com/repos/montlikadani/TabList/releases/assets/185490479
+    url: https://api.github.com/repos/montlikadani/TabList/releases/tags/v5.7.7
     sha256: 86fd01aae58b2ebac7dee9c77078ea5dbb9742c425fe0afd6cdae6121f2a79f9
   - name: ImageFrame
     source: modrinth
@@ -1141,127 +1141,127 @@ plugins:
     source: github
     version: "4.2"
     filename: PlayMoreSounds.jar
-    url: https://api.github.com/repos/chrisrnj/PlayMoreSounds/releases/assets/58679060
+    url: https://api.github.com/repos/chrisrnj/PlayMoreSounds/releases/tags/4.2
     sha256: 12511ecf710ba2686119d304fbfa9871cbd8fa4c127aa05ebb383343b08e03f2
   - name: WorldGuardExtraFlags
     source: github
     version: v4.2.4
     filename: WorldGuardExtraFlags.jar
-    url: https://api.github.com/repos/aromaa/WorldGuardExtraFlags/releases/assets/174093673
+    url: https://api.github.com/repos/aromaa/WorldGuardExtraFlags/releases/tags/v4.2.4
     sha256: 43baf19d4d1d2274239cec60bfcd540433a7c03fb77fbb75a55e879f6e492114
   - name: AutoConsoleCommands
     source: github
     version: v0.1.1
     filename: autoconsolecommands-0.1.0-SNAPSHOT.jar
-    url: https://api.github.com/repos/misdocumeno/AutoConsoleCommands/releases/assets/711179040
+    url: https://api.github.com/repos/misdocumeno/AutoConsoleCommands/releases/tags/v0.1.1
     sha256: 5d9889114920ff30d9cf0f22a25cf192b60cbd4732fffe0a54a61a3ba849c3a7
   - name: AutoPlayerTeleport
     source: github
     version: v0.1.1
     filename: autoplayerteleport-0.1.0-SNAPSHOT.jar
-    url: https://api.github.com/repos/misdocumeno/AutoPlayerTeleport/releases/assets/711178818
+    url: https://api.github.com/repos/misdocumeno/AutoPlayerTeleport/releases/tags/v0.1.1
     sha256: 193a4fa95118db88f280dbe6447826275cdc46b912ae4247d97a3590e84f8a20
   - name: BetterBack
     source: github
     version: v0.1.0
     filename: BetterBack-1.0-SNAPSHOT.jar
-    url: https://api.github.com/repos/misdocumeno/BetterBack/releases/assets/711168597
+    url: https://api.github.com/repos/misdocumeno/BetterBack/releases/tags/v0.1.0
     sha256: 76ce40194de1c923683fadf9ea5d2d16bf440c609a4b1ade4dba932b47c0bf07
   - name: BetterWarps
     source: github
     version: v0.1.0
     filename: BetterWarps-1.0-SNAPSHOT.jar
-    url: https://api.github.com/repos/misdocumeno/BetterWarps/releases/assets/711169642
+    url: https://api.github.com/repos/misdocumeno/BetterWarps/releases/tags/v0.1.0
     sha256: 17444e86ec2c811e25ea75f4a87b2865febdda4f58068e01b3f71f8c7a34b8aa
   - name: BiomePrinter
     source: github
     version: v0.1.1
     filename: biomeprinter-0.1.0-SNAPSHOT.jar
-    url: https://api.github.com/repos/misdocumeno/BiomePrinter/releases/assets/711179035
+    url: https://api.github.com/repos/misdocumeno/BiomePrinter/releases/tags/v0.1.1
     sha256: 1918d81d55abe4405c01358d5699c6ea434a2c0f9baabdee65800181e52b3567
   - name: ConnectionLogger
     source: github
     version: v0.1.1
     filename: connectionlogger-0.1.0-SNAPSHOT.jar
-    url: https://api.github.com/repos/misdocumeno/ConnectionLogger/releases/assets/711178570
+    url: https://api.github.com/repos/misdocumeno/ConnectionLogger/releases/tags/v0.1.1
     sha256: 313ceec1ee093bc5198e6d2831c0346e18aa3731e57ae6dace297ec09039071c
   - name: EternalEffects
     source: github
     version: v0.1.0
     filename: EternalEffects-1.0-SNAPSHOT.jar
-    url: https://api.github.com/repos/misdocumeno/EternalEffects/releases/assets/711169245
+    url: https://api.github.com/repos/misdocumeno/EternalEffects/releases/tags/v0.1.0
     sha256: 88bddf0b96e3ce8b6e27a63cbce6b05c36e4b0b8a12774beeef6f0bb59467d80
   - name: GetWorldName
     source: github
     version: v0.1.0
     filename: GetWorldName-0.1.0.jar
-    url: https://api.github.com/repos/misdocumeno/GetWorldName/releases/assets/711169715
+    url: https://api.github.com/repos/misdocumeno/GetWorldName/releases/tags/v0.1.0
     sha256: 1b8ab96255581b82d4aef8bdb514b8301a79e27adebd761620d71b57e4911292
   - name: HiddenHolograms
     source: github
     version: v0.1.1
     filename: hiddenholograms-0.1.0-SNAPSHOT.jar
-    url: https://api.github.com/repos/misdocumeno/HiddenHolograms/releases/assets/711179536
+    url: https://api.github.com/repos/misdocumeno/HiddenHolograms/releases/tags/v0.1.1
     sha256: 49330030c05b440161808da3883a11b0d414e8ff0872f11112b2c7c9bcb761e3
   - name: NoSlimesInMisPark
     source: github
     version: v0.1.0
     filename: NoSlimesInMisPark-1.0-SNAPSHOT.jar
-    url: https://api.github.com/repos/misdocumeno/NoSlimesInMisPark/releases/assets/711169516
+    url: https://api.github.com/repos/misdocumeno/NoSlimesInMisPark/releases/tags/v0.1.0
     sha256: 2362ee4a664fae0c44fe4288396f322df6bef0b43a16bfc904d42cb610a64e21
   - name: PermissionShops
     source: github
     version: v0.1.0
     filename: PermissionShops-1.0-SNAPSHOT.jar
-    url: https://api.github.com/repos/misdocumeno/PermissionShops/releases/assets/711170267
+    url: https://api.github.com/repos/misdocumeno/PermissionShops/releases/tags/v0.1.0
     sha256: acd552ab6a39d19d915ace157d20480315d0b3469f2b63d2fd84e0f166f17493
   - name: PermitShulkers
     source: github
     version: v0.1.1
     filename: permitshulkers-0.1.0-SNAPSHOT.jar
-    url: https://api.github.com/repos/misdocumeno/PermitShulkers/releases/assets/711179908
+    url: https://api.github.com/repos/misdocumeno/PermitShulkers/releases/tags/v0.1.1
     sha256: f20e4635228c39d1bc9977ead30dcb0973b2e2c4cf77bb9677340033351c4dce
   - name: PortalRoutes
     source: github
     version: v0.1.2
     filename: PortalRoutes-0.1.2.jar
-    url: https://api.github.com/repos/misdocumeno/PortalRoutes/releases/assets/712923959
+    url: https://api.github.com/repos/misdocumeno/PortalRoutes/releases/tags/v0.1.2
     sha256: d4027a60567af71a981bf5dd1aa90f3fb7719bcb5dd88c81f514b174b7782261
   - name: TheBestRTP
     source: github
     version: v0.1.0
     filename: TheBestRTP-0.1.0.jar
-    url: https://api.github.com/repos/misdocumeno/TheBestRTP/releases/assets/711169696
+    url: https://api.github.com/repos/misdocumeno/TheBestRTP/releases/tags/v0.1.0
     sha256: b824e1e778e1da259b34288a7258673d7f910790cc2fc174b9856121464cbbe8
   - name: TrackPlayTime
     source: github
     version: v0.1.1
     filename: trackplaytime-0.1.0-SNAPSHOT.jar
-    url: https://api.github.com/repos/misdocumeno/TrackPlayTime/releases/assets/711178720
+    url: https://api.github.com/repos/misdocumeno/TrackPlayTime/releases/tags/v0.1.1
     sha256: 9822ed12f8ebdc049bbe0dd0c7805c5704ab65d4800760f4eaacd676ee328672
   - name: WorldGameMode
     source: github
     version: v0.1.1
     filename: WorldGameMode-0.1.0-SNAPSHOT.jar
-    url: https://api.github.com/repos/misdocumeno/WorldGameMode/releases/assets/711176943
+    url: https://api.github.com/repos/misdocumeno/WorldGameMode/releases/tags/v0.1.1
     sha256: 933f925c1b703bdac8f0e6b89b82ce0cc7e8e7a7d2624b20b1851c25b9fbb7d6
   - name: WorldPrinter
     source: github
     version: v0.1.1
     filename: worldprinter-0.2.0-SNAPSHOT.jar
-    url: https://api.github.com/repos/misdocumeno/WorldPrinter/releases/assets/711179079
+    url: https://api.github.com/repos/misdocumeno/WorldPrinter/releases/tags/v0.1.1
     sha256: befd0bdf871717efe95456669d2ac73d7c4aa2f28f165db7d9cd8ac772ff03f7
   - name: Slimefun
     source: github
     version: v0.1.3
     filename: Slimefun.v4.9-UNOFFICIAL.jar
-    url: https://api.github.com/repos/misdocumeno/Slimefun4/releases/assets/720080222
+    url: https://api.github.com/repos/misdocumeno/Slimefun4/releases/tags/v0.1.3
     sha256: 2f8d0b4a7c1cf2a6c19d94374f0405cfdb3a457d806510ca2b1c4ae47836e722
   - name: QuickShop
     source: github
     version: v5.1.2.5-shulker
     filename: QuickShop.jar
-    url: https://api.github.com/repos/misdocumeno/QuickShop-Reremake/releases/assets/711214691
+    url: https://api.github.com/repos/misdocumeno/QuickShop-Reremake/releases/tags/v5.1.2.5-shulker
     sha256: b5903eb3950c2e27b0339fb53a49f90ae6b2c17559d98349d992dd01cd631d2b
   - name: DeathCoordinates
     source: spiget

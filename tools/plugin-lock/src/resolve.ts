@@ -1,6 +1,6 @@
 import { digest, downloadBytes, type HashAlgorithm } from "./http.ts"
 import type { DesiredPlugin, LockedArtifact, ResolvedArtifact } from "./model.ts"
-import { resolveGithub } from "./sources/github.ts"
+import { resolveGithub, resolveGithubAssetDownloadUrl } from "./sources/github.ts"
 import { resolveHangar } from "./sources/hangar.ts"
 import { resolveModrinth } from "./sources/modrinth.ts"
 import { resolvePapermc } from "./sources/papermc.ts"
@@ -57,7 +57,15 @@ export async function lockArtifact(plugin: DesiredPlugin): Promise<LockedArtifac
     }
   }
   const fromApi = apiHash(resolved)
-  const pin = fromApi ?? { algorithm: "sha256" as const, value: digest("sha256", await downloadBytes(resolved.url)) }
+  let pin = fromApi
+  if (!pin) {
+    // GitHub lock urls are stable tag locators, not asset download urls — resolve first.
+    const downloadUrl =
+      plugin.source === "github" && plugin.id
+        ? await resolveGithubAssetDownloadUrl(plugin.id, resolved.version, resolved.filename)
+        : resolved.url
+    pin = { algorithm: "sha256", value: digest("sha256", await downloadBytes(downloadUrl)) }
+  }
   console.log(`${resolved.name} ${resolved.version} ${pin.algorithm} ${fromApi ? "from the api" : "from the downloaded jar"}`)
   return {
     name: resolved.name,
