@@ -175,9 +175,10 @@ jobs:
       matrix:
         include: ${{ fromJson(needs.changes.outputs.servers_json) }}
     # Exact key rotates when our plugin Gradle deps/toolchain change; prefix is for restore-keys + cleanup.
+    # Job-level env cannot use `runner.*` (workflow parse fails); runners are ubuntu-24.04 → Linux.
     env:
-      GRADLE_MOUNT_PREFIX: gradle-mount-${{ runner.os }}-${{ matrix.name }}-
-      GRADLE_MOUNT_KEY: gradle-mount-${{ runner.os }}-${{ matrix.name }}-${{ hashFiles('plugins/gradle/wrapper/gradle-wrapper.properties', 'plugins/gradle/libs.versions.toml', 'plugins/**/build.gradle.kts', 'plugins/settings.gradle.kts', 'plugins/build.gradle.kts', 'plugins/buildSrc/**/*.kts') }}
+      GRADLE_MOUNT_PREFIX: gradle-mount-Linux-${{ matrix.name }}-
+      GRADLE_MOUNT_KEY: gradle-mount-Linux-${{ matrix.name }}-${{ hashFiles('plugins/gradle/wrapper/gradle-wrapper.properties', 'plugins/gradle/libs.versions.toml', 'plugins/**/build.gradle.kts', 'plugins/settings.gradle.kts', 'plugins/build.gradle.kts', 'plugins/buildSrc/**/*.kts') }}
     steps:
       - uses: actions/checkout@v4
 
