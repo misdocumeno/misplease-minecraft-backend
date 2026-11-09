@@ -1,4 +1,5 @@
 # Desired set only. Versions live in plugins-lock.yml.
+# server.version = Velocity release *line* (Fill API). Omit build → latest build of that line.
 server:
   source: papermc
   id: velocity

@@ -120,8 +120,10 @@ async function update(
   const server = desired.server
     ? { ...desired.server, name: desired.server.name || desired.server.id || desired.server.source }
     : undefined
+  // Prefer server.version (Paper/Velocity line) for git bytecode/JVM hints; top-level minecraft is legacy alias.
+  const serverMinecraft = server?.version ?? desired.minecraft
   const allEntries = [...(server ? [server] : []), ...desired.plugins].map((entry) =>
-    entry.source === "git" ? { ...entry, serverMinecraft: desired.minecraft } : entry,
+    entry.source === "git" ? { ...entry, serverMinecraft } : entry,
   )
   let previous: LockFile = { plugins: [] }
   try {
@@ -185,7 +187,7 @@ async function update(
       result.errors.push(`${artifact.name}: duplicate filename ${artifact.filename}`)
     }
     filenames.add(artifact.filename)
-    console.log(compatibilityLine(desired.minecraft, artifact))
+    console.log(compatibilityLine(serverMinecraft ?? desired.minecraft, artifact))
   }
 
   let lock: LockFile

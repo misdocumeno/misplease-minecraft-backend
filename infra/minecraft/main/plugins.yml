@@ -3,7 +3,8 @@
 # plugins share one repo (EssentialsX*) or when the slug/repo label would differ
 # from the lock name.
 # jar: exact name/path or /regex/ (YAML has no regex type). Git matches repo-relative path and basename.
-minecraft: "26.3"
+# server.version = Paper *line*; builds float on `plugin-lock update`. Also feeds source:git JVM/bytecode hints.
+# Upgrade: bump this line, then plugin-lock update.
 server:
   source: papermc
   id: paper
@@ -28,6 +29,9 @@ plugins:
   - name: CoreProtect
     source: modrinth
     slug: coreprotect
+  - name: DeathCoordinates
+    source: spiget
+    id: "43318"
   - name: EssentialsX
     source: github
     repo: EssentialsX/Essentials
@@ -76,20 +80,17 @@ plugins:
   - name: DecentHolograms
     source: modrinth
     slug: decentholograms
-  # Temporary until the upstream gets updated (Modrinth paper/spigot still 3.7-beta-8;
-  # Paper 26.x helper lives on v3.0-community-edition, not default v3.0).
+  # Temporary until Modrinth paper/spigot ships past 3.7-beta-8 (and/or with 26.x).
   # - name: Dynmap
   #   source: modrinth
   #   slug: dynmap
   #   channel: beta
+  # Fork of webbukkit/dynmap @ v3.0-community-edition, Paper 26.x helpers only.
   - name: Dynmap
-    source: git
-    repo: https://github.com/webbukkit/dynmap.git
-    # tip of v3.0-community-edition (paper-helper-26x); default branch v3.0 lacks it
-    commit: 38a38c665165c3f2b0c9846f705be9ceafaacb58
-    task: ":spigot:shadowJar"
+    source: github
+    repo: misdocumeno/dynmap
+    version: v26.3.6-ce
     jar: /^Dynmap-CE-.*-spigot\.jar$/
-    java: "25"
   - name: LuckPerms
     source: modrinth
     slug: luckperms
@@ -102,16 +103,16 @@ plugins:
   - name: ProtectionStones
     source: modrinth
     slug: protectionstones
-  # Temporary until the upstream gets updated (Modrinth 1.5.42 only lists through 26.2;
-  # master already has NMS v26_3_R1 / "Add support for 26.3").
+  # Temporary until Modrinth lists 26.3 (1.5.42 only goes through 26.2).
   # - name: RoseStacker
   #   source: modrinth
   #   slug: rosestacker
+  # Fork of Rosewood-Development/RoseStacker, NMS trimmed to v26_3_R1 only.
   - name: RoseStacker
-    source: git
-    repo: https://github.com/Rosewood-Development/RoseStacker.git
-    jar: /^RoseStacker-/
-    java: "25"
+    source: github
+    repo: misdocumeno/RoseStacker
+    version: v26.3.6
+    jar: /^RoseStacker/
   - name: SimpleScore
     source: modrinth
     slug: simplescore
@@ -126,16 +127,13 @@ plugins:
   - name: Vault
     source: github
     repo: MilkBowl/Vault
-  # OpenInv: prod stub (jaxy) has no public source — own rewrite later.
   - name: TabList
     source: github
     repo: montlikadani/TabList
     jar: /^TabList-bukkit-/
-  # ImageFrame replaces Spiget Images (maps must be re-created once on deploy).
   - name: ImageFrame
     source: modrinth
     slug: imageframe
-  # Paper cannot accept client legacy & codes on sign edit; keep a tiny color plugin.
   - name: ColoredSigns
     source: modrinth
     slug: coloredsigns
@@ -160,8 +158,6 @@ plugins:
   - name: CMILib
     source: spiget
     id: "87610"
-  # CommandRegions → WorldGuardExtraFlags command-on-entry / console-command-on-entry.
-  # DeathCoordinates → Essentials backAfterDeath click + essentials.back.ondeath.
   - name: VillagerTradeLimiter
     source: spiget
     id: "87210"
@@ -238,7 +234,7 @@ plugins:
   - name: Slimefun
     source: github
     repo: misdocumeno/Slimefun4
-  # Release uploads a thin *-SNAPSHOT.jar and a shaded QuickShop.jar (needs MineDown etc.).
+  # Release also ships a thin *-SNAPSHOT.jar without deps; pin the shaded QuickShop.jar.
   - name: QuickShop
     source: github
     repo: misdocumeno/QuickShop-Reremake

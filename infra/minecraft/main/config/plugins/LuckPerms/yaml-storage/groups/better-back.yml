@@ -1,4 +1,0 @@
-name: better-back
-permissions:
-    - better.back.back.command
-    - better.back.forward.command

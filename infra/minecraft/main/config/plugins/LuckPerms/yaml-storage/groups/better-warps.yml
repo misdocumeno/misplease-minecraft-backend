@@ -1,7 +1,0 @@
-name: better-warps
-permissions:
-    - better.warps.spawn.command
-    - better.warps.warp.command
-    - better.warps.home.command
-    - better.warps.set.home.command
-    - better.warps.del.home.command

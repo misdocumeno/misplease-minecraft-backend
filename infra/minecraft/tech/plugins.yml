@@ -1,14 +1,17 @@
-# Desired set only. Versions live in plugins-lock.yml (Paper 26.3 stack).
-minecraft: "26.3"
+# Desired set only. Versions live in plugins-lock.yml.
+# server.version = Paper *line*; builds float on `plugin-lock update`. Also feeds source:git JVM/bytecode hints.
 server:
   source: papermc
   id: paper
   version: "26.3"
 
 plugins:
-  - name: DecentHolograms
-    source: modrinth
-    slug: decentholograms
+  - name: ActionHealth
+    source: github
+    repo: zeshan321/ActionHealth
+  - name: DeathCoordinates
+    source: spiget
+    id: "43318"
   - name: EssentialsX
     source: github
     repo: EssentialsX/Essentials
@@ -27,7 +30,3 @@ plugins:
   - name: GriefPrevention
     source: modrinth
     slug: griefprevention
-  # QoL audio only (tech: chat ping by default; keep other events off — see pending).
-  - name: PlayMoreSounds
-    source: github
-    repo: chrisrnj/PlayMoreSounds

@@ -1,0 +1,2619 @@
+%YAML 1.1
+---
+worlds:
+-   name: EMPTY
+    title: EMPTY
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: EMPTY_nether
+    title: EMPTY_nether
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: nethershadows
+        background: '#300806'
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: nether
+        title: Surface
+        prefix: nt
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: nethershadows
+        background: '#300806'
+        mapzoomin: 1
+-   name: EMPTY_the_end
+    title: EMPTY_the_end
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: brightnight
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: the_end
+        title: Surface
+        prefix: st
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: brightnight
+        mapzoomin: 1
+-   name: SuperiorWorld
+    title: SuperiorWorld
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: world2
+    title: world2
+    enabled: true
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_vlowres
+        shader: stdtexture
+        lighting: shadows
+        image-format: default
+        mapzoomin: 1
+        mapzoomout: 3
+        boostzoom: 0
+        tilescale: 0
+        append_to_world: ''
+        protected: false
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_vlowres
+        shader: stdtexture
+        lighting: shadows
+        image-format: default
+        mapzoomin: 1
+        mapzoomout: 5
+        boostzoom: 0
+        tilescale: 0
+        append_to_world: ''
+        protected: false
+    protected: false
+    showborder: true
+    sendposition: true
+    sendhealth: true
+    visibilitylimits: [
+        ]
+    hiddenlimits: [
+        ]
+    hidestyle: stone
+-   name: navidad
+    title: navidad
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: '49'
+    title: '49'
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: world_old
+    title: world_old
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: trees
+    title: trees
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: parcelasushi
+    title: parcelasushi
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: '110'
+    title: '110'
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: spawn_the_end
+    title: spawn_the_end
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: brightnight
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: the_end
+        title: Surface
+        prefix: st
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: brightnight
+        mapzoomin: 1
+-   name: world_nether
+    title: world_nether
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: nethershadows
+        background: '#300806'
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: nether
+        title: Surface
+        prefix: nt
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: nethershadows
+        background: '#300806'
+        mapzoomin: 1
+-   name: 3mp
+    title: 3mp
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: 5mp
+    title: 5mp
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: '118'
+    title: '118'
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: world_116
+    title: world_116
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: '50'
+    title: '50'
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: '51'
+    title: '51'
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: '52'
+    title: '52'
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: nether
+    title: nether
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: nethershadows
+        background: '#300806'
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: nether
+        title: Surface
+        prefix: nt
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: nethershadows
+        background: '#300806'
+        mapzoomin: 1
+-   name: test
+    title: test
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: survival
+    title: survival
+    enabled: true
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_vlowres
+        shader: stdtexture
+        lighting: shadows
+        image-format: default
+        mapzoomin: 1
+        mapzoomout: 3
+        boostzoom: 0
+        tilescale: 0
+        append_to_world: ''
+        protected: false
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_vlowres
+        shader: stdtexture
+        lighting: shadows
+        image-format: default
+        mapzoomin: 1
+        mapzoomout: 5
+        boostzoom: 0
+        tilescale: 0
+        append_to_world: ''
+        protected: false
+    protected: false
+    showborder: true
+    sendposition: true
+    sendhealth: true
+    visibilitylimits: [
+        ]
+    hiddenlimits: [
+        ]
+    hidestyle: stone
+-   name: '120'
+    title: '120'
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: spawn_recursos2
+    title: spawn_recursos2
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: '121'
+    title: '121'
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: midtown
+    title: midtown
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: '1'
+    title: '1'
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: '123'
+    title: '123'
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: '4'
+    title: '4'
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: '5'
+    title: '5'
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: '126'
+    title: '126'
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: spawn_nether
+    title: spawn_nether
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: nethershadows
+        background: '#300806'
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: nether
+        title: Surface
+        prefix: nt
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: nethershadows
+        background: '#300806'
+        mapzoomin: 1
+-   name: 3mhp
+    title: 3mhp
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: 5top5pt7
+    title: 5top5pt7
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: construcciones_link
+    title: construcciones_link
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: 3top5pt5
+    title: 3top5pt5
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: 4top5pt7
+    title: 4top5pt7
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: 5top5pt6
+    title: 5top5pt6
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: 2top5pt5
+    title: 2top5pt5
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: 2top5pt4
+    title: 2top5pt4
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: ny2
+    title: ny2
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: 2top5pt3
+    title: 2top5pt3
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: 5top5pt2
+    title: 5top5pt2
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: ny1
+    title: ny1
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: 1top5pt2
+    title: 1top5pt2
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: 4top5pt2
+    title: 4top5pt2
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: lowertown
+    title: lowertown
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: '130'
+    title: '130'
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: '132'
+    title: '132'
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: '133'
+    title: '133'
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: '134'
+    title: '134'
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: world
+    title: world
+    enabled: true
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_vlowres
+        shader: stdtexture
+        lighting: shadows
+        image-format: default
+        mapzoomin: 1
+        mapzoomout: 3
+        boostzoom: 0
+        tilescale: 0
+        append_to_world: ''
+        protected: false
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_vlowres
+        shader: stdtexture
+        lighting: shadows
+        image-format: default
+        mapzoomin: 1
+        mapzoomout: 5
+        boostzoom: 0
+        tilescale: 0
+        append_to_world: ''
+        protected: false
+    protected: false
+    showborder: true
+    sendposition: true
+    sendhealth: true
+    visibilitylimits: [
+        ]
+    hiddenlimits: [
+        ]
+    hidestyle: stone
+-   name: '135'
+    title: '135'
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: '137'
+    title: '137'
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: 4top5pt10
+    title: 4top5pt10
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: end
+    title: end
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: brightnight
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: the_end
+        title: Surface
+        prefix: st
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: brightnight
+        mapzoomin: 1
+-   name: la2
+    title: la2
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: la1
+    title: la1
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: bridgebackup
+    title: bridgebackup
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: bridge_backup
+    title: bridge_backup
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: newspawn
+    title: newspawn
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: lavaland
+    title: lavaland
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: nethershadows
+        background: '#300806'
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: nether
+        title: Surface
+        prefix: nt
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: nethershadows
+        background: '#300806'
+        mapzoomin: 1
+-   name: '140'
+    title: '140'
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: '142'
+    title: '142'
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: '143'
+    title: '143'
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: nether_noreset
+    title: nether_noreset
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: nethershadows
+        background: '#300806'
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: nether
+        title: Surface
+        prefix: nt
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: nethershadows
+        background: '#300806'
+        mapzoomin: 1
+-   name: '145'
+    title: '145'
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: world_the_end
+    title: world_the_end
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: brightnight
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: the_end
+        title: Surface
+        prefix: st
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: brightnight
+        mapzoomin: 1
+-   name: 1mhp
+    title: 1mhp
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: island3
+    title: island3
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: island2
+    title: island2
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: island1
+    title: island1
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: ironfarm
+    title: ironfarm
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: world_mya
+    title: world_mya
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: chapi_buildings
+    title: chapi_buildings
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: world_the_end_noreset
+    title: world_the_end_noreset
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: brightnight
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: the_end
+        title: Surface
+        prefix: st
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: brightnight
+        mapzoomin: 1
+-   name: EquilibriumCity
+    title: EquilibriumCity
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: recursos2
+    title: recursos2
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: Greenfield
+    title: Greenfield
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: recursos_custom
+    title: recursos_custom
+    enabled: true
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_vlowres
+        shader: stdtexture
+        lighting: shadows
+        image-format: default
+        mapzoomin: 1
+        mapzoomout: 3
+        boostzoom: 0
+        tilescale: 0
+        append_to_world: ''
+        protected: false
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_vlowres
+        shader: stdtexture
+        lighting: shadows
+        image-format: default
+        mapzoomin: 1
+        mapzoomout: 5
+        boostzoom: 0
+        tilescale: 0
+        append_to_world: ''
+        protected: false
+    protected: false
+    showborder: true
+    sendposition: true
+    sendhealth: true
+    visibilitylimits: [
+        ]
+    hiddenlimits: [
+        ]
+    hidestyle: stone
+-   name: smallcity
+    title: smallcity
+    enabled: false
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_hires
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 1
+    -   class: org.dynmap.hdmap.HDMap
+        name: cave
+        title: Cave
+        prefix: ct
+        perspective: iso_SE_60_lowres
+        shader: cave
+        lighting: default
+        mapzoomin: 3
+-   name: world_edit_test
+    title: world_edit_test
+    enabled: true
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        image-format: default
+        mapzoomin: 1
+        mapzoomout: 3
+        boostzoom: 0
+        tilescale: 0
+        append_to_world: ''
+        protected: false
+    protected: false
+    showborder: true
+    sendposition: true
+    sendhealth: true
+    visibilitylimits: [
+        ]
+    hiddenlimits: [
+        ]
+    hidestyle: stone
+-   name: recursos_custom
+    title: recursos_custom
+    enabled: true
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: Flat
+        prefix: flat
+        perspective: iso_S_90_vlowres
+        shader: stdtexture
+        lighting: shadows
+        image-format: default
+        mapzoomin: 1
+        mapzoomout: 3
+        boostzoom: 0
+        tilescale: 0
+        append_to_world: ''
+        protected: false
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: Surface
+        prefix: t
+        perspective: iso_SE_30_vlowres
+        shader: stdtexture
+        lighting: shadows
+        image-format: default
+        mapzoomin: 1
+        mapzoomout: 5
+        boostzoom: 0
+        tilescale: 0
+        append_to_world: ''
+        protected: false
+    protected: false
+    showborder: true
+    sendposition: true
+    sendhealth: true
+    visibilitylimits: [
+        ]
+    hiddenlimits: [
+        ]
+    hidestyle: stone
+-   name: recursos_custom_2
+    title: recursos_custom_2
+    enabled: true
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: flat
+        prefix: flat
+        perspective: iso_S_90_vlowres
+        shader: default
+        lighting: default
+        image-format: default
+        mapzoomin: 2
+        mapzoomout: 3
+        boostzoom: 0
+        tilescale: 0
+        append_to_world: ''
+        protected: false
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: surface
+        prefix: surface
+        perspective: iso_SE_30_vlowres
+        shader: default
+        lighting: default
+        image-format: default
+        mapzoomin: 2
+        mapzoomout: 3
+        boostzoom: 0
+        tilescale: 0
+        append_to_world: ''
+        protected: false
+    protected: false
+    showborder: true
+    sendposition: true
+    sendhealth: true
+    visibilitylimits:
+    -   x0: 0
+        z0: 0
+        x1: 4095
+        z1: 4095
+    -   x0: 0
+        z0: 0
+        x1: 4095
+        z1: 4095
+    hiddenlimits: [
+        ]
+    hidestyle: air
+-   name: earth
+    title: earth
+    enabled: true
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: flat
+        prefix: flat
+        perspective: iso_S_90_vlowres
+        shader: default
+        lighting: default
+        image-format: default
+        mapzoomin: 2
+        mapzoomout: 3
+        boostzoom: 0
+        tilescale: 0
+        append_to_world: ''
+        protected: false
+    protected: false
+    showborder: true
+    sendposition: true
+    sendhealth: true
+    visibilitylimits: [
+        ]
+    hiddenlimits: [
+        ]
+    hidestyle: stone
+-   name: earth750
+    title: earth750
+    enabled: true
+    protected: false
+    showborder: true
+    sendposition: true
+    sendhealth: true
+    extrazoomout: 2
+    visibilitylimits: [
+        ]
+    hiddenlimits: [
+        ]
+    hidestyle: stone
+    maps: [
+        ]
+-   name: parcelas
+    title: parcelas
+    enabled: true
+    extrazoomout: 2
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: flat
+        prefix: flat
+        perspective: iso_S_90_vlowres
+        shader: default
+        lighting: default
+        image-format: default
+        mapzoomin: 2
+        mapzoomout: 3
+        boostzoom: 0
+        tilescale: 0
+        append_to_world: ''
+        protected: false
+    -   class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: surface
+        prefix: surface
+        perspective: iso_SE_30_vlowres
+        shader: default
+        lighting: default
+        image-format: default
+        mapzoomin: 2
+        mapzoomout: 3
+        boostzoom: 0
+        tilescale: 0
+        append_to_world: ''
+        protected: false
+    protected: false
+    showborder: true
+    sendposition: true
+    sendhealth: true
+    visibilitylimits: [
+        ]
+    hiddenlimits: [
+        ]
+    hidestyle: stone
+-   name: creativo
+    title: creativo
+    enabled: true
+    extrazoomout: 2
+    maps: [
+        ]
+    protected: false
+    showborder: true
+    sendposition: true
+    sendhealth: true
+    visibilitylimits: [
+        ]
+    hiddenlimits: [
+        ]
+    hidestyle: stone
+-   name: regentest
+    title: regentest
+    enabled: true
+    extrazoomout: 2
+    maps: [
+        ]
+    protected: false
+    showborder: true
+    sendposition: true
+    sendhealth: true
+    visibilitylimits: [
+        ]
+    hiddenlimits: [
+        ]
+    hidestyle: stone
+-   name: maptest
+    title: maptest
+    enabled: true
+    protected: false
+    showborder: true
+    sendposition: true
+    sendhealth: true
+    extrazoomout: 2
+    visibilitylimits: [
+        ]
+    hiddenlimits: [
+        ]
+    hidestyle: stone
+    maps:
+    -   class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: flat
+        prefix: flat
+        perspective: iso_S_90_vlowres
+        shader: default
+        lighting: default
+        image-format: default
+        mapzoomin: 2
+        mapzoomout: 3
+        boostzoom: 0
+        tilescale: 0
+        append_to_world: ''
+        protected: false

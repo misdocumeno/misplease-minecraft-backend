@@ -31,7 +31,7 @@ if [ "$KIND" != "proxy" ]; then
 fi
 
 # Optional console access without publishing RCON: set RCON_PASSWORD in compose/.env.
-# Port 25575 stays unpublished; tools/mc-console.sh reaches it via the container netns.
+# Port 25575 stays unpublished on the host; reach it only on the compose network.
 # Prefer a random password in .env — sibling containers on the compose network can still dial RCON.
 if [ -n "${RCON_PASSWORD:-}" ] && [ -f "$LOWER/server.properties" ]; then
   sed -i 's/^enable-rcon=.*/enable-rcon=true/' "$LOWER/server.properties"

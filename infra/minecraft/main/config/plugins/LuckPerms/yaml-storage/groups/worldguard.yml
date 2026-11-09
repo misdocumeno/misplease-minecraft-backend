@@ -1,7 +1,0 @@
-name: worldguard
-permissions:
-    # https://worldguard.enginehub.org/en/latest/permissions/
-    - worldguard.region.addmember.own.*
-    - worldguard.region.removemember.own.*
-    - worldguard.region.addowner.own.*
-    - worldguard.region.removeowner.own.*

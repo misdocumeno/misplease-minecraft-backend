@@ -424,13 +424,11 @@ plugins:
       - "26.2"
       - "26.3"
   - name: Dynmap
-    source: git
-    version: 38a38c665165c3f2b0c9846f705be9ceafaacb58
-    filename: Dynmap.jar
-    url: https://github.com/webbukkit/dynmap.git
-    jar: /^Dynmap-CE-.*-spigot\.jar$/
-    java: "25"
-    task: :spigot:shadowJar
+    source: github
+    version: v26.3.6-ce
+    filename: Dynmap-CE-3.x-Dev-spigot.jar
+    url: https://api.github.com/repos/misdocumeno/dynmap/releases/assets/725717602
+    sha256: 78f6d7a60ebcc5c491fc154df7ae01f81a82278fc678d73ab8cae693f56afcee
   - name: LuckPerms
     source: modrinth
     version: v5.5.71-bukkit
@@ -632,12 +630,11 @@ plugins:
     minecraft:
       - 1.21.10
   - name: RoseStacker
-    source: git
-    version: 47f0fc15e287bfc5b78998bdd0efbda9d664e49a
+    source: github
+    version: v26.3.6
     filename: RoseStacker.jar
-    url: https://github.com/Rosewood-Development/RoseStacker.git
-    jar: /^RoseStacker-/
-    java: "25"
+    url: https://api.github.com/repos/misdocumeno/RoseStacker/releases/assets/725716866
+    sha256: 17feb9e5910a5561451f12d194f3a6dce31721de7da2122e8fa0d15c1a40a5c4
   - name: SimpleScore
     source: modrinth
     version: 4.3.1
@@ -1266,3 +1263,9 @@ plugins:
     filename: QuickShop.jar
     url: https://api.github.com/repos/misdocumeno/QuickShop-Reremake/releases/assets/711214691
     sha256: b5903eb3950c2e27b0339fb53a49f90ae6b2c17559d98349d992dd01cd631d2b
+  - name: DeathCoordinates
+    source: spiget
+    version: "455215"
+    filename: DeathCoordinates-1.12.1.jar
+    url: https://cdn.spiget.org/file/spiget-resources/43318.jar
+    sha256: 089e2bcf96c215c9dbecc5414b69379570f1c34f4accf6c926febe50136f8334

@@ -1,7 +1,0 @@
-name: world_edit_creativo
-permissions:
-- fawe.permpack.basic
-- fawe.plotsquared
-- fawe.plotsquared.member
-- fawe.worldguard
-- worldedit.anyblock.nbt

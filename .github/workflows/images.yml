@@ -33,6 +33,8 @@ permissions:
   contents: read
   packages: write
   pull-requests: read
+  # List/delete Actions caches after rotating gradle-mount keys (avoid 10GB LRU thrash).
+  actions: write
 
 env:
   # Push images on main builds and manual runs; PRs only load+smoke locally on the runner.
@@ -172,6 +174,10 @@ jobs:
       fail-fast: false
       matrix:
         include: ${{ fromJson(needs.changes.outputs.servers_json) }}
+    # Exact key rotates when our plugin Gradle deps/toolchain change; prefix is for restore-keys + cleanup.
+    env:
+      GRADLE_MOUNT_PREFIX: gradle-mount-${{ runner.os }}-${{ matrix.name }}-
+      GRADLE_MOUNT_KEY: gradle-mount-${{ runner.os }}-${{ matrix.name }}-${{ hashFiles('plugins/gradle/wrapper/gradle-wrapper.properties', 'plugins/gradle/libs.versions.toml', 'plugins/**/build.gradle.kts', 'plugins/settings.gradle.kts', 'plugins/build.gradle.kts', 'plugins/buildSrc/**/*.kts') }}
     steps:
       - uses: actions/checkout@v4
 
@@ -181,16 +187,19 @@ jobs:
           cache: npm
           cache-dependency-path: tools/plugin-lock/package-lock.json
 
-      # JDK/Maven used when a lock entry is source: git (self-provisioned by plugin-lock).
+      # JDK/Maven for source: git (plugin-lock). Stable key — contents rarely change.
+      # Do not put run_id in the key (immutable Actions caches would duplicate GB every run).
       - uses: actions/cache/restore@v4
+        id: misplease-tools
         with:
           path: ~/.cache/misplease
-          key: misplease-tools-${{ runner.os }}-${{ github.run_id }}-${{ matrix.name }}
+          key: misplease-tools-${{ runner.os }}-temurin-maven
           restore-keys: |
             misplease-tools-${{ runner.os }}-
 
       # npm deps for the local JS action + CLI (ACTION gets ACTIONS_RUNTIME_TOKEN;
       # a plain `run:` step does not, so @actions/cache cannot run from shell alone).
+      # setup-node cache key already tracks package-lock.json (no run_id).
       - name: Install plugin-lock
         working-directory: tools/plugin-lock
         run: npm ci --omit=dev --ignore-scripts
@@ -207,10 +216,10 @@ jobs:
           cache-dir: ${{ github.workspace }}/.plugin-lock-cache
 
       - uses: actions/cache/save@v4
-        if: always()
+        if: always() && steps.misplease-tools.outputs.cache-hit != 'true'
         with:
           path: ~/.cache/misplease
-          key: misplease-tools-${{ runner.os }}-${{ github.run_id }}-${{ matrix.name }}
+          key: misplease-tools-${{ runner.os }}-temurin-maven
 
       - uses: docker/setup-buildx-action@v3
 
@@ -227,16 +236,19 @@ jobs:
       - name: Prepare Gradle mount dirs
         run: mkdir -p .gradle-ci/caches .gradle-ci/wrapper
 
+      # Persists BuildKit gradle mounts via cache-dance. Key = toolchain + our plugin Gradle
+      # files (deps). Source .class outputs live under build/, not here. Save only on miss;
+      # after save, delete superseded keys with the same prefix (controlled rotation).
       - name: Restore Gradle BuildKit mounts
         uses: actions/cache/restore@v4
+        id: gradle-mount
         with:
           path: |
             .gradle-ci/caches
             .gradle-ci/wrapper
-          key: gradle-mount-${{ runner.os }}-${{ matrix.name }}-${{ hashFiles('plugins/gradle/wrapper/gradle-wrapper.properties', 'plugins/gradle/libs.versions.toml') }}-${{ github.run_id }}
+          key: ${{ env.GRADLE_MOUNT_KEY }}
           restore-keys: |
-            gradle-mount-${{ runner.os }}-${{ matrix.name }}-${{ hashFiles('plugins/gradle/wrapper/gradle-wrapper.properties', 'plugins/gradle/libs.versions.toml') }}-
-            gradle-mount-${{ runner.os }}-${{ matrix.name }}-
+            ${{ env.GRADLE_MOUNT_PREFIX }}
 
       - name: Inject Gradle mounts into BuildKit
         uses: reproducible-containers/buildkit-cache-dance@v3.1.2
@@ -300,13 +312,43 @@ jobs:
             }
 
       - name: Save Gradle BuildKit mounts
-        if: always() && steps.server-image.outcome == 'success'
+        id: gradle-mount-save
+        if: always() && steps.server-image.outcome == 'success' && steps.gradle-mount.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
           path: |
             .gradle-ci/caches
             .gradle-ci/wrapper
-          key: gradle-mount-${{ runner.os }}-${{ matrix.name }}-${{ hashFiles('plugins/gradle/wrapper/gradle-wrapper.properties', 'plugins/gradle/libs.versions.toml') }}-${{ github.run_id }}
+          key: ${{ env.GRADLE_MOUNT_KEY }}
+
+      # After rotating to a new exact key, drop older gradle-mount-* for this matrix cell
+      # so GitHub LRU does not evict small plugin-jar caches first.
+      - name: Drop superseded gradle-mount caches
+        if: always() && steps.gradle-mount-save.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          keep="${GRADLE_MOUNT_KEY}"
+          prefix="${GRADLE_MOUNT_PREFIX}"
+          echo "Keeping exact key: ${keep}"
+          echo "Deleting other keys with prefix: ${prefix}"
+          deleted=0
+          while IFS=$'\t' read -r id key; do
+            [[ -n "$id" ]] || continue
+            if [[ "$key" == "$keep" ]]; then
+              echo "keep id=${id} key=${key}"
+              continue
+            fi
+            echo "delete id=${id} key=${key}"
+            gh cache delete "$id" -R "${{ github.repository }}"
+            deleted=$((deleted + 1))
+          done < <(
+            gh cache list -R "${{ github.repository }}" -L 100 -k "${prefix}" \
+              --json id,key \
+              --jq '.[] | [.id, .key] | @tsv'
+          )
+          echo "Deleted ${deleted} superseded cache(s)."
 
       - name: Smoke boot
         if: matrix.smoke
