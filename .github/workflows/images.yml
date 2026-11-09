@@ -174,13 +174,19 @@ jobs:
       fail-fast: false
       matrix:
         include: ${{ fromJson(needs.changes.outputs.servers_json) }}
-    # Exact key rotates when our plugin Gradle deps/toolchain change; prefix is for restore-keys + cleanup.
-    # Job-level env cannot use `runner.*` (workflow parse fails); runners are ubuntu-24.04 → Linux.
-    env:
-      GRADLE_MOUNT_PREFIX: gradle-mount-Linux-${{ matrix.name }}-
-      GRADLE_MOUNT_KEY: gradle-mount-Linux-${{ matrix.name }}-${{ hashFiles('plugins/gradle/wrapper/gradle-wrapper.properties', 'plugins/gradle/libs.versions.toml', 'plugins/**/build.gradle.kts', 'plugins/settings.gradle.kts', 'plugins/build.gradle.kts', 'plugins/buildSrc/**/*.kts') }}
     steps:
       - uses: actions/checkout@v4
+
+      # hashFiles / runner.* are invalid in job-level env; compute once after checkout.
+      - name: Gradle mount cache key
+        id: gradle-mount-key
+        run: |
+          set -euo pipefail
+          # runners are ubuntu-24.04
+          prefix="gradle-mount-Linux-${{ matrix.name }}-"
+          digest="${{ hashFiles('plugins/gradle/wrapper/gradle-wrapper.properties', 'plugins/gradle/libs.versions.toml', 'plugins/**/build.gradle.kts', 'plugins/settings.gradle.kts', 'plugins/build.gradle.kts', 'plugins/buildSrc/**/*.kts') }}"
+          echo "prefix=${prefix}" >> "$GITHUB_OUTPUT"
+          echo "key=${prefix}${digest}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-node@v4
         with:
@@ -247,9 +253,9 @@ jobs:
           path: |
             .gradle-ci/caches
             .gradle-ci/wrapper
-          key: ${{ env.GRADLE_MOUNT_KEY }}
+          key: ${{ steps.gradle-mount-key.outputs.key }}
           restore-keys: |
-            ${{ env.GRADLE_MOUNT_PREFIX }}
+            ${{ steps.gradle-mount-key.outputs.prefix }}
 
       - name: Inject Gradle mounts into BuildKit
         uses: reproducible-containers/buildkit-cache-dance@v3.1.2
@@ -320,7 +326,7 @@ jobs:
           path: |
             .gradle-ci/caches
             .gradle-ci/wrapper
-          key: ${{ env.GRADLE_MOUNT_KEY }}
+          key: ${{ steps.gradle-mount-key.outputs.key }}
 
       # After rotating to a new exact key, drop older gradle-mount-* for this matrix cell
       # so GitHub LRU does not evict small plugin-jar caches first.
@@ -328,6 +334,8 @@ jobs:
         if: always() && steps.gradle-mount-save.outcome == 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GRADLE_MOUNT_KEY: ${{ steps.gradle-mount-key.outputs.key }}
+          GRADLE_MOUNT_PREFIX: ${{ steps.gradle-mount-key.outputs.prefix }}
         run: |
           set -euo pipefail
           keep="${GRADLE_MOUNT_KEY}"
