@@ -234,8 +234,11 @@ plugins:
   - name: Slimefun
     source: github
     repo: misdocumeno/Slimefun4
+    version: vRC-37-misplease.1
+    jar: /^Slimefun\.jar$/
   # Release also ships a thin *-SNAPSHOT.jar without deps; pin the shaded QuickShop.jar.
   - name: QuickShop
     source: github
     repo: misdocumeno/QuickShop-Reremake
+    version: v5.1.2.5-misplease.1
     jar: /^QuickShop\.jar$/

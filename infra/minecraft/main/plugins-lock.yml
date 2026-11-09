@@ -1253,16 +1253,16 @@ plugins:
     sha256: befd0bdf871717efe95456669d2ac73d7c4aa2f28f165db7d9cd8ac772ff03f7
   - name: Slimefun
     source: github
-    version: v0.1.3
-    filename: Slimefun.v4.9-UNOFFICIAL.jar
-    url: https://api.github.com/repos/misdocumeno/Slimefun4/releases/tags/v0.1.3
-    sha256: 2f8d0b4a7c1cf2a6c19d94374f0405cfdb3a457d806510ca2b1c4ae47836e722
+    version: vRC-37-misplease.1
+    filename: Slimefun.jar
+    url: https://api.github.com/repos/misdocumeno/Slimefun4/releases/tags/vRC-37-misplease.1
+    sha256: 2acc328d61ba628dea11c696e5437794e2c706f2dbffcd1d10d4485df7026f8a
   - name: QuickShop
     source: github
-    version: v5.1.2.5-shulker
+    version: v5.1.2.5-misplease.1
     filename: QuickShop.jar
-    url: https://api.github.com/repos/misdocumeno/QuickShop-Reremake/releases/tags/v5.1.2.5-shulker
-    sha256: b5903eb3950c2e27b0339fb53a49f90ae6b2c17559d98349d992dd01cd631d2b
+    url: https://api.github.com/repos/misdocumeno/QuickShop-Reremake/releases/tags/v5.1.2.5-misplease.1
+    sha256: 4d3c502ed2095339b7cb836e8a76d64eb4f78548e29e2d849488deac26b7f8fb
   - name: DeathCoordinates
     source: spiget
     version: "455215"
