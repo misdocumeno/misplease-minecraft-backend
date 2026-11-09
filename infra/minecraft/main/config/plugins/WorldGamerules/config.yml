@@ -1,0 +1,34 @@
+# Applied on enable and whenever a world loads.
+# defaults apply first; worlds.<name> overrides (omit a world to leave it alone).
+defaults:
+  announceAdvancements: false
+  doFireTick: false
+  keepInventory: true
+  mobGriefing: false
+  sendCommandFeedback: false
+
+worlds:
+  world: {}
+  world2: {}
+  newspawn: {}
+  spawn_recursos2: {}
+  recursos2: {}
+  recursos_custom: {}
+  spawn_nether: {}
+  nether: {}
+  nether_noreset: {}
+  spawn_the_end: {}
+  world_the_end_noreset:
+    tntExplodes: false
+  end: {}
+  spawn_overworld: {}
+  survival:
+    mobGriefing: true
+  SuperiorWorld:
+    keepInventory: true
+    doInsomnia: false
+  test:
+    keepInventory: true
+  chapi_buildings:
+    keepInventory: true
+    doMobSpawning: false

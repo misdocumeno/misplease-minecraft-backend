@@ -30,5 +30,6 @@ include(
     "velocity-chat-control",
     "velocity-global-teleporter",
     "velocity-last-server",
+    "velocity-presence",
     "velocity-tablist-broadcast",
 )

@@ -228,6 +228,10 @@ plugins:
   - name: WorldGameMode
     source: github
     repo: misdocumeno/WorldGameMode
+  - name: WorldGamerules
+    source: github
+    repo: misdocumeno/WorldGamerules
+    version: v0.1.0
   - name: WorldPrinter
     source: github
     repo: misdocumeno/WorldPrinter

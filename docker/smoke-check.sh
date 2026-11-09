@@ -103,4 +103,13 @@ if grep -E 'Error occurred while enabling |Unsupported server version detected:|
   exit 1
 fi
 
+# Always surface warnings (Paper/Velocity/log4j). Do not fail the job on WARN alone.
+echo "---- smoke WARN ----"
+if grep -E '\[WARN\]|\[WARNING\]| WARN | WARNING ' "$LOG"; then
+  :
+else
+  echo "(none)"
+fi
+echo "---- end smoke WARN ----"
+
 echo "smoke ok: $IMAGE ($KIND)"

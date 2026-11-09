@@ -6,5 +6,5 @@ dependencies {
     implementation(libs.exposed.core)
     implementation(libs.exposed.dao)
     implementation(libs.exposed.jdbc)
-    implementation(libs.sqlite.jdbc)
+    implementation(libs.postgresql)
 }

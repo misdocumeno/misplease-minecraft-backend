@@ -2,6 +2,7 @@ package io.github.misdocumeno
 
 import io.github.misdocumeno.infra.paper.PaperTeleportAskHandler
 import io.github.misdocumeno.infra.paper.TeleportMessages
+import io.github.misdocumeno.infra.paper.bind
 import io.github.misdocumeno.infra.paper.commands.TeleportAcceptCommand
 import io.github.misdocumeno.infra.paper.commands.TeleportAllCommand
 import io.github.misdocumeno.infra.paper.commands.TeleportAskCommand
@@ -16,6 +17,7 @@ import io.github.misdocumeno.infra.redis.RedisTeleportAskAdapter
 import io.github.misdocumeno.infra.redis.RedisTeleportAskListener
 import io.github.misdocumeno.infra.redis.RedisTeleportRequestSender
 import io.github.misdocumeno.infra.redis.RedisUsernameRepository
+import io.github.misdocumeno.infra.redis.TpaRequestQueries
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulRedisConnection
 import io.lettuce.core.api.sync.RedisCommands
@@ -49,23 +51,24 @@ class BackendTeleportCommandPlugin : JavaPlugin() {
         val messages = TeleportMessages(this)
 
         val usernames = RedisUsernameRepository(redis, this)
+        val tpa = TpaRequestQueries(redis, this)
         val authenticated = RedisAuthenticatedRepository(redis)
         val locations = RedisLocationResolver(authenticated, connectionPubSub, connection, json)
         locations.start()
         val teleporter = RedisTeleportRequestSender(connection, json)
 
-        getCommand("tp")!!.setExecutor(TeleportCommand(this, usernames, locations, teleporter, scope, messages))
-        getCommand("tphere")!!.setExecutor(TeleportHereCommand(usernames, teleporter, messages))
-        getCommand("tpall")!!.setExecutor(TeleportAllCommand(this, usernames, locations, teleporter, scope, messages))
+        getCommand("tp")!!.bind(TeleportCommand(this, usernames, locations, teleporter, scope, messages))
+        getCommand("tphere")!!.bind(TeleportHereCommand(usernames, teleporter, messages))
+        getCommand("tpall")!!.bind(TeleportAllCommand(this, usernames, locations, teleporter, scope, messages))
 
-        getCommand("tpa")!!.setExecutor(TeleportAskCommand(this, scope, usernames, redis, json, messages))
-        getCommand("tpahere")!!.setExecutor(TeleportAskHereCommand(this, scope, usernames, redis, json, messages))
+        getCommand("tpa")!!.bind(TeleportAskCommand(this, scope, usernames, redis, json, messages))
+        getCommand("tpahere")!!.bind(TeleportAskHereCommand(this, scope, usernames, redis, json, messages))
 
-        getCommand("tpaccept")!!.setExecutor(
-            TeleportAcceptCommand(this, usernames, locations, teleporter, redis, scope, messages)
+        getCommand("tpaccept")!!.bind(
+            TeleportAcceptCommand(this, usernames, locations, teleporter, tpa, scope, messages),
         )
-        getCommand("tpdeny")!!.setExecutor(TeleportDenyCommand(this, scope, usernames, redis, messages))
-        getCommand("tpacancel")!!.setExecutor(TeleportCancelCommand(this, scope, usernames, redis, messages))
+        getCommand("tpdeny")!!.bind(TeleportDenyCommand(this, scope, usernames, tpa, messages))
+        getCommand("tpacancel")!!.bind(TeleportCancelCommand(this, scope, usernames, tpa, messages))
 
         val handler = PaperTeleportAskHandler(this, messages)
         val adapter = RedisTeleportAskAdapter(handler, json)

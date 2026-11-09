@@ -78,11 +78,8 @@ class TeleportAllCommand(
 
     override fun onTabComplete(
         sender: CommandSender, command: Command, label: String, args: Array<out String>
-    ): List<String>? {
-        return if (args.size == 1) {
-            usernames.findPartialMultiple(args.last())
-        } else {
-            null
-        }
+    ): List<String> {
+        if (args.size != 1) return emptyList()
+        return usernames.suggest(args.last())
     }
 }

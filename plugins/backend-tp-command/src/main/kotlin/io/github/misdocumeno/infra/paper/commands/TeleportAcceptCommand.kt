@@ -7,7 +7,7 @@ import io.github.misdocumeno.domain.model.TeleportAskType
 import io.github.misdocumeno.infra.paper.TeleportMessages
 import io.github.misdocumeno.infra.paper.globalLocation
 import io.github.misdocumeno.infra.paper.runSync
-import io.lettuce.core.api.sync.RedisCommands
+import io.github.misdocumeno.infra.redis.TpaRequestQueries
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
@@ -23,7 +23,7 @@ class TeleportAcceptCommand(
     private val usernames: UsernameRepository,
     private val locations: GlobalLocationResolver,
     private val teleporter: Teleporter,
-    private val redis: RedisCommands<String, String>,
+    private val tpa: TpaRequestQueries,
     private val scope: CoroutineScope,
     private val messages: TeleportMessages,
 ) : CommandExecutor, TabCompleter {
@@ -38,7 +38,7 @@ class TeleportAcceptCommand(
         val target = sender.name
         val arg = args.firstOrNull()
         scope.launch {
-            val requests = getPendingRequests(target)
+            val requests = tpa.incoming(target)
             plugin.runSync {
                 if (!sender.isOnline) return@runSync
                 when {
@@ -47,25 +47,25 @@ class TeleportAcceptCommand(
                     arg == null -> {
                         val (requester, type) = requests.first()
                         performTeleport(requester, sender, type)
-                        scope.launch { clearRequest(requester, target) }
+                        scope.launch { tpa.clear(requester, target) }
                         messages.accepted(sender, requester)
                     }
                     arg == "*" -> {
                         messages.acceptedAll(sender)
                         requests.forEach { (requester, type) ->
                             performTeleport(requester, sender, type)
-                            scope.launch { clearRequest(requester, target) }
+                            scope.launch { tpa.clear(requester, target) }
                         }
                     }
                     else -> {
                         val requester =
                             usernames.findCaseInsensitive(arg) ?: usernames.findPartial(arg) ?: arg
-                        val request = requests.find { (name) -> name == requester }
+                        val request = requests.find { (name) -> name.equals(requester, ignoreCase = true) }
                         if (request == null) {
                             messages.noRequestFrom(sender, requester)
                         } else {
                             performTeleport(request.first, sender, request.second)
-                            scope.launch { clearRequest(requester, target) }
+                            scope.launch { tpa.clear(requester, target) }
                             messages.accepted(sender, requester)
                         }
                     }
@@ -77,12 +77,11 @@ class TeleportAcceptCommand(
 
     override fun onTabComplete(
         sender: CommandSender, command: Command, label: String, args: Array<out String>
-    ): List<String>? {
-        return if (sender is Player && args.size == 1) {
-            getPendingRequests(sender.name).map { (requester) -> requester }
-        } else {
-            null
-        }
+    ): List<String> {
+        if (sender !is Player || args.size != 1) return emptyList()
+        val partial = args.first()
+        val pending = tpa.suggestIncoming(sender.name, partial)
+        return if ("*".startsWith(partial)) pending + "*" else pending
     }
 
     private fun performTeleport(requester: String, receiver: Player, type: TeleportAskType) {
@@ -99,30 +98,16 @@ class TeleportAcceptCommand(
                         plugin.runSync { if (receiver.isOnline) messages.busy(receiver) }
                         return@launch
                     }?.let {
-                        teleporter.teleport(receiver.name, it, feedback)
+                        plugin.runSync {
+                            if (receiver.isOnline) {
+                                teleporter.teleport(receiver.name, it, feedback)
+                            }
+                        }
                     } ?: plugin.runSync {
                         if (receiver.isOnline) messages.playerNotFound(receiver, requester)
                     }
                 }
             }
         }
-    }
-
-    private fun getPendingRequests(target: String): List<Pair<String, TeleportAskType>> {
-        return redis.smembers("tpa:requests:$target").mapNotNull { requester ->
-            redis.get("tpa:request:$requester:$target")?.let {
-                requester to TeleportAskType.valueOf(it)
-            } ?: run {
-                redis.srem("tpa:requests:$target", requester)
-                redis.srem("tpa:outgoing_requests:$requester", target)
-                null
-            }
-        }
-    }
-
-    private fun clearRequest(requester: String, target: String) {
-        redis.del("tpa:request:$requester:$target")
-        redis.srem("tpa:requests:$target", requester)
-        redis.srem("tpa:outgoing_requests:$requester", target)
     }
 }

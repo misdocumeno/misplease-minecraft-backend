@@ -1269,3 +1269,9 @@ plugins:
     filename: DeathCoordinates-1.12.1.jar
     url: https://cdn.spiget.org/file/spiget-resources/43318.jar
     sha256: 089e2bcf96c215c9dbecc5414b69379570f1c34f4accf6c926febe50136f8334
+  - name: WorldGamerules
+    source: github
+    version: v0.1.0
+    filename: WorldGamerules-0.1.0.jar
+    url: https://api.github.com/repos/misdocumeno/WorldGamerules/releases/tags/v0.1.0
+    sha256: ac83f29023ece2479f7855ac2bc6cbc89eff7b824df896651e33202280ca31e2

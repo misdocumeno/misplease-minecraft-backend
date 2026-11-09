@@ -22,7 +22,6 @@ class LoginCommand(
     private val plugin: Plugin,
 ) : CommandExecutor, TabCompleter {
 
-    // TODO: do not log "<user> issued /login <pass> command"
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
         if (sender !is Player) return true
         if (args.isEmpty()) return false

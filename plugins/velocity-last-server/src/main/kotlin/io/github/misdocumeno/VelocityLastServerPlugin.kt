@@ -2,8 +2,6 @@ package io.github.misdocumeno
 
 import com.google.inject.Inject
 import com.velocitypowered.api.event.Subscribe
-import com.velocitypowered.api.event.player.ServerConnectedEvent
-import com.velocitypowered.api.event.player.ServerPreConnectEvent
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
 import com.velocitypowered.api.plugin.Plugin
 import com.velocitypowered.api.plugin.annotation.DataDirectory
@@ -13,16 +11,13 @@ import io.github.misdocumeno.infra.database.DatabaseFactory
 import io.github.misdocumeno.infra.database.ExposedLastServerRepository
 import io.github.misdocumeno.listener.LastServerListener
 import org.slf4j.Logger
-import java.nio.file.Files
 import java.nio.file.Path
-import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
 
 @Plugin(
     id = "last-server",
     name = "LastServer",
-    version = "0.1.0",
-    description = "Restore the last server the player was on after a reconnect",
+    version = "0.1.1",
+    description = "Restore the last server the player was on after a reconnect (Postgres)",
     authors = ["Mis"],
 )
 class VelocityLastServerPlugin @Inject constructor(
@@ -33,9 +28,8 @@ class VelocityLastServerPlugin @Inject constructor(
 
     @Subscribe
     fun onProxyInitialize(event: ProxyInitializeEvent) {
-        Files.createDirectories(dataDir)
-
-        DatabaseFactory.init(dataDir)
+        DatabaseFactory.initFromEnv()
+        logger.info("last-server storage: postgres (DATABASE_URL)")
 
         val repository = ExposedLastServerRepository()
         val service = LastServerService(repository)

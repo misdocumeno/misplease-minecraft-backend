@@ -75,11 +75,8 @@ class TeleportAskCommand(
 
     override fun onTabComplete(
         sender: CommandSender, command: Command, label: String, args: Array<out String>
-    ): List<String>? {
-        return if (sender is Player && args.size == 1) {
-            usernames.findPartialMultiple(args.first()).filter { it != sender.name }
-        } else {
-            null
-        }
+    ): List<String> {
+        if (sender !is Player || args.size != 1) return emptyList()
+        return usernames.suggest(args.first()).filter { !it.equals(sender.name, ignoreCase = true) }
     }
 }

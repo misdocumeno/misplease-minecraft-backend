@@ -12,6 +12,7 @@ import io.github.misdocumeno.infra.bukkit.BukkitPlayerBlocker
 import io.github.misdocumeno.infra.bukkit.LoginCommand
 import io.github.misdocumeno.infra.bukkit.BukkitConfig
 import io.github.misdocumeno.infra.http.KtorAuthAction
+import io.github.misdocumeno.infra.log.LoginCommandLogFilter
 import io.github.misdocumeno.infra.redis.RedisAuthQuery
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
@@ -30,6 +31,7 @@ class BackendAuthAdapterPlugin : JavaPlugin() {
 
     override fun onEnable() {
         scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        LoginCommandLogFilter.install()
 
         val ktor = HttpClient(CIO) {
             install(ContentNegotiation) { json() }

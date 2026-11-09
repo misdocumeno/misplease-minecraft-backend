@@ -1,10 +1,9 @@
 package io.github.misdocumeno.infra.paper.commands
 
 import io.github.misdocumeno.application.UsernameRepository
-import io.github.misdocumeno.domain.model.TeleportAskType
 import io.github.misdocumeno.infra.paper.TeleportMessages
 import io.github.misdocumeno.infra.paper.runSync
-import io.lettuce.core.api.sync.RedisCommands
+import io.github.misdocumeno.infra.redis.TpaRequestQueries
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.bukkit.command.Command
@@ -18,7 +17,7 @@ class TeleportDenyCommand(
     private val plugin: Plugin,
     private val scope: CoroutineScope,
     private val usernames: UsernameRepository,
-    private val redis: RedisCommands<String, String>,
+    private val tpa: TpaRequestQueries,
     private val messages: TeleportMessages,
 ) : CommandExecutor, TabCompleter {
 
@@ -32,7 +31,7 @@ class TeleportDenyCommand(
         val target = sender.name
         val arg = args.firstOrNull()
         scope.launch {
-            val requests = getPendingRequests(target)
+            val requests = tpa.incoming(target)
             plugin.runSync {
                 if (!sender.isOnline) return@runSync
                 when {
@@ -40,20 +39,20 @@ class TeleportDenyCommand(
                     arg == null && requests.size > 1 -> messages.specifyDeny(sender)
                     arg == null -> {
                         val (requester) = requests.first()
-                        scope.launch { clearRequest(requester, target) }
+                        scope.launch { tpa.clear(requester, target) }
                         messages.denied(sender, requester)
                     }
                     arg == "*" -> {
                         messages.deniedAll(sender)
-                        scope.launch { requests.forEach { (requester) -> clearRequest(requester, target) } }
+                        scope.launch { requests.forEach { (requester) -> tpa.clear(requester, target) } }
                     }
                     else -> {
                         val requester =
                             usernames.findCaseInsensitive(arg) ?: usernames.findPartial(arg) ?: arg
-                        if (requests.none { (name) -> name == requester }) {
+                        if (requests.none { (name) -> name.equals(requester, ignoreCase = true) }) {
                             messages.noRequestFrom(sender, requester)
                         } else {
-                            scope.launch { clearRequest(requester, target) }
+                            scope.launch { tpa.clear(requester, target) }
                             messages.denied(sender, requester)
                         }
                     }
@@ -65,30 +64,10 @@ class TeleportDenyCommand(
 
     override fun onTabComplete(
         sender: CommandSender, command: Command, label: String, args: Array<out String>,
-    ): List<String>? {
-        // Rare path; sync Redis on tab is acceptable vs empty completions.
-        return if (sender is Player && args.size == 1) {
-            getPendingRequests(sender.name).map { (requester) -> requester }
-        } else {
-            null
-        }
-    }
-
-    private fun getPendingRequests(player: String): List<Pair<String, TeleportAskType>> {
-        return redis.smembers("tpa:requests:$player").mapNotNull { requester ->
-            redis.get("tpa:request:$requester:$player")?.let {
-                requester to TeleportAskType.valueOf(it)
-            } ?: run {
-                redis.srem("tpa:requests:$player", requester)
-                redis.srem("tpa:outgoing_requests:$requester", player)
-                null
-            }
-        }
-    }
-
-    private fun clearRequest(requester: String, target: String) {
-        redis.del("tpa:request:$requester:$target")
-        redis.srem("tpa:requests:$target", requester)
-        redis.srem("tpa:outgoing_requests:$requester", target)
+    ): List<String> {
+        if (sender !is Player || args.size != 1) return emptyList()
+        val partial = args.first()
+        val pending = tpa.suggestIncoming(sender.name, partial)
+        return if ("*".startsWith(partial)) pending + "*" else pending
     }
 }
