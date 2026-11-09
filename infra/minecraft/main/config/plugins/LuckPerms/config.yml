@@ -31,7 +31,7 @@
 # - When set to "global" this setting is effectively ignored.
 # - In all other cases, the value here is added to all players in a "server" context.
 # - See: https://luckperms.net/wiki/Context
-server: global
+server: main
 
 # If the servers own UUID cache/lookup facility should be used when there is no record for a player
 # already in LuckPerms.
@@ -80,7 +80,7 @@ use-server-uuid-cache: false
 #
 # - A H2 database is the default option.
 # - If you want to edit data manually in "traditional" storage files, we suggest using YAML.
-storage-method: yaml
+storage-method: postgresql
 
 # The following block defines the settings for remote database storage methods.
 #
@@ -91,15 +91,16 @@ data:
     # - The standard DB engine port is used by default
     #   (MySQL: 3306, PostgreSQL: 5432, MongoDB: 27017)
     # - Specify as "host:port" if differs
-    address: localhost
+    address: db
 
     # The name of the database to store LuckPerms data in.
     # - This must be created already. Don't worry about this setting if you're using MongoDB.
-    database: minecraft
+    database: misplease
 
     # Credentials for the database.
-    username: root
-    password: ''
+    # password filled by entrypoint from DB_PASSWORD (do not commit secrets).
+    username: misplease
+    password: __MISPLEASE_DB_PASSWORD__
 
     # These settings apply to the MySQL connection pool.
     # - The default values will be suitable for the majority of users.
@@ -142,11 +143,8 @@ data:
         #
         # You can also use this section to disable SSL connections, by uncommenting the 'useSSL' and
         # 'verifyServerCertificate' options below.
-        properties:
-            useUnicode: true
-            characterEncoding: utf8
-            #useSSL: false
-            #verifyServerCertificate: false
+        # PostgreSQL: do not set MySQL utf8 properties.
+        properties: {}
 
     # The prefix for all LuckPerms SQL tables.
     #
@@ -208,7 +206,7 @@ sync-minutes: -1
 # - When using a file-based storage type, LuckPerms can monitor the data files for changes, and
 #   automatically update when changes are detected.
 # - If you don't want this feature to be active, set this option to false.
-watch-files: true
+watch-files: false
 
 # Define which messaging service should be used by the plugin.
 #
@@ -237,7 +235,7 @@ watch-files: true
 #                configured below.
 #   => custom    Uses a messaging service provided using the LuckPerms API.
 #   => auto      Attempts to automatically setup a messaging service using redis or sql.
-messaging-service: auto
+messaging-service: redis
 
 # If LuckPerms should automatically push updates after a change has been made with a command.
 auto-push-updates: true
@@ -250,16 +248,16 @@ push-log-entries: true
 # - If you have LuckPerms installed on your backend servers as well as a BungeeCord proxy, you
 #   should set this option to false on either your backends or your proxies, to avoid players being
 #   messaged twice about log entries.
-broadcast-received-log-entries: true
+broadcast-received-log-entries: false
 
 # Settings for Redis.
 # Port 6379 is used by default; set address to "host:port" if differs
 # Multiple Redis nodes can be specified in the same format as a string list under the name "addresses".
 redis:
-    enabled: false
-    address: localhost
+    enabled: true
+    address: redis
     username: ''
-    password: ''
+    password: __MISPLEASE_REDIS_PASSWORD__
 
 # Settings for Nats.
 # Port 4222 is used by default; set address to "host:port" if differs

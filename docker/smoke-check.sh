@@ -57,6 +57,7 @@ run_args=(
   -e SERVER_ID=smoke
   -e SMOKE_PLAIN=1
   -e "REDIS_URL=redis://redis:6379/0"
+  -e "DB_PASSWORD=smoke"
   -e "DATABASE_URL=postgres://misplease:smoke@db:5432/misplease"
   # SIGNATURE_VERIFY: own QuickShop build is unsigned; same flag as docker-compose main.
   -e "JVM_OPTS=-Xms256M -Xmx${HEAP_MX} -XX:+UseG1GC -Dpaper.preferSparkPlugin=true -Dorg.maxgamer.quickshop.util.envcheck.skip.SIGNATURE_VERIFY"

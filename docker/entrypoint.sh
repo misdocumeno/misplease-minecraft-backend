@@ -43,6 +43,27 @@ if [ -n "${RCON_PASSWORD:-}" ] && [ -f "$LOWER/server.properties" ]; then
   rm -f -- "$STATE/server.properties"
 fi
 
+# LuckPerms: inject DB/Redis passwords into the overlay copy (config mount is read-only).
+# Placeholders live in git; never commit real secrets.
+for lp_cfg in \
+  "$LOWER/plugins/LuckPerms/config.yml" \
+  "$LOWER/plugins/luckperms/config.yml"
+do
+  [ -f "$lp_cfg" ] || continue
+  if [ -n "${DB_PASSWORD:-}" ]; then
+    sed -i "s|__MISPLEASE_DB_PASSWORD__|${DB_PASSWORD}|g" "$lp_cfg"
+  fi
+  redis_pw="${REDIS_PASSWORD:-}"
+  if [ -z "$redis_pw" ] && [ -n "${REDIS_URL:-}" ]; then
+    # redis://:password@host:6379/0 → password (empty if URL has no auth)
+    redis_pw="$(printf '%s' "$REDIS_URL" | sed -n 's|^redis://:\([^@]*\)@.*|\1|p')"
+  fi
+  # Always clear the placeholder (empty string is valid for unauthenticated Redis, e.g. smoke).
+  sed -i "s|__MISPLEASE_REDIS_PASSWORD__|${redis_pw}|g" "$lp_cfg"
+  rel="${lp_cfg#"$LOWER/"}"
+  rm -f -- "$STATE/$rel"
+done
+
 if [ -n "$(find "$JARS" -mindepth 1 -maxdepth 1 -name '*.jar' -print -quit)" ]; then
   cp -a "$JARS"/*.jar "$LOWER/plugins/"
 fi

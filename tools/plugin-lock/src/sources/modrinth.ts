@@ -17,7 +17,12 @@ interface ModrinthVersion {
   files: ModrinthFile[]
 }
 
-const SERVER_LOADERS = new Set(["paper", "purpur", "bukkit", "spigot"])
+const DEFAULT_SERVER_LOADERS = new Set(["paper", "purpur", "bukkit", "spigot"])
+
+function acceptedLoaders(plugin: DesiredPlugin): Set<string> {
+  if (plugin.loaders && plugin.loaders.length > 0) return new Set(plugin.loaders.map((l) => l.toLowerCase()))
+  return DEFAULT_SERVER_LOADERS
+}
 
 function acceptedTypes(channel: string | undefined): Set<string> {
   const name = (channel ?? "release").toLowerCase()
@@ -65,6 +70,7 @@ function toResolved(plugin: DesiredPlugin, chosen: ModrinthVersion): ResolvedArt
 async function listServerVersions(plugin: DesiredPlugin): Promise<ModrinthVersion[]> {
   if (!plugin.id) throw new Error("modrinth plugin needs an id")
   const types = acceptedTypes(plugin.channel)
+  const loaders = acceptedLoaders(plugin)
   const matches: ModrinthVersion[] = []
   for (let offset = 0; offset < 2000; offset += 100) {
     const query = new URLSearchParams({ limit: "100", offset: String(offset) })
@@ -75,7 +81,7 @@ async function listServerVersions(plugin: DesiredPlugin): Promise<ModrinthVersio
     matches.push(
       ...page.filter(
         (version) =>
-          types.has(version.version_type) && version.loaders.some((loader) => SERVER_LOADERS.has(loader)),
+          types.has(version.version_type) && version.loaders.some((loader) => loaders.has(loader.toLowerCase())),
       ),
     )
     if (page.length < 100) break

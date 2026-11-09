@@ -29,12 +29,17 @@ services:
       - KIND=proxy
       - JVM_OPTS=-Xms256M -Xmx512M
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DATABASE_URL=postgres://misplease:${DB_PASSWORD}@db:5432/misplease
     volumes:
       - ./infra/velocity/config:/config:ro
       - ./infra/velocity/data:/data
     ports:
       - 25565:25577
     depends_on:
+      db:
+        condition: service_healthy
       redis:
         condition: service_healthy
     restart: unless-stopped
@@ -64,6 +69,8 @@ services:
       - KIND=server
       - SERVER_ID=main
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - DB_PASSWORD=${DB_PASSWORD}
       - DATABASE_URL=postgres://misplease:${DB_PASSWORD}@db:5432/misplease
       - JVM_OPTS=-Xms1G -Xmx5G -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC -Dorg.maxgamer.quickshop.util.envcheck.skip.SIGNATURE_VERIFY -Dpaper.preferSparkPlugin=true --add-modules=jdk.incubator.vector
       - RCON_PASSWORD=${RCON_PASSWORD:-}
@@ -106,6 +113,8 @@ services:
       - KIND=server
       - SERVER_ID=tech
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - DB_PASSWORD=${DB_PASSWORD}
       - DATABASE_URL=postgres://misplease:${DB_PASSWORD}@db:5432/misplease
       - JVM_OPTS=-Xms512M -Xmx4G -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Dpaper.preferSparkPlugin=true
       - RCON_PASSWORD=${RCON_PASSWORD:-}

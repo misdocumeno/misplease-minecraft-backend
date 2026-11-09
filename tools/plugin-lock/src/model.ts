@@ -17,6 +17,8 @@ export interface DesiredPlugin {
   serverMinecraft?: string
   /** When set (via update --minecraft), resolvers pick the newest jar that still fits this server version. */
   minecraftCeiling?: string
+  /** Modrinth loaders to accept (default: paper/purpur/bukkit/spigot). Use `[velocity]` on the proxy. */
+  loaders?: string[]
 }
 
 export interface DesiredFile {

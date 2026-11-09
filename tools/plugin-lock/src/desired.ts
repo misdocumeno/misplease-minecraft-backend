@@ -22,6 +22,7 @@ interface RawEntry {
   job?: string
   server?: string
   java?: string | number
+  loaders?: string[]
 }
 
 function asString(value: string | number | undefined): string | undefined {
@@ -63,6 +64,7 @@ function toPlugin(raw: RawEntry): DesiredPlugin {
     jar: raw.jar ?? raw.asset,
     server: raw.server,
     java: asString(raw.java),
+    loaders: Array.isArray(raw.loaders) ? raw.loaders.map(String) : undefined,
   }
 }
 

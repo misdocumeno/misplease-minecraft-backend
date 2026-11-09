@@ -1255,8 +1255,8 @@ plugins:
     source: github
     version: v0.1.3
     filename: Slimefun.v4.9-UNOFFICIAL.jar
-    url: https://api.github.com/repos/misdocumeno/Slimefun4/releases/assets/720078196
-    sha256: 09654bc800cea4053f057b0d325dae973341300b62e9ff8451958fbee52896e4
+    url: https://api.github.com/repos/misdocumeno/Slimefun4/releases/assets/720080222
+    sha256: 2f8d0b4a7c1cf2a6c19d94374f0405cfdb3a457d806510ca2b1c4ae47836e722
   - name: QuickShop
     source: github
     version: v5.1.2.5-shulker
