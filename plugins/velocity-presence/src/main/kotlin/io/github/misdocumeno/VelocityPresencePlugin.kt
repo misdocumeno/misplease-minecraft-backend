@@ -38,6 +38,7 @@ class VelocityPresencePlugin @Inject constructor(
 
     private var redis: RedisClient? = null
     private var connection: StatefulRedisConnection<String, String>? = null
+    private var lastBody: String? = null
 
     @Subscribe
     fun onInit(event: ProxyInitializeEvent) {
@@ -85,13 +86,16 @@ class VelocityPresencePlugin @Inject constructor(
             servers = byServer,
         )
         val body = json.encodeToString(proxyPayload)
-
-        for (path in listOf(Path.of("/data/presence.json"), dataDir.resolve("presence.json"))) {
-            try {
-                Files.createDirectories(path.parent)
-                Files.writeString(path, body + "\n")
-            } catch (e: Exception) {
-                logger.warn("could not write $path: ${e.message}")
+        // Disk mirror only when the payload changes (join/leave/switch) — tiny + rare.
+        if (body != lastBody) {
+            lastBody = body
+            for (path in listOf(Path.of("/data/presence.json"), dataDir.resolve("presence.json"))) {
+                try {
+                    Files.createDirectories(path.parent)
+                    Files.writeString(path, body + "\n")
+                } catch (e: Exception) {
+                    logger.warn("could not write $path: ${e.message}")
+                }
             }
         }
 

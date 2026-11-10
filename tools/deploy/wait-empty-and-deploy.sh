@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
-# Wait until velocity-presence reports proxy empty for EMPTY_SECONDS, then
-# ff-only update the stack checkout (optional) and docker compose pull + up.
-# Intended for a self-hosted Actions runner on the host.
+# Wait until the proxy is empty for EMPTY_SECONDS, then ff-only update the stack
+# checkout (optional) and docker compose pull + up.
+# Intended for a self-hosted Actions runner (prefer compose service + docker.sock).
 #
-# Why presence.json (not HTTP): Redis is the network SoT; the JSON is the
-# host-local mirror written by velocity-presence on the same VM as the runner.
-# File read is direct, no extra service/port. Use an HTTP gate only if a remote
-# checker appears later.
+# Presence SoT is Redis key misplease:presence:proxy (same JSON schema as the file).
+# presence.json is only a host mirror for humans / fallback when REDIS_URL is unset.
 set -euo pipefail
 
 ROOT="${MISPLEASE_ROOT:-/home/mis/misplease}"
@@ -14,10 +12,9 @@ COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
 PRESENCE_FILE="${PRESENCE_FILE:-$ROOT/infra/velocity/data/presence.json}"
 EMPTY_SECONDS="${EMPTY_SECONDS:-60}"
 POLL_SECONDS="${POLL_SECONDS:-5}"
-# 0 = wait forever (pending until empty).
 MAX_WAIT_SECONDS="${MAX_WAIT_SECONDS:-0}"
-# Optional: commit SHA that images built (workflow_run head_sha).
 DEPLOY_SHA="${DEPLOY_SHA:-}"
+REDIS_URL="${REDIS_URL:-}"
 
 cd "$ROOT"
 
@@ -29,26 +26,51 @@ fi
 empty_since=""
 started="$(date +%s)"
 
-is_empty() {
-  if [[ ! -f "$PRESENCE_FILE" ]]; then
-    echo "presence file missing: $PRESENCE_FILE (is velocity-presence running?)" >&2
-    return 1
-  fi
+is_empty_payload() {
+  local payload="$1"
   if command -v python3 >/dev/null 2>&1; then
-    python3 - "$PRESENCE_FILE" <<'PY'
-import json, sys
-p = json.load(open(sys.argv[1], encoding="utf-8"))
+    PRESENCE_JSON="$payload" python3 - <<'PY'
+import json, os, sys
+p = json.loads(os.environ["PRESENCE_JSON"])
 sys.exit(0 if p.get("empty") is True and int(p.get("count") or 0) == 0 else 1)
 PY
   elif command -v node >/dev/null 2>&1; then
-    node -e 'const p=require(process.argv[1]); process.exit(p.empty===true && (p.count|0)===0?0:1)' "$PRESENCE_FILE"
+    PRESENCE_JSON="$payload" node -e 'const p=JSON.parse(process.env.PRESENCE_JSON); process.exit(p.empty===true && (p.count|0)===0?0:1)'
   else
-    echo "need python3 or node to parse presence.json" >&2
+    echo "need python3 or node to parse presence JSON" >&2
     exit 1
   fi
 }
 
-echo "waiting for proxy empty ≥ ${EMPTY_SECONDS}s (presence=$PRESENCE_FILE)"
+read_presence() {
+  if [[ -n "$REDIS_URL" ]]; then
+    # redis-cli -u redis://:pass@host:6379/0 GET key
+    if ! command -v redis-cli >/dev/null 2>&1; then
+      echo "REDIS_URL set but redis-cli missing" >&2
+      exit 1
+    fi
+    redis-cli -u "$REDIS_URL" --raw GET misplease:presence:proxy
+  else
+    if [[ ! -f "$PRESENCE_FILE" ]]; then
+      echo "presence file missing: $PRESENCE_FILE (and REDIS_URL unset)" >&2
+      return 1
+    fi
+    cat "$PRESENCE_FILE"
+  fi
+}
+
+is_empty() {
+  local payload
+  payload="$(read_presence)" || return 1
+  [[ -n "$payload" ]] || return 1
+  is_empty_payload "$payload"
+}
+
+if [[ -n "$REDIS_URL" ]]; then
+  echo "waiting for proxy empty ≥ ${EMPTY_SECONDS}s (redis misplease:presence:proxy)"
+else
+  echo "waiting for proxy empty ≥ ${EMPTY_SECONDS}s (file $PRESENCE_FILE)"
+fi
 
 while true; do
   now="$(date +%s)"

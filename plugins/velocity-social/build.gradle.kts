@@ -4,6 +4,11 @@ plugins {
 
 dependencies {
     implementation(libs.lettuce.core)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.exposed.core)
+    implementation(libs.exposed.dao)
+    implementation(libs.exposed.jdbc)
+    implementation(libs.postgresql)
     compileOnly(libs.luckperms.api)
 }
 

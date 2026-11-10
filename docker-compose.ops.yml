@@ -1,0 +1,50 @@
+# Ops sidecars for preprod/prod (not required to play).
+#   docker compose -f docker-compose.prod.yml -f docker-compose.ops.yml --profile ops up -d
+#
+# github-runner: Actions runner in a container + host docker.sock (typical private-repo CD).
+# backup: restic client → RESTIC_REPOSITORY (rest-server on Windows). Needs RESTIC_* in .env.
+
+services:
+  github-runner:
+    profiles: ["ops"]
+    image: myoung34/github-runner:ubuntu-noble
+    container_name: misplease-gha-runner
+    restart: unless-stopped
+    environment:
+      REPO_URL: https://github.com/misdocumeno/misplease-minecraft-backend
+      RUNNER_NAME: ${GH_RUNNER_NAME:-misplease}
+      RUNNER_SCOPE: repo
+      ACCESS_TOKEN: ${GH_RUNNER_TOKEN:?set GH_RUNNER_TOKEN in .env}
+      LABELS: self-hosted,misplease
+      RUNNER_WORKDIR: /tmp/runner-work
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+      MISPLEASE_ROOT: /misplease
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${MISPLEASE_HOST_ROOT:-/home/mis/misplease}:/misplease
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  backup:
+    profiles: ["ops"]
+    # Alpine + restic CLI; pg_dump via docker compose exec on the host socket.
+    image: restic/restic:0.18.0
+    container_name: misplease-backup
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "-c", "apk add --no-cache docker-cli docker-cli-compose >/dev/null && exec /bin/sh /scripts/restic-loop.sh"]
+    environment:
+      RESTIC_REPOSITORY: ${RESTIC_REPOSITORY:?}
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD:?}
+      BACKUP_INTERVAL_HOURS: ${BACKUP_INTERVAL_HOURS:-24}
+      MISPLEASE_ROOT: /misplease
+      COMPOSE_FILE: docker-compose.prod.yml
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${MISPLEASE_HOST_ROOT:-/home/mis/misplease}:/misplease:ro
+      - ${MISPLEASE_HOST_ROOT:-/home/mis/misplease}/infra:/data/infra:ro
+      - ./tools/backup/restic-loop.sh:/scripts/restic-loop.sh:ro
+    depends_on:
+      db:
+        condition: service_healthy
