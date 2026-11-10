@@ -68,6 +68,7 @@ run_args=(
 docker run "${run_args[@]}" "$IMAGE" >/dev/null
 
 deadline=$((SECONDS + TIMEOUT_S))
+last_ping=0
 while (( SECONDS < deadline )); do
   docker logs "$NAME" >"$LOG" 2>&1 || true
   if grep -q 'Done (' "$LOG"; then
@@ -75,8 +76,16 @@ while (( SECONDS < deadline )); do
   fi
   if ! docker ps -q -f "name=^/${NAME}$" | grep -q .; then
     echo "container exited before Done" >&2
-    cat "$LOG" >&2
+    wc -l "$LOG" >&2 || true
+    tail -n 200 "$LOG" >&2
     exit 1
+  fi
+  # Progress every ~60s so Actions UI isn't only redis/postgres pull + silence.
+  if (( SECONDS - last_ping >= 60 )); then
+    last_ping=$SECONDS
+    lines="$(wc -l <"$LOG" | tr -d ' ')"
+    echo "smoke waiting… ${SECONDS}s/${TIMEOUT_S}s log_lines=${lines} last:"
+    tail -n 3 "$LOG" || true
   fi
   sleep 3
 done
@@ -84,7 +93,10 @@ done
 docker logs "$NAME" >"$LOG" 2>&1 || true
 if ! grep -q 'Done (' "$LOG"; then
   echo "timed out after ${TIMEOUT_S}s waiting for Done (" >&2
-  tail -n 80 "$LOG" >&2
+  echo "---- log size ----" >&2
+  wc -l "$LOG" >&2 || true
+  echo "---- last 250 lines ----" >&2
+  tail -n 250 "$LOG" >&2
   exit 1
 fi
 

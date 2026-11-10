@@ -77,7 +77,23 @@ fi
 # SMOKE_PLAIN=1: copy lower→state and run from /data/state (no overlay).
 # GitHub Actions runners often lack usable kernel overlay; fuse-overlayfs then
 # breaks plugin data dirs. Prod/preprod keep the real overlay path.
+#
+# Also slim world plugins: prod Multiverse/PlotSquared configs autoLoad dozens of
+# worlds. On empty /data that means generating them all before Paper prints
+# "Done (" — CI then times out with only the last ~80 log lines visible.
 if [ "${SMOKE_PLAIN:-}" = "1" ]; then
+  if [ "$KIND" != "proxy" ]; then
+    mv_worlds="$LOWER/plugins/Multiverse-Core/worlds.yml"
+    if [ -f "$mv_worlds" ]; then
+      echo "smoke: Multiverse autoLoad=false (skip mass world gen)"
+      sed -i "s/autoLoad: 'true'/autoLoad: 'false'/g" "$mv_worlds"
+    fi
+    ps_worlds="$LOWER/plugins/PlotSquared/config/worlds.yml"
+    if [ -f "$ps_worlds" ]; then
+      echo "smoke: clearing PlotSquared worlds.yml"
+      printf 'worlds: {}\n' >"$ps_worlds"
+    fi
+  fi
   echo "smoke plain mode: copying server tree into $STATE"
   cp -a "$LOWER"/. "$STATE"/
   MERGED="$STATE"
