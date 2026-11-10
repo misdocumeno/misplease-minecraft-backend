@@ -50,8 +50,6 @@ done
 
 run_args=(
   -d --name "$NAME" --network "$NET"
-  # Pseudo-TTY so JVM/log4j line-buffer stdout (block buffering hid Done on GHA).
-  -t
   --cap-add SYS_ADMIN
   --security-opt apparmor:unconfined
   --device /dev/fuse

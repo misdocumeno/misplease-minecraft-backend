@@ -78,25 +78,15 @@ fi
 # GitHub Actions runners often lack usable kernel overlay; fuse-overlayfs then
 # breaks plugin data dirs. Prod/preprod keep the real overlay path.
 #
-# Also slim world plugins: prod Multiverse/PlotSquared configs autoLoad dozens of
-# worlds. On empty /data that means generating them all before Paper prints
-# "Done (" — CI then times out with only the last ~80 log lines visible.
+# Multiverse autoLoad=true with missing world dirs can stall boot; leave PlotSquared
+# alone so smoke still exercises it. Restarter must not stop an empty smoke JVM.
 if [ "${SMOKE_PLAIN:-}" = "1" ]; then
   if [ "$KIND" != "proxy" ]; then
     mv_worlds="$LOWER/plugins/Multiverse-Core/worlds.yml"
     if [ -f "$mv_worlds" ]; then
       echo "smoke: Multiverse autoLoad=false (skip mass world gen)"
-      # Quoted and bare YAML bools both appear in exported worlds.yml.
       sed -i -e "s/autoLoad: 'true'/autoLoad: 'false'/g" -e "s/autoLoad: true/autoLoad: false/g" "$mv_worlds"
     fi
-    # PlotSquared on empty /data either mass-gens plots or fails enable
-    # (zip file closed / cascading Plot2Dynmap NoClassDefFound). Skip both jars.
-    for jar in "$LOWER/plugins"/PlotSquared*.jar "$LOWER/plugins"/Plot2Dynmap*.jar; do
-      [ -e "$jar" ] || continue
-      echo "smoke: disabling $(basename "$jar")"
-      mv "$jar" "${jar}.smoke-disabled"
-    done
-    # Daily restarter must not stop an empty smoke JVM (CI often runs near `at`).
     for restarter_cfg in \
       "$LOWER/plugins/backend-restarter/config.yml" \
       "$LOWER/plugins/Backend-Restarter/config.yml"
@@ -106,12 +96,6 @@ if [ "${SMOKE_PLAIN:-}" = "1" ]; then
         sed -i 's/^enabled:.*/enabled: false/' "$restarter_cfg"
       fi
     done
-    # Slimefun stable auto-update + skin fetches can stall boot on GHA networks.
-    sf_cfg="$LOWER/plugins/Slimefun/config.yml"
-    if [ -f "$sf_cfg" ]; then
-      echo "smoke: Slimefun auto-update=false"
-      sed -i 's/^\([[:space:]]*\)auto-update:.*/\1auto-update: false/' "$sf_cfg"
-    fi
   fi
   echo "smoke plain mode: copying server tree into $STATE"
   cp -a "$LOWER"/. "$STATE"/
