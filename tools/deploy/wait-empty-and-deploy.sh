@@ -1,20 +1,27 @@
 #!/usr/bin/env bash
-# Wait until the proxy is empty for EMPTY_SECONDS, then ff-only update the stack
-# checkout (optional) and docker compose pull + up.
-# Intended for a self-hosted Actions runner (prefer compose service + docker.sock).
+# Wait until Redis presence reports proxy empty for EMPTY_SECONDS, then
+# ff-only update the stack checkout (optional) and docker compose pull + up.
 #
-# Presence SoT is Redis key misplease:presence:proxy (same JSON schema as the file).
-# presence.json is only a host mirror for humans / fallback when REDIS_URL is unset.
+# Runner lives in compose (docker.sock) on the same network as redis — Redis is
+# the only gate (no presence.json). Schema: see velocity-presence Presence DTO.
 set -euo pipefail
 
-ROOT="${MISPLEASE_ROOT:-/home/mis/misplease}"
+ROOT="${MISPLEASE_ROOT:-/misplease}"
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
-PRESENCE_FILE="${PRESENCE_FILE:-$ROOT/infra/velocity/data/presence.json}"
 EMPTY_SECONDS="${EMPTY_SECONDS:-60}"
 POLL_SECONDS="${POLL_SECONDS:-5}"
 MAX_WAIT_SECONDS="${MAX_WAIT_SECONDS:-0}"
 DEPLOY_SHA="${DEPLOY_SHA:-}"
-REDIS_URL="${REDIS_URL:-}"
+
+if [[ -z "${REDIS_URL:-}" ]]; then
+  if [[ -n "${REDIS_PASSWORD:-}" ]]; then
+    REDIS_URL="redis://:${REDIS_PASSWORD}@redis:6379/0"
+  else
+    echo "REDIS_URL or REDIS_PASSWORD required (compose runner)" >&2
+    exit 1
+  fi
+fi
+export REDIS_URL
 
 cd "$ROOT"
 
@@ -23,54 +30,30 @@ if [[ ! -f "$COMPOSE_FILE" ]]; then
   exit 1
 fi
 
+if ! command -v redis-cli >/dev/null 2>&1; then
+  echo "redis-cli required" >&2
+  exit 1
+fi
+
 empty_since=""
 started="$(date +%s)"
 
-is_empty_payload() {
-  local payload="$1"
+is_empty() {
+  local payload
+  payload="$(redis-cli -u "$REDIS_URL" --raw GET misplease:presence:proxy || true)"
+  [[ -n "$payload" ]] || return 1
   if command -v python3 >/dev/null 2>&1; then
     PRESENCE_JSON="$payload" python3 - <<'PY'
 import json, os, sys
 p = json.loads(os.environ["PRESENCE_JSON"])
 sys.exit(0 if p.get("empty") is True and int(p.get("count") or 0) == 0 else 1)
 PY
-  elif command -v node >/dev/null 2>&1; then
+  else
     PRESENCE_JSON="$payload" node -e 'const p=JSON.parse(process.env.PRESENCE_JSON); process.exit(p.empty===true && (p.count|0)===0?0:1)'
-  else
-    echo "need python3 or node to parse presence JSON" >&2
-    exit 1
   fi
 }
 
-read_presence() {
-  if [[ -n "$REDIS_URL" ]]; then
-    # redis-cli -u redis://:pass@host:6379/0 GET key
-    if ! command -v redis-cli >/dev/null 2>&1; then
-      echo "REDIS_URL set but redis-cli missing" >&2
-      exit 1
-    fi
-    redis-cli -u "$REDIS_URL" --raw GET misplease:presence:proxy
-  else
-    if [[ ! -f "$PRESENCE_FILE" ]]; then
-      echo "presence file missing: $PRESENCE_FILE (and REDIS_URL unset)" >&2
-      return 1
-    fi
-    cat "$PRESENCE_FILE"
-  fi
-}
-
-is_empty() {
-  local payload
-  payload="$(read_presence)" || return 1
-  [[ -n "$payload" ]] || return 1
-  is_empty_payload "$payload"
-}
-
-if [[ -n "$REDIS_URL" ]]; then
-  echo "waiting for proxy empty ≥ ${EMPTY_SECONDS}s (redis misplease:presence:proxy)"
-else
-  echo "waiting for proxy empty ≥ ${EMPTY_SECONDS}s (file $PRESENCE_FILE)"
-fi
+echo "waiting for proxy empty ≥ ${EMPTY_SECONDS}s (redis misplease:presence:proxy)"
 
 while true; do
   now="$(date +%s)"

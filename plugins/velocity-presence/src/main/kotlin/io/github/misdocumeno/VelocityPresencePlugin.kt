@@ -7,7 +7,6 @@ import com.velocitypowered.api.event.player.ServerConnectedEvent
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
 import com.velocitypowered.api.plugin.Plugin
-import com.velocitypowered.api.plugin.annotation.DataDirectory
 import com.velocitypowered.api.proxy.ProxyServer
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulRedisConnection
@@ -15,8 +14,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.slf4j.Logger
-import java.nio.file.Files
-import java.nio.file.Path
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -25,20 +22,18 @@ import java.util.concurrent.ConcurrentHashMap
     id = "presence",
     name = "Presence",
     version = "0.1.0",
-    description = "Publish proxy empty/player-count for restarter and CD (Redis + /data/presence.json)",
+    description = "Publish proxy empty/player-count for restarter and CD (Redis only)",
     authors = ["Mis"],
 )
 class VelocityPresencePlugin @Inject constructor(
     private val proxy: ProxyServer,
     private val logger: Logger,
-    @param:DataDirectory private val dataDir: Path,
 ) {
     private val json = Json { encodeDefaults = true }
     private val playerServer = ConcurrentHashMap<UUID, String>()
 
     private var redis: RedisClient? = null
     private var connection: StatefulRedisConnection<String, String>? = null
-    private var lastBody: String? = null
 
     @Subscribe
     fun onInit(event: ProxyInitializeEvent) {
@@ -86,19 +81,6 @@ class VelocityPresencePlugin @Inject constructor(
             servers = byServer,
         )
         val body = json.encodeToString(proxyPayload)
-        // Disk mirror only when the payload changes (join/leave/switch) — tiny + rare.
-        if (body != lastBody) {
-            lastBody = body
-            for (path in listOf(Path.of("/data/presence.json"), dataDir.resolve("presence.json"))) {
-                try {
-                    Files.createDirectories(path.parent)
-                    Files.writeString(path, body + "\n")
-                } catch (e: Exception) {
-                    logger.warn("could not write $path: ${e.message}")
-                }
-            }
-        }
-
         val conn = connection ?: return
         try {
             val sync = conn.sync()

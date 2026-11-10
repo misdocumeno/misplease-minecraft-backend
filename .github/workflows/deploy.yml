@@ -55,9 +55,7 @@ jobs:
           if [[ -z "${REDIS_URL:-}" ]] && [[ -n "${REDIS_PASSWORD:-}" ]]; then
             export REDIS_URL="redis://:${REDIS_PASSWORD}@redis:6379/0"
           fi
-          export PRESENCE_FILE="${MISPLEASE_ROOT}/infra/velocity/data/presence.json"
-          # redis-cli for the empty gate (ubuntu runner image).
-          if [[ -n "${REDIS_URL:-}" ]] && ! command -v redis-cli >/dev/null; then
+          if ! command -v redis-cli >/dev/null; then
             sudo apt-get update -qq && sudo apt-get install -y -qq redis-tools
           fi
           cp "${GITHUB_WORKSPACE}/tools/deploy/wait-empty-and-deploy.sh" /tmp/misplease-wait-empty-and-deploy.sh

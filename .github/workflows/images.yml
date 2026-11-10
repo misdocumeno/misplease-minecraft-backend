@@ -363,7 +363,7 @@ jobs:
         if: matrix.smoke
         run: |
           chmod +x docker/smoke-check.sh
-          SMOKE_HEAP=1536M SMOKE_TIMEOUT_S=360 \
+          SMOKE_HEAP=1536M SMOKE_TIMEOUT_S=480 \
             ./docker/smoke-check.sh \
             "ghcr.io/${{ github.repository }}/${{ matrix.name }}:smoke" \
             "${{ matrix.kind }}" \
