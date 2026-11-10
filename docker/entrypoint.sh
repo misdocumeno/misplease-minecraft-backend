@@ -86,12 +86,29 @@ if [ "${SMOKE_PLAIN:-}" = "1" ]; then
     mv_worlds="$LOWER/plugins/Multiverse-Core/worlds.yml"
     if [ -f "$mv_worlds" ]; then
       echo "smoke: Multiverse autoLoad=false (skip mass world gen)"
-      sed -i "s/autoLoad: 'true'/autoLoad: 'false'/g" "$mv_worlds"
+      # Quoted and bare YAML bools both appear in exported worlds.yml.
+      sed -i -e "s/autoLoad: 'true'/autoLoad: 'false'/g" -e "s/autoLoad: true/autoLoad: false/g" "$mv_worlds"
     fi
     ps_worlds="$LOWER/plugins/PlotSquared/config/worlds.yml"
     if [ -f "$ps_worlds" ]; then
       echo "smoke: clearing PlotSquared worlds.yml"
       printf 'worlds: {}\n' >"$ps_worlds"
+    fi
+    # Daily restarter must not stop an empty smoke JVM (CI often runs near `at`).
+    for restarter_cfg in \
+      "$LOWER/plugins/backend-restarter/config.yml" \
+      "$LOWER/plugins/Backend-Restarter/config.yml"
+    do
+      if [ -f "$restarter_cfg" ]; then
+        echo "smoke: backend-restarter enabled=false"
+        sed -i 's/^enabled:.*/enabled: false/' "$restarter_cfg"
+      fi
+    done
+    # Slimefun stable auto-update + skin fetches can stall boot on GHA networks.
+    sf_cfg="$LOWER/plugins/Slimefun/config.yml"
+    if [ -f "$sf_cfg" ]; then
+      echo "smoke: Slimefun auto-update=false"
+      sed -i 's/^\([[:space:]]*\)auto-update:.*/\1auto-update: false/' "$sf_cfg"
     fi
   fi
   echo "smoke plain mode: copying server tree into $STATE"

@@ -50,6 +50,8 @@ done
 
 run_args=(
   -d --name "$NAME" --network "$NET"
+  # Pseudo-TTY so JVM/log4j line-buffer stdout (block buffering hid Done on GHA).
+  -t
   --cap-add SYS_ADMIN
   --security-opt apparmor:unconfined
   --device /dev/fuse
@@ -67,15 +69,21 @@ run_args=(
 
 docker run "${run_args[@]}" "$IMAGE" >/dev/null
 
+# Paper: "Done (Xs)!" / "For help, type \"help\"". Velocity: "Done (Xs)!".
+# backend-restarter also logs smoke-ready once the scheduler ticks (smoke only).
+smoke_ready() {
+  grep -qE 'Done \([0-9]|For help, type "help"|smoke-ready: server ticking' "$1"
+}
+
 deadline=$((SECONDS + TIMEOUT_S))
 last_ping=0
 while (( SECONDS < deadline )); do
   docker logs "$NAME" >"$LOG" 2>&1 || true
-  if grep -q 'Done (' "$LOG"; then
+  if smoke_ready "$LOG"; then
     break
   fi
   if ! docker ps -q -f "name=^/${NAME}$" | grep -q .; then
-    echo "container exited before Done" >&2
+    echo "container exited before smoke ready" >&2
     wc -l "$LOG" >&2 || true
     tail -n 200 "$LOG" >&2
     exit 1
@@ -91,8 +99,8 @@ while (( SECONDS < deadline )); do
 done
 
 docker logs "$NAME" >"$LOG" 2>&1 || true
-if ! grep -q 'Done (' "$LOG"; then
-  echo "timed out after ${TIMEOUT_S}s waiting for Done (" >&2
+if ! smoke_ready "$LOG"; then
+  echo "timed out after ${TIMEOUT_S}s waiting for smoke ready" >&2
   echo "---- log size ----" >&2
   wc -l "$LOG" >&2 || true
   echo "---- last 250 lines ----" >&2

@@ -35,6 +35,16 @@ class BackendRestarterPlugin : JavaPlugin() {
 
     override fun onEnable() {
         saveDefaultConfig()
+        // CI smoke boots an empty server around the daily `at` window; a pending
+        // restart would graceful-stop before smoke-check sees ready. Also emit a
+        // 1-tick marker — Paper can tick while "Done (" is missing/buffered.
+        if (isSmokeBoot()) {
+            logger.info("restarter disabled (smoke boot)")
+            server.scheduler.runTaskLater(this, Runnable {
+                logger.info("smoke-ready: server ticking")
+            }, 1L)
+            return
+        }
         reloadFromConfig()
         lastCompleted = readLastCompleted()
         // Every 10s is enough for a 60s empty gate.
@@ -43,6 +53,12 @@ class BackendRestarterPlugin : JavaPlugin() {
             "restarter enabled=${config.getBoolean("enabled")} " +
                 "tz=$zone at=$at empty-seconds=$emptySeconds lastCompleted=$lastCompleted",
         )
+    }
+
+    private fun isSmokeBoot(): Boolean {
+        if (System.getenv("SMOKE_PLAIN") == "1") return true
+        val serverId = System.getenv("SERVER_ID")?.trim().orEmpty()
+        return serverId.equals("smoke", ignoreCase = true)
     }
 
     private fun reloadFromConfig() {
