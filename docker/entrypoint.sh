@@ -89,11 +89,13 @@ if [ "${SMOKE_PLAIN:-}" = "1" ]; then
       # Quoted and bare YAML bools both appear in exported worlds.yml.
       sed -i -e "s/autoLoad: 'true'/autoLoad: 'false'/g" -e "s/autoLoad: true/autoLoad: false/g" "$mv_worlds"
     fi
-    ps_worlds="$LOWER/plugins/PlotSquared/config/worlds.yml"
-    if [ -f "$ps_worlds" ]; then
-      echo "smoke: clearing PlotSquared worlds.yml"
-      printf 'worlds: {}\n' >"$ps_worlds"
-    fi
+    # PlotSquared on empty /data either mass-gens plots or fails enable
+    # (zip file closed / cascading Plot2Dynmap NoClassDefFound). Skip both jars.
+    for jar in "$LOWER/plugins"/PlotSquared*.jar "$LOWER/plugins"/Plot2Dynmap*.jar; do
+      [ -e "$jar" ] || continue
+      echo "smoke: disabling $(basename "$jar")"
+      mv "$jar" "${jar}.smoke-disabled"
+    done
     # Daily restarter must not stop an empty smoke JVM (CI often runs near `at`).
     for restarter_cfg in \
       "$LOWER/plugins/backend-restarter/config.yml" \
