@@ -50,6 +50,9 @@ done
 
 run_args=(
   -d --name "$NAME" --network "$NET"
+  # Pseudo-TTY: without a TTY, log4j/JVM often block-buffer stdout so docker logs
+  # stalls mid-boot (Looks frozen on "Downloaded newer image…" until a flush).
+  -t
   --cap-add SYS_ADMIN
   --security-opt apparmor:unconfined
   --device /dev/fuse
@@ -67,27 +70,23 @@ run_args=(
 
 docker run "${run_args[@]}" "$IMAGE" >/dev/null
 
-# Prefer Paper/Velocity "Done ("; also accept restarter's smoke-ready tick marker
-# when JVM stdout is block-buffered and Done never reaches docker logs.
-smoke_ready() {
-  grep -qE 'Done \(|smoke-ready: server ticking' "$1"
-}
-
+# Paper prints Done AFTER delayed init (incl. runTaskLater(1)). That is real
+# readiness — do not accept earlier plugin markers.
 deadline=$((SECONDS + TIMEOUT_S))
 last_ping=0
 while (( SECONDS < deadline )); do
   docker logs "$NAME" >"$LOG" 2>&1 || true
-  if smoke_ready "$LOG"; then
+  if grep -q 'Done (' "$LOG"; then
     break
   fi
   if ! docker ps -q -f "name=^/${NAME}$" | grep -q .; then
-    echo "container exited before smoke ready" >&2
+    echo "container exited before Done" >&2
     wc -l "$LOG" >&2 || true
     tail -n 200 "$LOG" >&2
     exit 1
   fi
-  # Progress every ~60s so Actions UI isn't only redis/postgres pull + silence.
-  if (( SECONDS - last_ping >= 60 )); then
+  # Progress every ~15s so the Actions log is not silent for a minute at a time.
+  if (( SECONDS - last_ping >= 15 )); then
     last_ping=$SECONDS
     lines="$(wc -l <"$LOG" | tr -d ' ')"
     echo "smoke waiting… ${SECONDS}s/${TIMEOUT_S}s log_lines=${lines} last:"
@@ -97,8 +96,8 @@ while (( SECONDS < deadline )); do
 done
 
 docker logs "$NAME" >"$LOG" 2>&1 || true
-if ! smoke_ready "$LOG"; then
-  echo "timed out after ${TIMEOUT_S}s waiting for Done (/smoke-ready" >&2
+if ! grep -q 'Done (' "$LOG"; then
+  echo "timed out after ${TIMEOUT_S}s waiting for Done (" >&2
   echo "---- log size ----" >&2
   wc -l "$LOG" >&2 || true
   echo "---- last 250 lines ----" >&2
