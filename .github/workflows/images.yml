@@ -363,7 +363,8 @@ jobs:
         if: matrix.smoke
         run: |
           chmod +x docker/smoke-check.sh
-          SMOKE_HEAP=1536M SMOKE_TIMEOUT_S=480 \
+          # main/tech plugin sets often need >8m on GHA before Paper prints Done (
+          SMOKE_HEAP=2048M SMOKE_TIMEOUT_S=900 \
             ./docker/smoke-check.sh \
             "ghcr.io/${{ github.repository }}/${{ matrix.name }}:smoke" \
             "${{ matrix.kind }}" \
