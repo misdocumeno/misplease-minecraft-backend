@@ -1,0 +1,9 @@
+{
+  "name": "misplease-migrate",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "pg": "^8.16.3",
+    "yaml": "^2.8.1"
+  }
+}
