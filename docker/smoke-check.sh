@@ -50,9 +50,6 @@ done
 
 run_args=(
   -d --name "$NAME" --network "$NET"
-  # Pseudo-TTY: without a TTY, log4j/JVM often block-buffer stdout so docker logs
-  # stalls mid-boot (Looks frozen on "Downloaded newer image…" until a flush).
-  -t
   --cap-add SYS_ADMIN
   --security-opt apparmor:unconfined
   --device /dev/fuse
@@ -71,7 +68,7 @@ run_args=(
 docker run "${run_args[@]}" "$IMAGE" >/dev/null
 
 # Paper prints Done AFTER delayed init (incl. runTaskLater(1)). That is real
-# readiness — do not accept earlier plugin markers.
+# readiness — do not accept earlier plugin markers (they can race before Done).
 deadline=$((SECONDS + TIMEOUT_S))
 last_ping=0
 while (( SECONDS < deadline )); do

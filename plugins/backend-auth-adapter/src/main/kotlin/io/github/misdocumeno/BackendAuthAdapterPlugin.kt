@@ -31,7 +31,9 @@ class BackendAuthAdapterPlugin : JavaPlugin() {
 
     override fun onEnable() {
         scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-        LoginCommandLogFilter.install()
+        // After Done (: delay≥2 is not run in Paper's pre-Done delayed-init heartbeat.
+        // Installing the Log4j filter during onEnable hangs boot (see LoginCommandLogFilter).
+        server.scheduler.runTaskLater(this, Runnable { LoginCommandLogFilter.install() }, 20L)
 
         val ktor = HttpClient(CIO) {
             install(ContentNegotiation) { json() }
