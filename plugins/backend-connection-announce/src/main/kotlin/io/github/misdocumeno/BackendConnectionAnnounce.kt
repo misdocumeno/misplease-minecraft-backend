@@ -1,10 +1,15 @@
 package io.github.misdocumeno
 
 import io.github.misdocumeno.domain.model.AuthEvent
+import io.github.misdocumeno.domain.model.NetworkAnnounce
 import io.github.misdocumeno.infra.paper.ConnectionEventListener
 import io.github.misdocumeno.infra.paper.PaperAuthEventHandler
+import io.github.misdocumeno.infra.paper.PaperNetworkAnnounceHandler
 import io.github.misdocumeno.infra.redis.RedisAuthAdapter
 import io.github.misdocumeno.infra.redis.RedisAuthListener
+import io.github.misdocumeno.infra.redis.RedisNetworkAnnounceAdapter
+import io.github.misdocumeno.infra.redis.RedisNetworkAnnounceListener
+import io.github.misdocumeno.infra.redis.RedisNetworkAnnouncePublisher
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulRedisConnection
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection
@@ -33,18 +38,28 @@ class BackendConnectionAnnounce : JavaPlugin() {
                     subclass(AuthEvent.Authenticated::class)
                     subclass(AuthEvent.Invalidated::class)
                 }
+                polymorphic(NetworkAnnounce::class) {
+                    subclass(NetworkAnnounce.Death::class)
+                }
             }
         }
 
-        val handler = PaperAuthEventHandler(this, server, connection)
-        val adapter = RedisAuthAdapter(handler, json)
+        val authHandler = PaperAuthEventHandler(this, server, connection)
+        RedisAuthListener(connectionPubSub, RedisAuthAdapter(authHandler, json)).start()
 
-        RedisAuthListener(connectionPubSub, adapter).start()
-        server.pluginManager.registerEvents(ConnectionEventListener(), this)
+        val announcePublisher = RedisNetworkAnnouncePublisher(connection, json)
+        val announceHandler = PaperNetworkAnnounceHandler(this, server, connection)
+        RedisNetworkAnnounceListener(
+            connectionPubSub,
+            RedisNetworkAnnounceAdapter(announceHandler, json),
+        ).start()
+
+        server.pluginManager.registerEvents(ConnectionEventListener(announcePublisher), this)
     }
 
     override fun onDisable() {
         connectionPubSub.close()
+        connection.close()
         redis.shutdown()
     }
 }

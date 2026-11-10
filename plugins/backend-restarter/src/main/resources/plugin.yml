@@ -1,0 +1,6 @@
+name: backend-restarter
+main: io.github.misdocumeno.BackendRestarterPlugin
+version: 0.1.0-SNAPSHOT
+api-version: '1.20'
+description: Daily empty-server graceful stop so Docker restart policy brings the JVM back
+authors: [Mis]

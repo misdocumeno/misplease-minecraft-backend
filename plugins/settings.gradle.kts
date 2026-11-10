@@ -25,11 +25,13 @@ include(
     "backend-connection-announce",
     "backend-global-teleporter",
     "backend-location-resolver",
+    "backend-restarter",
     "backend-tp-command",
     "velocity-auth-adapter",
     "velocity-chat-control",
     "velocity-global-teleporter",
     "velocity-last-server",
     "velocity-presence",
+    "velocity-social",
     "velocity-tablist-broadcast",
 )

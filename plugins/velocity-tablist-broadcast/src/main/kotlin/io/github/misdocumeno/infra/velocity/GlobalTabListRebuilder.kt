@@ -5,11 +5,14 @@ import com.velocitypowered.api.proxy.ProxyServer
 import com.velocitypowered.api.proxy.player.TabListEntry
 import io.lettuce.core.api.StatefulRedisConnection
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+import net.luckperms.api.LuckPermsProvider
 
 class GlobalTabListRebuilder(
     private val proxy: ProxyServer,
     private val connection: StatefulRedisConnection<String, String>,
 ) {
+    private val legacy = LegacyComponentSerializer.legacyAmpersand()
 
     fun rebuildGlobalTabList() {
         connection.async().smembers(AUTH_SET).whenComplete { names, error ->
@@ -45,7 +48,8 @@ class GlobalTabListRebuilder(
     }
 
     private fun upsertRemote(viewer: Player, target: Player) {
-        val displayName = Component.text(target.username)
+        // Local players keep TabList plugin formatting on main; remotes get LP prefix color.
+        val displayName = coloredName(target)
         val latency = target.ping.toInt().coerceAtLeast(0)
         val existing = viewer.tabList.getEntry(target.uniqueId)
         if (existing.isPresent) {
@@ -62,8 +66,18 @@ class GlobalTabListRebuilder(
                 .profile(target.gameProfile)
                 .displayName(displayName)
                 .latency(latency)
-                .build()
+                .build(),
         )
+    }
+
+    private fun coloredName(player: Player): Component {
+        val prefix = runCatching {
+            LuckPermsProvider.get()
+                .getPlayerAdapter(Player::class.java)
+                .getMetaData(player)
+                .prefix
+        }.getOrNull().orEmpty()
+        return legacy.deserialize(prefix + player.username)
     }
 
     private fun serverName(player: Player): String? =

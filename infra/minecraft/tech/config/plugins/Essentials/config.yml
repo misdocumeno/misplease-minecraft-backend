@@ -176,6 +176,15 @@ overridden-commands:
 # You should not need to disable commands used by other plugins, as they will automatically get priority.
 # See https://breezewiki.com/bukkit/wiki/Commands.yml#aliases to map commands to other plugins.
 disabled-commands:
+  # Network-wide replacements live on Velocity (velocity-social).
+  - msg
+  - m
+  - tell
+  - w
+  - whisper
+  - r
+  - reply
+  - list
   #- nick
   #- clear
 

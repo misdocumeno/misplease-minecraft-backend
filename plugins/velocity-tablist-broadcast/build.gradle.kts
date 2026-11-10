@@ -5,6 +5,7 @@ plugins {
 dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.lettuce.core)
+    compileOnly(libs.luckperms.api)
 }
 
 tasks.shadowJar {

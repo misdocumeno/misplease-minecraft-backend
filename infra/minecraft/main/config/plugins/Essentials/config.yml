@@ -150,6 +150,15 @@ overridden-commands:
 # See http://wiki.bukkit.org/Commands.yml#aliases to map commands to other plugins.
 disabled-commands:
     - give
+    # Network-wide replacements live on Velocity (velocity-social).
+    - msg
+    - m
+    - tell
+    - w
+    - whisper
+    - r
+    - reply
+    - list
 
 # These commands will be shown to players with socialSpy enabled.
 # You can add commands from other plugins you may want to track or

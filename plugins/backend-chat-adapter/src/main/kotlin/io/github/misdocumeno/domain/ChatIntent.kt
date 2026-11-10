@@ -9,4 +9,6 @@ data class ChatIntent(
     val senderUUID: Uuid,
     val rawMessage: String,
     val timestamp: Long,
+    /** MiniMessage for the sender name (LP prefix/suffix + name). Null → gray fallback. */
+    val senderNameMiniMessage: String? = null,
 )

@@ -30,5 +30,8 @@ shares:
   optionals_for_ungrouped_worlds: true
   
   # You must specify optional shares you wish to use here or they will be ignored.
-  # The only built in optional shares are "economy" and "last_location".
-  use_optionals: []
+  # Built-ins include economy, last_location, advancements, recipes, game_statistics.
+  # survival group uses shares: all → with this toggle, advancements follow inventory
+  # across survival worlds; creativo lists shares explicitly (no advancements) so they stay separate.
+  use_optionals:
+    - advancements

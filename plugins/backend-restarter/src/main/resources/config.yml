@@ -1,0 +1,11 @@
+# When enabled, once per local calendar day after window-start, wait until the
+# server stays empty for empty-seconds, then run a graceful stop. Docker
+# `restart: unless-stopped` starts the container again. Players online only delay
+# the stop (armed until empty), they do not cancel the day's restart.
+enabled: true
+timezone: America/Argentina/Buenos_Aires
+window-start: "05:00"
+# Must stay empty this long before stop (also used as reconnect grace).
+empty-seconds: 60
+# Optional broadcast before stop (empty string = silent).
+warn-message: "&eReinicio diario: el servidor se apaga en unos segundos…"

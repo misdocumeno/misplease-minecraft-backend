@@ -1,0 +1,52 @@
+# After a successful images push on main, deploy on the self-hosted runner.
+# If anyone is online, the job stays pending until the proxy has been empty for
+# EMPTY_SECONDS (default 60). A newer successful images run cancels this wait.
+name: deploy
+
+on:
+  workflow_run:
+    workflows: [images]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      empty_seconds:
+        description: Seconds the proxy must stay empty before compose up
+        required: false
+        default: "60"
+
+concurrency:
+  group: misplease-prod-deploy
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main')
+    runs-on: [self-hosted, misplease]
+    steps:
+      - name: Checkout deploy script
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Wait empty + compose pull/up
+        env:
+          MISPLEASE_ROOT: ${{ vars.MISPLEASE_ROOT }}
+          COMPOSE_FILE: docker-compose.prod.yml
+          EMPTY_SECONDS: ${{ github.event.inputs.empty_seconds || '60' }}
+          POLL_SECONDS: "5"
+          MAX_WAIT_SECONDS: "0"
+          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+        run: |
+          set -euo pipefail
+          export MISPLEASE_ROOT="${MISPLEASE_ROOT:-/home/mis/misplease}"
+          export PRESENCE_FILE="${MISPLEASE_ROOT}/infra/velocity/data/presence.json"
+          cp "${GITHUB_WORKSPACE}/tools/deploy/wait-empty-and-deploy.sh" /tmp/misplease-wait-empty-and-deploy.sh
+          chmod +x /tmp/misplease-wait-empty-and-deploy.sh
+          /tmp/misplease-wait-empty-and-deploy.sh
