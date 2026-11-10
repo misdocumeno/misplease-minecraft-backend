@@ -176,9 +176,8 @@ services:
       # `repo`) only if you want auto re-register without the volume / after wiping it.
       RUNNER_TOKEN: ${GH_RUNNER_REGISTRATION_TOKEN:-}
       ACCESS_TOKEN: ${GH_RUNNER_PAT:-}
-      # Custom label only. GitHub may still auto-apply `self-hosted` on the runner
-      # object; we do not put it in LABELS or treat it as our env name.
-      LABELS: misplease
+      # Standard GitHub self-hosted runner label (docs: runs-on: self-hosted).
+      LABELS: self-hosted
       RUNNER_WORKDIR: /tmp/runner-work
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
