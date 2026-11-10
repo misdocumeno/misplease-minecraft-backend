@@ -67,15 +67,21 @@ run_args=(
 
 docker run "${run_args[@]}" "$IMAGE" >/dev/null
 
+# Prefer Paper/Velocity "Done ("; also accept restarter's smoke-ready tick marker
+# when JVM stdout is block-buffered and Done never reaches docker logs.
+smoke_ready() {
+  grep -qE 'Done \(|smoke-ready: server ticking' "$1"
+}
+
 deadline=$((SECONDS + TIMEOUT_S))
 last_ping=0
 while (( SECONDS < deadline )); do
   docker logs "$NAME" >"$LOG" 2>&1 || true
-  if grep -q 'Done (' "$LOG"; then
+  if smoke_ready "$LOG"; then
     break
   fi
   if ! docker ps -q -f "name=^/${NAME}$" | grep -q .; then
-    echo "container exited before Done" >&2
+    echo "container exited before smoke ready" >&2
     wc -l "$LOG" >&2 || true
     tail -n 200 "$LOG" >&2
     exit 1
@@ -91,8 +97,8 @@ while (( SECONDS < deadline )); do
 done
 
 docker logs "$NAME" >"$LOG" 2>&1 || true
-if ! grep -q 'Done (' "$LOG"; then
-  echo "timed out after ${TIMEOUT_S}s waiting for Done (" >&2
+if ! smoke_ready "$LOG"; then
+  echo "timed out after ${TIMEOUT_S}s waiting for Done (/smoke-ready" >&2
   echo "---- log size ----" >&2
   wc -l "$LOG" >&2 || true
   echo "---- last 250 lines ----" >&2

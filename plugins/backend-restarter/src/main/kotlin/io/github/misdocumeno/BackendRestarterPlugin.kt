@@ -35,10 +35,14 @@ class BackendRestarterPlugin : JavaPlugin() {
 
     override fun onEnable() {
         saveDefaultConfig()
-        // CI smoke: empty server near the daily `at` window must not pending-stop
-        // before smoke-check sees "Done (".
+        // CI smoke: empty server near the daily `at` window must not pending-stop.
+        // Also emit smoke-ready on first tick — docker logs often never show Paper's
+        // "Done (" (block-buffered stdout) even when the server is up.
         if (isSmokeBoot()) {
             logger.info("restarter disabled (smoke boot)")
+            server.scheduler.runTaskLater(this, Runnable {
+                logger.info("smoke-ready: server ticking")
+            }, 1L)
             return
         }
         reloadFromConfig()
