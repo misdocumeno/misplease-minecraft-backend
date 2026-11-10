@@ -35,14 +35,10 @@ class BackendRestarterPlugin : JavaPlugin() {
 
     override fun onEnable() {
         saveDefaultConfig()
-        // CI smoke boots an empty server around the daily `at` window; a pending
-        // restart would graceful-stop before smoke-check sees ready. Also emit a
-        // 1-tick marker — Paper can tick while "Done (" is missing/buffered.
+        // CI smoke: empty server near the daily `at` window must not pending-stop
+        // before smoke-check sees "Done (".
         if (isSmokeBoot()) {
             logger.info("restarter disabled (smoke boot)")
-            server.scheduler.runTaskLater(this, Runnable {
-                logger.info("smoke-ready: server ticking")
-            }, 1L)
             return
         }
         reloadFromConfig()
