@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # Wait until Redis presence reports proxy empty for EMPTY_SECONDS, then
-# ff-only update the stack checkout (optional) and docker compose pull + up.
+# enable Velocity maintenance (block new joins), ff-only update checkout,
+# docker compose pull + up, then clear maintenance.
+#
+# During the empty grace, players MAY join and abort the grace (deploy stays
+# pending). Maintenance turns on only after the grace succeeds.
 #
 # Runner lives in compose (docker.sock) on the same network as redis — Redis is
 # the only gate (no presence.json). Schema: see velocity-presence Presence DTO.
@@ -12,6 +16,8 @@ EMPTY_SECONDS="${EMPTY_SECONDS:-60}"
 POLL_SECONDS="${POLL_SECONDS:-5}"
 MAX_WAIT_SECONDS="${MAX_WAIT_SECONDS:-0}"
 DEPLOY_SHA="${DEPLOY_SHA:-}"
+MAINTENANCE_KEY="${MAINTENANCE_KEY:-misplease:maintenance}"
+MAINTENANCE_VALUE="${MAINTENANCE_VALUE:-{\"enabled\":true,\"message\":\"&cServidor en mantenimiento. Probá de nuevo en unos minutos.\"}}"
 
 if [[ -z "${REDIS_URL:-}" ]]; then
   if [[ -n "${REDIS_PASSWORD:-}" ]]; then
@@ -34,6 +40,16 @@ if ! command -v redis-cli >/dev/null 2>&1; then
   echo "redis-cli required" >&2
   exit 1
 fi
+
+maintenance_on=0
+clear_maintenance() {
+  if [[ "$maintenance_on" -eq 1 ]]; then
+    echo "clearing maintenance ($MAINTENANCE_KEY)"
+    redis-cli -u "$REDIS_URL" DEL "$MAINTENANCE_KEY" >/dev/null || true
+    maintenance_on=0
+  fi
+}
+trap clear_maintenance EXIT
 
 empty_since=""
 started="$(date +%s)"
@@ -65,11 +81,11 @@ while true; do
   if is_empty; then
     if [[ -z "$empty_since" ]]; then
       empty_since="$now"
-      echo "proxy empty — starting ${EMPTY_SECONDS}s reconnect grace"
+      echo "proxy empty — starting ${EMPTY_SECONDS}s reconnect grace (joins still allowed)"
     fi
     waited=$((now - empty_since))
     if [[ "$waited" -ge "$EMPTY_SECONDS" ]]; then
-      echo "proxy empty for ${waited}s — deploying"
+      echo "proxy empty for ${waited}s — arming deploy"
       break
     fi
   else
@@ -81,17 +97,36 @@ while true; do
   sleep "$POLL_SECONDS"
 done
 
+echo "enabling maintenance (deny joins)"
+redis-cli -u "$REDIS_URL" SET "$MAINTENANCE_KEY" "$MAINTENANCE_VALUE" >/dev/null
+maintenance_on=1
+
+# Brief re-check: someone may have slipped in during the last poll interval.
+sleep 2
+if ! is_empty; then
+  echo "players present after maintenance arm — clearing maintenance and aborting this attempt" >&2
+  clear_maintenance
+  exit 1
+fi
+
 if [[ -n "$DEPLOY_SHA" ]] && [[ -d .git ]]; then
   echo "git fetch + ff-only merge $DEPLOY_SHA"
   git fetch --depth=1 origin "$DEPLOY_SHA"
   git merge --ff-only "$DEPLOY_SHA"
 fi
 
-echo "docker compose -f $COMPOSE_FILE pull"
-docker compose -f "$COMPOSE_FILE" pull
+# Only game/auth services — never recreate github-runner/backup mid-deploy.
+SERVICES="velocity main tech auth auth-db-migrate db redis"
 
-echo "docker compose -f $COMPOSE_FILE up -d"
-docker compose -f "$COMPOSE_FILE" up -d
+echo "docker compose -f $COMPOSE_FILE pull $SERVICES"
+docker compose -f "$COMPOSE_FILE" pull $SERVICES || docker compose -f "$COMPOSE_FILE" pull
 
-echo "deploy finished"
+echo "docker compose -f $COMPOSE_FILE up -d $SERVICES"
+docker compose -f "$COMPOSE_FILE" up -d $SERVICES
+
+echo "deploy finished — clearing maintenance"
+clear_maintenance
+trap - EXIT
+
+echo "done"
 docker compose -f "$COMPOSE_FILE" ps

@@ -1,6 +1,9 @@
 # Preprod + prod: pull images from GHCR only (never build on the host).
 #   docker compose -f docker-compose.prod.yml pull
 #   docker compose -f docker-compose.prod.yml up -d
+# Ops sidecars (runner + restic), same file, optional profile:
+#   docker compose -f docker-compose.prod.yml --profile ops up -d
+# CD only touches game services (see tools/deploy); runner/backup stay up.
 #
 # IMAGE_TAG defaults to `dev` (what images.yml pushes on main). Pin to a sha for rollbacks.
 
@@ -155,5 +158,63 @@ services:
       timeout: 5s
       retries: 5
 
+  # --- ops profile (not required to play) ---
+  # Community image wrapping the official actions/runner binary (not published by GitHub).
+  github-runner:
+    profiles: ["ops"]
+    image: myoung34/github-runner:ubuntu-noble
+    container_name: misplease-gha-runner
+    restart: unless-stopped
+    environment:
+      REPO_URL: https://github.com/misdocumeno/misplease-minecraft-backend
+      RUNNER_NAME: ${GH_RUNNER_NAME:-misplease}
+      RUNNER_SCOPE: repo
+      # Prefer one-shot registration (see .cursor/notes/github-runner.md):
+      # set GH_RUNNER_REGISTRATION_TOKEN once from the GitHub UI; credentials
+      # persist in the named volume below — container restarts do NOT need a new token.
+      # Optional long-lived PAT (fine-grained Administration on this repo, or classic
+      # `repo`) only if you want auto re-register without the volume / after wiping it.
+      RUNNER_TOKEN: ${GH_RUNNER_REGISTRATION_TOKEN:-}
+      ACCESS_TOKEN: ${GH_RUNNER_PAT:-}
+      # Custom label only. GitHub may still auto-apply `self-hosted` on the runner
+      # object; we do not put it in LABELS or treat it as our env name.
+      LABELS: misplease
+      RUNNER_WORKDIR: /tmp/runner-work
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+      MISPLEASE_ROOT: /misplease
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${MISPLEASE_HOST_ROOT:-/home/mis/misplease}:/misplease
+      # Persists .runner / .credentials so recreate ≠ re-register.
+      - github-runner-data:/actions-runner
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  backup:
+    profiles: ["ops"]
+    image: restic/restic:0.18.0
+    container_name: misplease-backup
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "-c", "apk add --no-cache docker-cli docker-cli-compose >/dev/null && exec /bin/sh /scripts/restic-loop.sh"]
+    environment:
+      RESTIC_REPOSITORY: ${RESTIC_REPOSITORY:?}
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD:?}
+      # Wall-clock UTC (not "N hours after container start"). Default 06:00 UTC.
+      BACKUP_AT_HOUR: ${BACKUP_AT_HOUR:-6}
+      BACKUP_AT_MINUTE: ${BACKUP_AT_MINUTE:-0}
+      MISPLEASE_ROOT: /misplease
+      COMPOSE_FILE: docker-compose.prod.yml
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${MISPLEASE_HOST_ROOT:-/home/mis/misplease}:/misplease:ro
+      - ${MISPLEASE_HOST_ROOT:-/home/mis/misplease}/infra:/data/infra:ro
+      - ./tools/backup/restic-loop.sh:/scripts/restic-loop.sh:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   db-data:
+  github-runner-data:

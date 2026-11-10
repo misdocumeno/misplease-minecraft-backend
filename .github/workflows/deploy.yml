@@ -1,6 +1,12 @@
-# After a successful images push on main, deploy on the self-hosted runner.
+# After a successful images push on main, deploy on the prod host runner
+# (label `misplease` only — do not use `self-hosted` as our env name).
 # If anyone is online, the job stays pending until the proxy has been empty for
 # EMPTY_SECONDS (default 60). A newer successful images run cancels this wait.
+#
+# HARD RULE: never attach pull_request / fork workflows to runs-on: [misplease]
+# (docker.sock = root on the host). Only trusted main (via images→deploy) and
+# workflow_dispatch. After empty grace, deploy enables Redis maintenance so
+# Velocity denies joins for the bounce window.
 name: deploy
 
 on:
@@ -28,7 +34,7 @@ jobs:
       (github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.event == 'push' &&
        github.event.workflow_run.head_branch == 'main')
-    runs-on: [self-hosted, misplease]
+    runs-on: [misplease]
     steps:
       - name: Checkout deploy script
         uses: actions/checkout@v4

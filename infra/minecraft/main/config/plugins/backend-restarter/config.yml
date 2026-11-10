@@ -1,5 +1,5 @@
 enabled: true
 timezone: America/Argentina/Buenos_Aires
-window-start: "05:00"
+at: "05:00"
 empty-seconds: 60
 warn-message: "&eReinicio diario: el servidor se apaga en unos segundos…"

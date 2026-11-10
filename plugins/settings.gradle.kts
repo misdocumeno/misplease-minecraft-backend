@@ -31,6 +31,7 @@ include(
     "velocity-chat-control",
     "velocity-global-teleporter",
     "velocity-last-server",
+    "velocity-maintenance",
     "velocity-presence",
     "velocity-social",
     "velocity-tablist-broadcast",
