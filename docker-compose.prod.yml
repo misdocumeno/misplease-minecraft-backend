@@ -182,12 +182,13 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       # redis-cli (deploy wait script) needs ACL user `default`; Jedis/Lettuce accept redis://:pass@ too.
       REDIS_URL: redis://default:${REDIS_PASSWORD}@redis:6379/0
-      MISPLEASE_ROOT: /misplease
+      # Same absolute path as the host — compose bind mounts are resolved by the daemon.
+      MISPLEASE_ROOT: ${MISPLEASE_HOST_ROOT:-/home/mis/misplease}
       # Do not mount ~/.ssh/config (OpenSSH rejects foreign uid). Key files only.
       GIT_SSH_COMMAND: ssh -i /root/.ssh/misplease_deploy -o IdentitiesOnly=yes -o UserKnownHostsFile=/root/.ssh/known_hosts -o StrictHostKeyChecking=yes
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ${MISPLEASE_HOST_ROOT:-/home/mis/misplease}:/misplease
+      - ${MISPLEASE_HOST_ROOT:-/home/mis/misplease}:${MISPLEASE_HOST_ROOT:-/home/mis/misplease}
       - ${MISPLEASE_SSH_DIR:-/home/mis/.ssh}/misplease_deploy:/root/.ssh/misplease_deploy:ro
       - ${MISPLEASE_SSH_DIR:-/home/mis/.ssh}/known_hosts:/root/.ssh/known_hosts:ro
       # Host `docker login ghcr.io` (user mis) — pull via docker.sock uses this client config.
@@ -210,11 +211,11 @@ services:
       # Wall-clock UTC (not "N hours after container start"). Default 06:00 UTC.
       BACKUP_AT_HOUR: ${BACKUP_AT_HOUR:-6}
       BACKUP_AT_MINUTE: ${BACKUP_AT_MINUTE:-0}
-      MISPLEASE_ROOT: /misplease
+      MISPLEASE_ROOT: ${MISPLEASE_HOST_ROOT:-/home/mis/misplease}
       COMPOSE_FILE: docker-compose.prod.yml
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ${MISPLEASE_HOST_ROOT:-/home/mis/misplease}:/misplease:ro
+      - ${MISPLEASE_HOST_ROOT:-/home/mis/misplease}:${MISPLEASE_HOST_ROOT:-/home/mis/misplease}:ro
       - ${MISPLEASE_HOST_ROOT:-/home/mis/misplease}/infra:/data/infra:ro
       - ./tools/backup/restic-loop.sh:/scripts/restic-loop.sh:ro
     depends_on:

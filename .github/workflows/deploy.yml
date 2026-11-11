@@ -54,11 +54,8 @@ jobs:
           REDIS_URL: ${{ vars.REDIS_URL }}
         run: |
           set -euo pipefail
-          if [[ -d /misplease ]]; then
-            export MISPLEASE_ROOT=/misplease
-          else
-            export MISPLEASE_ROOT="${MISPLEASE_ROOT:-/home/mis/misplease}"
-          fi
+          # Must be the host absolute path (compose bind mounts are daemon-side).
+          export MISPLEASE_ROOT="${MISPLEASE_ROOT:-/home/mis/misplease}"
           if [[ -z "${REDIS_URL:-}" ]] && [[ -n "${REDIS_PASSWORD:-}" ]]; then
             export REDIS_URL="redis://default:${REDIS_PASSWORD}@redis:6379/0"
           fi
