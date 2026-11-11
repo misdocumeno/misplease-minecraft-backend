@@ -122,6 +122,8 @@ if [[ -n "$DEPLOY_SHA" ]] && [[ -d .git ]]; then
   echo "git fetch + ff-only merge $DEPLOY_SHA"
   # Runner container uid ≠ host checkout owner (docker bind-mount).
   git config --global --add safe.directory "$ROOT"
+  # Deploy key is mounted at /root/.ssh (see github-runner service).
+  export GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-ssh -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new}"
   git fetch --depth=1 origin "$DEPLOY_SHA"
   git merge --ff-only "$DEPLOY_SHA"
 fi
