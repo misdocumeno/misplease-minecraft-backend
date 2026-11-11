@@ -120,6 +120,8 @@ fi
 
 if [[ -n "$DEPLOY_SHA" ]] && [[ -d .git ]]; then
   echo "git fetch + ff-only merge $DEPLOY_SHA"
+  # Runner container uid ≠ host checkout owner (docker bind-mount).
+  git config --global --add safe.directory "$ROOT"
   git fetch --depth=1 origin "$DEPLOY_SHA"
   git merge --ff-only "$DEPLOY_SHA"
 fi
