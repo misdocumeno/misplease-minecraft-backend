@@ -1,14 +1,15 @@
+# Shared by auth (root context) and server.Dockerfile — do not exclude plugins/.
 .git
 .cursor
-**/.gradle
-**/build
 **/node_modules
 **/dist
-agent-transcripts
-plugins
-infra/minecraft
-infra/velocity
-tools
-*.md
+**/build
+**/.gradle
+**/*.tsbuildinfo
+infra/minecraft/**/data/
+infra/velocity/data/
 .env
 .env.*
+agent-transcripts
+*.md
+!packages/db/**/*.md
