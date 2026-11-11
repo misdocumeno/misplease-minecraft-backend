@@ -169,13 +169,15 @@ services:
       REPO_URL: https://github.com/misdocumeno/misplease-minecraft-backend
       RUNNER_NAME: ${GH_RUNNER_NAME:-misplease}
       RUNNER_SCOPE: repo
-      # Prefer one-shot registration (see .cursor/notes/github-runner.md):
-      # set GH_RUNNER_REGISTRATION_TOKEN once from the GitHub UI; credentials
-      # persist in the named volume below — container restarts do NOT need a new token.
-      # Optional long-lived PAT (fine-grained Administration on this repo, or classic
-      # `repo`) only if you want auto re-register without the volume / after wiping it.
+      # One-shot registration token from GitHub UI (keep in .env until CD is proven).
+      # Reuse across recreate/restart requires BOTH env vars below + the data volume
+      # (myoung34: without them it prints "Runner reusage is disabled", deletes
+      # .runner/.credentials, and deregisters on EXIT — that is why we kept asking
+      # for a new token).
       RUNNER_TOKEN: ${GH_RUNNER_REGISTRATION_TOKEN:-}
       ACCESS_TOKEN: ${GH_RUNNER_PAT:-}
+      CONFIGURED_ACTIONS_RUNNER_FILES_DIR: /runner-files
+      DISABLE_AUTOMATIC_DEREGISTRATION: "true"
       # Standard GitHub self-hosted runner label (docs: runs-on: self-hosted).
       LABELS: self-hosted
       RUNNER_WORKDIR: /tmp/runner-work
@@ -193,8 +195,8 @@ services:
       - ${MISPLEASE_SSH_DIR:-/home/mis/.ssh}/known_hosts:/root/.ssh/known_hosts:ro
       # Host `docker login ghcr.io` (user mis) — pull via docker.sock uses this client config.
       - ${MISPLEASE_DOCKER_CONFIG:-/home/mis/.docker/config.json}:/root/.docker/config.json:ro
-      # Persists .runner / .credentials so recreate ≠ re-register.
-      - github-runner-data:/actions-runner
+      # Only .runner/.credentials (NOT the whole /actions-runner install tree).
+      - github-runner-data:/runner-files
     depends_on:
       redis:
         condition: service_healthy
