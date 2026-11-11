@@ -2,7 +2,7 @@ package io.github.misdocumeno.infra.database
 
 import org.jetbrains.exposed.sql.Table
 
-/** Schema owned by infra/db/migrations; plugins must not SchemaUtils.create. */
+/** Schema owned by packages/db (Drizzle); plugins must not create/alter tables. */
 object LastSessionTable : Table("player_last_session") {
     val uuid = varchar("uuid", 36)
     val server = varchar("server", 128)

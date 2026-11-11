@@ -1,6 +1,6 @@
 import { pgTable, varchar, bigint, doublePrecision, real } from 'drizzle-orm/pg-core'
 
-/** Owned by backend-last-session (+ velocity restore); auth only reads for admin get. */
+/** Written by backend-last-session; velocity-last-session restores server only. */
 export const playerLastSession = pgTable('player_last_session', {
     uuid: varchar('uuid', { length: 36 }).primaryKey(),
     server: varchar('server', { length: 128 }).notNull(),

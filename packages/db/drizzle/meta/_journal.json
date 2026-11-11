@@ -8,6 +8,13 @@
       "when": 1766708090346,
       "tag": "0000_dark_solo",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794375560491,
+      "tag": "0001_player_session_and_mail",
+      "breakpoints": true
     }
   ]
 }

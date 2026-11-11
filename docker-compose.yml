@@ -135,7 +135,9 @@ services:
     restart: unless-stopped
 
   auth:
-    build: ./services/auth
+    build:
+      context: .
+      dockerfile: services/auth/Dockerfile
     image: misplease/auth:dev
     container_name: misplease-auth
     restart: unless-stopped
@@ -146,40 +148,22 @@ services:
     depends_on:
       db-migrate:
         condition: service_completed_successfully
-      auth-db-migrate:
-        condition: service_completed_successfully
     ports:
       - 127.0.0.1:3000:3000
 
-  auth-db-migrate:
-    build: ./services/auth
+  # Drizzle migrator from @misplease/db (baked into auth image).
+  db-migrate:
+    build:
+      context: .
+      dockerfile: services/auth/Dockerfile
     image: misplease/auth:dev
-    container_name: misplease-auth-migrate
+    container_name: misplease-db-migrate
     environment:
       - DATABASE_URL=postgres://misplease:${DB_PASSWORD}@db:5432/misplease
-    volumes:
-      # TODO: add drizzle directories here would be enough for multiple tables migrations?
-      # or should i create multiple databases in the same container?
-      - ./services/auth/drizzle:/app/drizzle
     depends_on:
       db:
         condition: service_healthy
-    command: node /app/dist/migrate.js
-
-  db-migrate:
-    image: migrate/migrate:v4.18.3
-    container_name: misplease-db-migrate
-    volumes:
-      - ./infra/db/migrations:/migrations:ro
-    depends_on:
-      db:
-        condition: service_healthy
-    command:
-      [
-        '-path=/migrations',
-        '-database=postgres://misplease:${DB_PASSWORD}@db:5432/misplease?sslmode=disable',
-        'up',
-      ]
+    command: ["node", "/app/packages/db/dist/migrate.js"]
 
   db:
     image: postgres:18-alpine

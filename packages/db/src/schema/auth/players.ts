@@ -1,6 +1,6 @@
 import { integer, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
-import { auth } from '.'
+import { auth } from './schema'
 
 export const players = auth.table(
     'players',

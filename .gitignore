@@ -51,3 +51,7 @@ Desktop.ini
 
 # One-off agent helpers
 tools/_tmp-*
+
+*.tsbuildinfo
+
+*.tsbuildinfo

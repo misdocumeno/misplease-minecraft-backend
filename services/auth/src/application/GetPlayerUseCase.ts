@@ -2,7 +2,7 @@ import type { PlayerRepository } from '@/domain/repositories/PlayerRepository'
 import type { SessionStore } from '@/domain/ports/SessionStore'
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js'
 import { eq } from 'drizzle-orm'
-import { playerLastSession } from '@/infra/database/schema/lastSession'
+import { playerLastSession } from '@misplease/db'
 import type { AppRedisClient } from '@/index'
 
 export type OnlineInfo = {
@@ -41,7 +41,8 @@ export class GetPlayerUseCase {
         private readonly players: PlayerRepository,
         private readonly sessions: SessionStore,
         private readonly redis: AppRedisClient,
-        private readonly db: PostgresJsDatabase,
+        // Schema is owned by @misplease/db; auth only needs query capability.
+        private readonly db: PostgresJsDatabase<Record<string, unknown>>,
     ) {}
 
     async execute(username: string): Promise<GetPlayerResult> {

@@ -2,16 +2,13 @@
 .cursor
 **/.gradle
 **/build
-**/bin
 **/node_modules
-**/*.db
+**/dist
+agent-transcripts
+plugins
+infra/minecraft
+infra/velocity
+tools
+*.md
 .env
 .env.*
-.plugin-lock-cache
-plugins-main
-plugins-tech
-plugins-velocity
-infra/minecraft/**/data
-# Downloaded/materialized plugin jars (wrappers under plugins/**/gradle/ stay)
-*.jar
-!**/gradle-wrapper.jar

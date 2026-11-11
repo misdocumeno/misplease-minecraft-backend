@@ -171,7 +171,7 @@ if [[ -n "$DEPLOY_SHA" ]] && [[ -d .git ]]; then
 fi
 
 # Only game/auth services — never recreate github-runner/backup mid-deploy.
-SERVICES="velocity main tech auth auth-db-migrate db-migrate db redis"
+SERVICES="velocity main tech auth db-migrate db redis"
 
 echo "docker compose -f $COMPOSE_FILE pull $SERVICES"
 docker compose -f "$COMPOSE_FILE" pull $SERVICES || docker compose -f "$COMPOSE_FILE" pull

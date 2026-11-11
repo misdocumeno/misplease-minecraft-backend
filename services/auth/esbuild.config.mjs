@@ -1,8 +1,10 @@
 import { build } from 'esbuild'
 import pkg from './package.json' with { type: 'json' }
 
-build({
-    entryPoints: { index: 'src/index.ts', migrate: 'src/infra/database/migrate.ts' },
+const external = Object.keys(pkg.dependencies || {}).filter((name) => name !== '@misplease/db')
+
+await build({
+    entryPoints: { index: 'src/index.ts' },
     outdir: 'dist',
 
     platform: 'node',
@@ -15,5 +17,5 @@ build({
 
     logLevel: 'info',
 
-    external: [...Object.keys(pkg.dependencies || {})],
+    external,
 })

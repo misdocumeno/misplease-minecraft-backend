@@ -1,14 +1,19 @@
+import path from 'node:path'
 import postgres from 'postgres'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
-;(async () => {
+
+const migrationsFolder =
+    process.env.DRIZZLE_MIGRATIONS_FOLDER ?? path.join(__dirname, '..', 'drizzle')
+
+async function main() {
     const migrationClient = postgres(process.env.DATABASE_URL!, { max: 1 })
     const db = drizzle(migrationClient)
 
-    console.log('Applying migrations...')
+    console.log(`Applying migrations from ${migrationsFolder}...`)
 
     try {
-        await migrate(db, { migrationsFolder: './drizzle' })
+        await migrate(db, { migrationsFolder })
         console.log('Migrations applied successfully!')
     } catch (err) {
         console.error('Error applying migrations:', err)
@@ -16,4 +21,6 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator'
     } finally {
         await migrationClient.end()
     }
-})()
+}
+
+main()

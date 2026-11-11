@@ -1,8 +1,6 @@
 package io.github.misdocumeno.infra.database
 
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.transactions.transaction
 import java.net.URI
 
 object DatabaseFactory {
@@ -10,15 +8,13 @@ object DatabaseFactory {
         val raw = System.getenv("DATABASE_URL")
             ?: error("DATABASE_URL is required for velocity-social mail")
         val (jdbcUrl, user, password) = toJdbc(raw)
+        // Schema owned by packages/db (Drizzle); plugins only connect + query.
         Database.connect(
             url = jdbcUrl,
             driver = "org.postgresql.Driver",
             user = user,
             password = password,
         )
-        transaction {
-            SchemaUtils.create(PlayerMailTable)
-        }
     }
 
     internal fun toJdbc(databaseUrl: String): Triple<String, String, String> {

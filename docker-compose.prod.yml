@@ -117,38 +117,19 @@ services:
     depends_on:
       db-migrate:
         condition: service_completed_successfully
-      auth-db-migrate:
-        condition: service_completed_successfully
     ports:
       - 127.0.0.1:3000:3000
 
-  auth-db-migrate:
+  # Drizzle migrator from @misplease/db (same auth image).
+  db-migrate:
     image: ghcr.io/misdocumeno/misplease-minecraft-backend/auth:${IMAGE_TAG:-dev}
-    container_name: misplease-auth-migrate
+    container_name: misplease-db-migrate
     environment:
       - DATABASE_URL=postgres://misplease:${DB_PASSWORD}@db:5432/misplease
-    volumes:
-      - ./services/auth/drizzle:/app/drizzle
     depends_on:
       db:
         condition: service_healthy
-    command: node /app/dist/migrate.js
-
-  # Shared/public schema (Exposed plugins). Auth schema stays on auth-db-migrate.
-  db-migrate:
-    image: migrate/migrate:v4.18.3
-    container_name: misplease-db-migrate
-    volumes:
-      - ./infra/db/migrations:/migrations:ro
-    depends_on:
-      db:
-        condition: service_healthy
-    command:
-      [
-        '-path=/migrations',
-        '-database=postgres://misplease:${DB_PASSWORD}@db:5432/misplease?sslmode=disable',
-        'up',
-      ]
+    command: ["node", "/app/packages/db/dist/migrate.js"]
 
   db:
     image: postgres:18-alpine

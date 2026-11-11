@@ -2,7 +2,7 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js'
 import { eq, sql } from 'drizzle-orm'
 import { PlayerRepository, type PlayerRecord } from '@/domain/repositories/PlayerRepository'
 import { Player } from '@/domain/entities/Player'
-import { players } from './schema/players'
+import { players } from '@misplease/db'
 
 export class DrizzlePlayerRepository implements PlayerRepository {
     constructor(private readonly db: PostgresJsDatabase<{ players: typeof players }>) {}
