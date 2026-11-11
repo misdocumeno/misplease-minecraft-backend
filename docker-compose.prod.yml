@@ -190,6 +190,8 @@ services:
       - ${MISPLEASE_HOST_ROOT:-/home/mis/misplease}:/misplease
       - ${MISPLEASE_SSH_DIR:-/home/mis/.ssh}/misplease_deploy:/root/.ssh/misplease_deploy:ro
       - ${MISPLEASE_SSH_DIR:-/home/mis/.ssh}/known_hosts:/root/.ssh/known_hosts:ro
+      # Host `docker login ghcr.io` (user mis) — pull via docker.sock uses this client config.
+      - ${MISPLEASE_DOCKER_CONFIG:-/home/mis/.docker/config.json}:/root/.docker/config.json:ro
       # Persists .runner / .credentials so recreate ≠ re-register.
       - github-runner-data:/actions-runner
     depends_on:
