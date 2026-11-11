@@ -10,7 +10,7 @@
 # the only gate (no presence.json). Schema: see velocity-presence Presence DTO.
 set -euo pipefail
 
-ROOT="${MISPLEASE_ROOT:-/misplease}"
+ROOT="${MISPLEASE_ROOT:-/home/mis/misplease}"
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
 EMPTY_SECONDS="${EMPTY_SECONDS:-60}"
 POLL_SECONDS="${POLL_SECONDS:-5}"
