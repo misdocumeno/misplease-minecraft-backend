@@ -119,13 +119,16 @@ if ! is_empty; then
 fi
 
 if [[ -n "$DEPLOY_SHA" ]] && [[ -d .git ]]; then
-  echo "git fetch + ff-only merge $DEPLOY_SHA"
+  echo "git fetch + hard reset $DEPLOY_SHA"
   # Runner container uid ≠ host checkout owner (docker bind-mount).
   git config --global --add safe.directory "$ROOT"
   # Deploy key is mounted at /root/.ssh (see github-runner service).
   export GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-ssh -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new}"
+  # Shallow fetch of a SHA often has no merge-base with the previous shallow
+  # tip ("refusing to merge unrelated histories"). Deploy trees are disposable:
+  # pin exactly to DEPLOY_SHA (.env / data dirs stay untracked).
   git fetch --depth=1 origin "$DEPLOY_SHA"
-  git merge --ff-only "$DEPLOY_SHA"
+  git reset --hard FETCH_HEAD
 fi
 
 # Only game/auth services — never recreate github-runner/backup mid-deploy.
