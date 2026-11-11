@@ -3,7 +3,7 @@ import { createClient } from 'redis'
 import postgres from 'postgres'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { players } from './infra/database/schema/players'
-import { playerLastServer } from './infra/database/schema/lastServer'
+import { playerLastSession } from './infra/database/schema/lastSession'
 import { DrizzlePlayerRepository } from './infra/database/DrizzlePlayerRepository'
 import { GameSessionController } from './infra/http/GameSessionController'
 import { CreateGameSessionUseCase } from './application/CreateGameSessionUseCase'
@@ -31,7 +31,7 @@ async function main() {
     await redis.connect()
 
     const conn = postgres(process.env.DATABASE_URL!)
-    const db = drizzle(conn, { schema: { players, playerLastServer } })
+    const db = drizzle(conn, { schema: { players, playerLastSession } })
     const playerRepository = new DrizzlePlayerRepository(db)
 
     const app = express()

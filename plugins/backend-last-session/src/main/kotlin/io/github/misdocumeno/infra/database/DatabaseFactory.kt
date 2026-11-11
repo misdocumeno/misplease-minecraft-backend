@@ -1,15 +1,13 @@
 package io.github.misdocumeno.infra.database
 
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.transactions.transaction
 import java.net.URI
 
 object DatabaseFactory {
 
     fun initFromEnv() {
         val raw = System.getenv("DATABASE_URL")
-            ?: error("DATABASE_URL is required for last-server (postgres)")
+            ?: error("DATABASE_URL is required for last-session (postgres)")
         val (jdbcUrl, user, password) = toJdbc(raw)
 
         Database.connect(
@@ -18,13 +16,8 @@ object DatabaseFactory {
             user = user,
             password = password,
         )
-
-        transaction {
-            SchemaUtils.create(LastServerTable)
-        }
     }
 
-    /** Accepts `postgres://` / `postgresql://` (compose) or already-jdbc URLs. */
     internal fun toJdbc(databaseUrl: String): Triple<String, String, String> {
         if (databaseUrl.startsWith("jdbc:")) {
             return Triple(databaseUrl, "", "")

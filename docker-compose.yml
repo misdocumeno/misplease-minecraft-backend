@@ -38,6 +38,8 @@ services:
     ports:
       - 25565:25577
     depends_on:
+      db-migrate:
+        condition: service_completed_successfully
       db:
         condition: service_healthy
       redis:
@@ -81,6 +83,8 @@ services:
       # dynmap
       - 8080:25568
     depends_on:
+      db-migrate:
+        condition: service_completed_successfully
       db:
         condition: service_healthy
       redis:
@@ -122,6 +126,8 @@ services:
       - ./infra/minecraft/tech/config:/config:ro
       - ./infra/minecraft/tech/data:/data
     depends_on:
+      db-migrate:
+        condition: service_completed_successfully
       db:
         condition: service_healthy
       redis:
@@ -138,6 +144,8 @@ services:
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
       - AUTH_ADMIN_TOKEN=${AUTH_ADMIN_TOKEN:-}
     depends_on:
+      db-migrate:
+        condition: service_completed_successfully
       auth-db-migrate:
         condition: service_completed_successfully
     ports:
@@ -157,6 +165,21 @@ services:
       db:
         condition: service_healthy
     command: node /app/dist/migrate.js
+
+  db-migrate:
+    image: migrate/migrate:v4.18.3
+    container_name: misplease-db-migrate
+    volumes:
+      - ./infra/db/migrations:/migrations:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    command:
+      [
+        '-path=/migrations',
+        '-database=postgres://misplease:${DB_PASSWORD}@db:5432/misplease?sslmode=disable',
+        'up',
+      ]
 
   db:
     image: postgres:18-alpine

@@ -2,12 +2,23 @@ import type { PlayerRepository } from '@/domain/repositories/PlayerRepository'
 import type { SessionStore } from '@/domain/ports/SessionStore'
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js'
 import { eq } from 'drizzle-orm'
-import { playerLastServer } from '@/infra/database/schema/lastServer'
+import { playerLastSession } from '@/infra/database/schema/lastSession'
 import type { AppRedisClient } from '@/index'
 
 export type OnlineInfo = {
     server: string
 } | null
+
+export type LastSessionInfo = {
+    server: string
+    world: string | null
+    x: number | null
+    y: number | null
+    z: number | null
+    yaw: number | null
+    pitch: number | null
+    updatedAt: string
+}
 
 export type GetPlayerResult =
     | {
@@ -17,7 +28,7 @@ export type GetPlayerResult =
           createdAt: string
           authenticated: boolean
           online: OnlineInfo
-          lastServer: { server: string; updatedAt: string } | null
+          lastSession: LastSessionInfo | null
       }
     | { type: 'NotFound' }
 
@@ -39,7 +50,7 @@ export class GetPlayerUseCase {
 
         const authenticated = await this.sessions.isAuthenticated(record.username)
         const online = await this.findOnline(record.username, record.uuid)
-        const lastServer = await this.findLastServer(record.uuid)
+        const lastSession = await this.findLastSession(record.uuid)
 
         return {
             type: 'Success',
@@ -48,7 +59,7 @@ export class GetPlayerUseCase {
             createdAt: record.createdAt.toISOString(),
             authenticated,
             online,
-            lastServer,
+            lastSession,
         }
     }
 
@@ -66,16 +77,22 @@ export class GetPlayerUseCase {
         }
     }
 
-    private async findLastServer(uuid: string) {
+    private async findLastSession(uuid: string): Promise<LastSessionInfo | null> {
         const rows = await this.db
             .select()
-            .from(playerLastServer)
-            .where(eq(playerLastServer.uuid, uuid))
+            .from(playerLastSession)
+            .where(eq(playerLastSession.uuid, uuid))
             .limit(1)
         const row = rows[0]
         if (!row) return null
         return {
             server: row.server,
+            world: row.world ?? null,
+            x: row.x ?? null,
+            y: row.y ?? null,
+            z: row.z ?? null,
+            yaw: row.yaw ?? null,
+            pitch: row.pitch ?? null,
             updatedAt: new Date(row.updatedAt).toISOString(),
         }
     }

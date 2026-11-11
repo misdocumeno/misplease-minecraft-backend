@@ -6,21 +6,21 @@ import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
 import com.velocitypowered.api.plugin.Plugin
 import com.velocitypowered.api.plugin.annotation.DataDirectory
 import com.velocitypowered.api.proxy.ProxyServer
-import io.github.misdocumeno.domain.LastServerService
+import io.github.misdocumeno.domain.LastSessionService
 import io.github.misdocumeno.infra.database.DatabaseFactory
-import io.github.misdocumeno.infra.database.ExposedLastServerRepository
-import io.github.misdocumeno.listener.LastServerListener
+import io.github.misdocumeno.infra.database.ExposedLastSessionRepository
+import io.github.misdocumeno.listener.LastSessionListener
 import org.slf4j.Logger
 import java.nio.file.Path
 
 @Plugin(
-    id = "last-server",
-    name = "LastServer",
-    version = "0.1.1",
-    description = "Restore the last server the player was on after a reconnect (Postgres)",
+    id = "last-session",
+    name = "LastSession",
+    version = "0.2.0",
+    description = "Restore the last backend from player_last_session after reconnect (Postgres)",
     authors = ["Mis"],
 )
-class VelocityLastServerPlugin @Inject constructor(
+class VelocityLastSessionPlugin @Inject constructor(
     private val proxy: ProxyServer,
     private val logger: Logger,
     @param:DataDirectory private val dataDir: Path,
@@ -29,11 +29,11 @@ class VelocityLastServerPlugin @Inject constructor(
     @Subscribe
     fun onProxyInitialize(event: ProxyInitializeEvent) {
         DatabaseFactory.initFromEnv()
-        logger.info("last-server storage: postgres (DATABASE_URL)")
+        logger.info("last-session restore: postgres (DATABASE_URL), writes owned by backends")
 
-        val repository = ExposedLastServerRepository()
-        val service = LastServerService(repository)
+        val repository = ExposedLastSessionRepository()
+        val service = LastSessionService(repository)
 
-        proxy.eventManager.register(this, LastServerListener(proxy, service, logger))
+        proxy.eventManager.register(this, LastSessionListener(proxy, service, logger))
     }
 }

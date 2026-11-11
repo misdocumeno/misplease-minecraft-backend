@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 # Wait until Redis presence reports proxy empty for EMPTY_SECONDS, then
-# enable Velocity maintenance (block new joins), ff-only update checkout,
+# enable Velocity maintenance (block new joins), hard-reset checkout to DEPLOY_SHA,
 # docker compose pull + up, then clear maintenance.
+#
+# Empty age uses presence.updatedAt while empty=true — if the proxy has already
+# been empty longer than EMPTY_SECONDS when the job starts, deploy arms immediately
+# (no extra full grace). A join resets the presence timestamp and the grace.
 #
 # During the empty grace, players MAY join and abort the grace (deploy stays
 # pending). Maintenance turns on only after the grace succeeds.
@@ -60,25 +64,61 @@ clear_maintenance() {
 }
 trap clear_maintenance EXIT
 
-empty_since=""
 started="$(date +%s)"
+last_age_reported=""
 
-is_empty() {
+# Prints integer seconds the proxy has been empty (from presence.updatedAt), or fails.
+empty_age_seconds() {
   local payload
   payload="$(redis_cli -u "$REDIS_URL" --raw GET misplease:presence:proxy || true)"
   [[ -n "$payload" ]] || return 1
   if command -v python3 >/dev/null 2>&1; then
     PRESENCE_JSON="$payload" python3 - <<'PY'
 import json, os, sys
+from datetime import datetime, timezone
 p = json.loads(os.environ["PRESENCE_JSON"])
-sys.exit(0 if p.get("empty") is True and int(p.get("count") or 0) == 0 else 1)
+if p.get("empty") is not True or int(p.get("count") or 0) != 0:
+    sys.exit(1)
+raw = p.get("updatedAt") or ""
+try:
+    # Kotlin Instant / ISO-8601, optionally with nanos
+    s = raw.replace("Z", "+00:00")
+    if "." in s:
+        head, rest = s.split(".", 1)
+        frac = ""
+        tz = "+00:00"
+        for i, ch in enumerate(rest):
+            if ch.isdigit():
+                frac += ch
+            else:
+                tz = rest[i:]
+                break
+        frac = (frac + "000000")[:6]
+        s = f"{head}.{frac}{tz}"
+    dt = datetime.fromisoformat(s)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    age = int((datetime.now(timezone.utc) - dt).total_seconds())
+    if age < 0:
+        age = 0
+    print(age)
+except Exception:
+    sys.exit(1)
 PY
   else
-    PRESENCE_JSON="$payload" node -e 'const p=JSON.parse(process.env.PRESENCE_JSON); process.exit(p.empty===true && (p.count|0)===0?0:1)'
+    PRESENCE_JSON="$payload" node -e '
+const p = JSON.parse(process.env.PRESENCE_JSON);
+if (p.empty !== true || (p.count|0) !== 0) process.exit(1);
+const t = Date.parse(p.updatedAt);
+if (!Number.isFinite(t)) process.exit(1);
+let age = Math.floor((Date.now() - t) / 1000);
+if (age < 0) age = 0;
+process.stdout.write(String(age));
+'
   fi
 }
 
-echo "waiting for proxy empty ≥ ${EMPTY_SECONDS}s (redis misplease:presence:proxy)"
+echo "waiting for proxy empty ≥ ${EMPTY_SECONDS}s (presence.updatedAt while empty)"
 
 while true; do
   now="$(date +%s)"
@@ -87,21 +127,20 @@ while true; do
     exit 1
   fi
 
-  if is_empty; then
-    if [[ -z "$empty_since" ]]; then
-      empty_since="$now"
-      echo "proxy empty — starting ${EMPTY_SECONDS}s reconnect grace (joins still allowed)"
+  if age="$(empty_age_seconds)"; then
+    if [[ "$last_age_reported" != "$age" ]]; then
+      echo "proxy empty for ${age}s (need ${EMPTY_SECONDS}s)"
+      last_age_reported="$age"
     fi
-    waited=$((now - empty_since))
-    if [[ "$waited" -ge "$EMPTY_SECONDS" ]]; then
-      echo "proxy empty for ${waited}s — arming deploy"
+    if [[ "$age" -ge "$EMPTY_SECONDS" ]]; then
+      echo "proxy empty for ${age}s — arming deploy"
       break
     fi
   else
-    if [[ -n "$empty_since" ]]; then
+    if [[ -n "$last_age_reported" ]]; then
       echo "player activity — grace reset (pending deploy still armed)"
     fi
-    empty_since=""
+    last_age_reported=""
   fi
   sleep "$POLL_SECONDS"
 done
@@ -112,7 +151,7 @@ maintenance_on=1
 
 # Brief re-check: someone may have slipped in during the last poll interval.
 sleep 2
-if ! is_empty; then
+if ! empty_age_seconds >/dev/null; then
   echo "players present after maintenance arm — clearing maintenance and aborting this attempt" >&2
   clear_maintenance
   exit 1
@@ -132,7 +171,7 @@ if [[ -n "$DEPLOY_SHA" ]] && [[ -d .git ]]; then
 fi
 
 # Only game/auth services — never recreate github-runner/backup mid-deploy.
-SERVICES="velocity main tech auth auth-db-migrate db redis"
+SERVICES="velocity main tech auth auth-db-migrate db-migrate db redis"
 
 echo "docker compose -f $COMPOSE_FILE pull $SERVICES"
 docker compose -f "$COMPOSE_FILE" pull $SERVICES || docker compose -f "$COMPOSE_FILE" pull
