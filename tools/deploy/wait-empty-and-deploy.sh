@@ -21,13 +21,22 @@ MAINTENANCE_VALUE="${MAINTENANCE_VALUE:-{\"enabled\":true,\"message\":\"&cServid
 
 if [[ -z "${REDIS_URL:-}" ]]; then
   if [[ -n "${REDIS_PASSWORD:-}" ]]; then
-    REDIS_URL="redis://:${REDIS_PASSWORD}@redis:6379/0"
+    # redis-cli requires an ACL username; empty-user URLs (redis://:pass@) AUTH-fail.
+    REDIS_URL="redis://default:${REDIS_PASSWORD}@redis:6379/0"
   else
     echo "REDIS_URL or REDIS_PASSWORD required (compose runner)" >&2
     exit 1
   fi
 fi
+# Normalize app-style redis://:pass@host → redis://default:pass@host for redis-cli.
+if [[ "$REDIS_URL" =~ ^redis://:([^@]*)@(.+)$ ]]; then
+  REDIS_URL="redis://default:${BASH_REMATCH[1]}@${BASH_REMATCH[2]}"
+fi
 export REDIS_URL
+
+redis_cli() {
+  redis-cli --no-auth-warning "$@"
+}
 
 cd "$ROOT"
 
@@ -45,7 +54,7 @@ maintenance_on=0
 clear_maintenance() {
   if [[ "$maintenance_on" -eq 1 ]]; then
     echo "clearing maintenance ($MAINTENANCE_KEY)"
-    redis-cli -u "$REDIS_URL" DEL "$MAINTENANCE_KEY" >/dev/null || true
+    redis_cli -u "$REDIS_URL" DEL "$MAINTENANCE_KEY" >/dev/null || true
     maintenance_on=0
   fi
 }
@@ -56,7 +65,7 @@ started="$(date +%s)"
 
 is_empty() {
   local payload
-  payload="$(redis-cli -u "$REDIS_URL" --raw GET misplease:presence:proxy || true)"
+  payload="$(redis_cli -u "$REDIS_URL" --raw GET misplease:presence:proxy || true)"
   [[ -n "$payload" ]] || return 1
   if command -v python3 >/dev/null 2>&1; then
     PRESENCE_JSON="$payload" python3 - <<'PY'
@@ -98,7 +107,7 @@ while true; do
 done
 
 echo "enabling maintenance (deny joins)"
-redis-cli -u "$REDIS_URL" SET "$MAINTENANCE_KEY" "$MAINTENANCE_VALUE" >/dev/null
+redis_cli -u "$REDIS_URL" SET "$MAINTENANCE_KEY" "$MAINTENANCE_VALUE" >/dev/null
 maintenance_on=1
 
 # Brief re-check: someone may have slipped in during the last poll interval.

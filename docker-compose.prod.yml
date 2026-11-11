@@ -180,7 +180,8 @@ services:
       LABELS: self-hosted
       RUNNER_WORKDIR: /tmp/runner-work
       REDIS_PASSWORD: ${REDIS_PASSWORD}
-      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+      # redis-cli (deploy wait script) needs ACL user `default`; Jedis/Lettuce accept redis://:pass@ too.
+      REDIS_URL: redis://default:${REDIS_PASSWORD}@redis:6379/0
       MISPLEASE_ROOT: /misplease
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock

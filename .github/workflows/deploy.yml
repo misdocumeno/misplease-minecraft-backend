@@ -60,7 +60,7 @@ jobs:
             export MISPLEASE_ROOT="${MISPLEASE_ROOT:-/home/mis/misplease}"
           fi
           if [[ -z "${REDIS_URL:-}" ]] && [[ -n "${REDIS_PASSWORD:-}" ]]; then
-            export REDIS_URL="redis://:${REDIS_PASSWORD}@redis:6379/0"
+            export REDIS_URL="redis://default:${REDIS_PASSWORD}@redis:6379/0"
           fi
           if ! command -v redis-cli >/dev/null; then
             sudo apt-get update -qq && sudo apt-get install -y -qq redis-tools
