@@ -183,11 +183,13 @@ services:
       # redis-cli (deploy wait script) needs ACL user `default`; Jedis/Lettuce accept redis://:pass@ too.
       REDIS_URL: redis://default:${REDIS_PASSWORD}@redis:6379/0
       MISPLEASE_ROOT: /misplease
+      # Do not mount ~/.ssh/config (OpenSSH rejects foreign uid). Key files only.
+      GIT_SSH_COMMAND: ssh -i /root/.ssh/misplease_deploy -o IdentitiesOnly=yes -o UserKnownHostsFile=/root/.ssh/known_hosts -o StrictHostKeyChecking=yes
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${MISPLEASE_HOST_ROOT:-/home/mis/misplease}:/misplease
-      # Repo deploy key + known_hosts (git fetch during CD). Runner runs as root.
-      - ${MISPLEASE_SSH_DIR:-/home/mis/.ssh}:/root/.ssh:ro
+      - ${MISPLEASE_SSH_DIR:-/home/mis/.ssh}/misplease_deploy:/root/.ssh/misplease_deploy:ro
+      - ${MISPLEASE_SSH_DIR:-/home/mis/.ssh}/known_hosts:/root/.ssh/known_hosts:ro
       # Persists .runner / .credentials so recreate ≠ re-register.
       - github-runner-data:/actions-runner
     depends_on:
