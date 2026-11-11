@@ -176,8 +176,8 @@ SERVICES="velocity main tech auth db-migrate db redis"
 echo "docker compose -f $COMPOSE_FILE pull $SERVICES"
 docker compose -f "$COMPOSE_FILE" pull $SERVICES || docker compose -f "$COMPOSE_FILE" pull
 
-echo "docker compose -f $COMPOSE_FILE up -d $SERVICES"
-docker compose -f "$COMPOSE_FILE" up -d $SERVICES
+echo "docker compose -f $COMPOSE_FILE up -d --remove-orphans $SERVICES"
+docker compose -f "$COMPOSE_FILE" up -d --remove-orphans $SERVICES
 
 echo "deploy finished — clearing maintenance"
 clear_maintenance
