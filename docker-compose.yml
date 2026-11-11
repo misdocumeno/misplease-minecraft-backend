@@ -136,6 +136,7 @@ services:
     environment:
       - DATABASE_URL=postgres://misplease:${DB_PASSWORD}@db:5432/misplease
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - AUTH_ADMIN_TOKEN=${AUTH_ADMIN_TOKEN:-}
     depends_on:
       auth-db-migrate:
         condition: service_completed_successfully

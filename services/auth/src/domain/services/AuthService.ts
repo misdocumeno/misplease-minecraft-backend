@@ -22,4 +22,9 @@ export class AuthService {
         await this.playerRepo.save(player)
         return uuid
     }
+
+    async setPassword(username: string, password: string) {
+        const hash = await this.hasher.hash(password)
+        return this.playerRepo.updatePasswordHash(username, hash)
+    }
 }

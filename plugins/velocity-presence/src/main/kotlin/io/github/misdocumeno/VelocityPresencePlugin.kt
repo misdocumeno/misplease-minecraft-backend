@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap
     id = "presence",
     name = "Presence",
     version = "0.1.0",
-    description = "Publish proxy empty/player-count for restarter and CD (Redis only)",
+    description = "Publish proxy presence (counts + online players) to Redis for CD and admin",
     authors = ["Mis"],
 )
 class VelocityPresencePlugin @Inject constructor(
@@ -72,14 +72,25 @@ class VelocityPresencePlugin @Inject constructor(
     private fun publish() {
         val byServer = playerServer.values.groupingBy { it }.eachCount()
         val total = playerServer.size
-        val proxyPayload = Presence(
-            scope = "proxy",
-            server = "proxy",
-            count = total,
-            empty = total == 0,
-            updatedAt = Instant.now().toString(),
-            servers = byServer,
-        )
+        val online =
+            playerServer.mapNotNull { (uuid, server) ->
+                val player = proxy.getPlayer(uuid).orElse(null) ?: return@mapNotNull null
+                OnlinePlayer(
+                    username = player.username,
+                    uuid = uuid.toString(),
+                    server = server,
+                )
+            }.sortedBy { it.username.lowercase() }
+        val proxyPayload =
+            Presence(
+                scope = "proxy",
+                server = "proxy",
+                count = total,
+                empty = total == 0,
+                updatedAt = Instant.now().toString(),
+                servers = byServer,
+                players = online,
+            )
         val body = json.encodeToString(proxyPayload)
         val conn = connection ?: return
         try {
@@ -87,15 +98,18 @@ class VelocityPresencePlugin @Inject constructor(
             sync.set("misplease:presence:proxy", body)
             sync.publish("misplease:presence", body)
             for ((name, n) in byServer) {
-                val serverBody = json.encodeToString(
-                    Presence(
-                        scope = "server",
-                        server = name,
-                        count = n,
-                        empty = n == 0,
-                        updatedAt = Instant.now().toString(),
-                    ),
-                )
+                val serverPlayers = online.filter { it.server == name }
+                val serverBody =
+                    json.encodeToString(
+                        Presence(
+                            scope = "server",
+                            server = name,
+                            count = n,
+                            empty = n == 0,
+                            updatedAt = Instant.now().toString(),
+                            players = serverPlayers,
+                        ),
+                    )
                 // Do not overwrite backend keys while that backend is up; proxy view is separate.
                 sync.set("misplease:presence:proxy:server:$name", serverBody)
             }
@@ -106,6 +120,13 @@ class VelocityPresencePlugin @Inject constructor(
 }
 
 @Serializable
+data class OnlinePlayer(
+    val username: String,
+    val uuid: String,
+    val server: String,
+)
+
+@Serializable
 data class Presence(
     val scope: String,
     val server: String,
@@ -113,4 +134,5 @@ data class Presence(
     val empty: Boolean,
     val updatedAt: String,
     val servers: Map<String, Int> = emptyMap(),
+    val players: List<OnlinePlayer> = emptyList(),
 )

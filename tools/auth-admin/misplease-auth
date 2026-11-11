@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# Host-side admin CLI for the auth service (loopback :3000).
+# Usage (from stack root or anywhere):
+#   misplease-auth register <user> <pass>
+#   misplease-auth set-password <user> <pass>
+#   misplease-auth get <user>
+#   misplease-auth online
+set -euo pipefail
+
+ROOT="${MISPLEASE_ROOT:-/home/mis/misplease}"
+ENV_FILE="${AUTH_ENV_FILE:-$ROOT/.env}"
+BASE_URL="${AUTH_ADMIN_URL:-http://127.0.0.1:3000}"
+
+load_token() {
+  if [[ -n "${AUTH_ADMIN_TOKEN:-}" ]]; then
+    return 0
+  fi
+  if [[ -f "$ENV_FILE" ]]; then
+    # shellcheck disable=SC1090
+    set -a
+    # Only pull AUTH_ADMIN_TOKEN; avoid sourcing whole .env (special chars).
+    AUTH_ADMIN_TOKEN="$(grep -E '^AUTH_ADMIN_TOKEN=' "$ENV_FILE" | tail -n1 | cut -d= -f2- | tr -d '\r' | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")"
+    set +a
+  fi
+  if [[ -z "${AUTH_ADMIN_TOKEN:-}" ]]; then
+    echo "AUTH_ADMIN_TOKEN missing (set env or add to $ENV_FILE)" >&2
+    exit 1
+  fi
+}
+
+api() {
+  local method="$1"
+  local path="$2"
+  local body="${3:-}"
+  local args=(-sS -X "$method" -H "Authorization: Bearer $AUTH_ADMIN_TOKEN" -H "Content-Type: application/json")
+  if [[ -n "$body" ]]; then
+    args+=(-d "$body")
+  fi
+  curl "${args[@]}" "$BASE_URL$path"
+  echo
+}
+
+usage() {
+  cat >&2 <<'EOF'
+usage:
+  misplease-auth register <username> <password>
+  misplease-auth set-password <username> <password>
+  misplease-auth get <username>
+  misplease-auth online
+EOF
+  exit 2
+}
+
+load_token
+
+cmd="${1:-}"
+case "$cmd" in
+  register)
+    [[ $# -eq 3 ]] || usage
+    api POST /admin/register "$(jq -nc --arg u "$2" --arg p "$3" '{username:$u,password:$p}')"
+    ;;
+  set-password)
+    [[ $# -eq 3 ]] || usage
+    api POST /admin/set-password "$(jq -nc --arg u "$2" --arg p "$3" '{username:$u,password:$p}')"
+    ;;
+  get)
+    [[ $# -eq 2 ]] || usage
+    enc="$(jq -nr --arg u "$2" '$u|@uri')"
+    api GET "/admin/players/$enc"
+    ;;
+  online)
+    [[ $# -eq 1 ]] || usage
+    api GET /admin/online
+    ;;
+  *)
+    usage
+    ;;
+esac
