@@ -64,6 +64,24 @@ do
   rm -f -- "$STATE/$rel"
 done
 
+# Velocity modern forwarding secret (same value on proxy + every Paper backend).
+# Proxy: forwarding.secret. Paper: proxies.velocity.secret in config/paper-global.yml.
+fwd_secret="${VELOCITY_FORWARDING_SECRET:-}"
+if [ -n "$fwd_secret" ]; then
+  if [ "$KIND" = "proxy" ]; then
+    printf '%s' "$fwd_secret" >"$LOWER/forwarding.secret"
+    rm -f -- "$STATE/forwarding.secret"
+  else
+    paper_global="$LOWER/config/paper-global.yml"
+    if [ -f "$paper_global" ]; then
+      sed -i "s|__MISPLEASE_VELOCITY_SECRET__|${fwd_secret}|g" "$paper_global"
+      rm -f -- "$STATE/config/paper-global.yml"
+    fi
+  fi
+elif [ "$KIND" != "proxy" ] && grep -q '__MISPLEASE_VELOCITY_SECRET__' "$LOWER/config/paper-global.yml" 2>/dev/null; then
+  echo "warning: VELOCITY_FORWARDING_SECRET unset; Paper velocity secret placeholder left empty" >&2
+fi
+
 if [ -n "$(find "$JARS" -mindepth 1 -maxdepth 1 -name '*.jar' -print -quit)" ]; then
   cp -a "$JARS"/*.jar "$LOWER/plugins/"
 fi

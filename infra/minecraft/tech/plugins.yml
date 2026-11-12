@@ -34,3 +34,7 @@ plugins:
     source: github
     repo: misdocumeno/OpenInv
     version: v0.1.0
+  # Same jar on Velocity + backends; proxy owns /skin + storage (global).
+  - name: SkinsRestorer
+    source: modrinth
+    slug: skinsrestorer

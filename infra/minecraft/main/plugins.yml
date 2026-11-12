@@ -139,6 +139,10 @@ plugins:
   - name: SignManager
     source: modrinth
     slug: signmanager
+  # Same jar on Velocity + backends; proxy owns /skin + storage (global). See skinsrestorer.net/docs/installation/velocity
+  - name: SkinsRestorer
+    source: modrinth
+    slug: skinsrestorer
   - name: AdvancedPlHide
     source: modrinth
     slug: advancedplhide

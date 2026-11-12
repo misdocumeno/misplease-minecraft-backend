@@ -14,3 +14,8 @@ plugins:
   - name: ViaVersion
     source: modrinth
     slug: viaversion
+  # Proxy + every backend. Commands/storage on Velocity = network-wide /skin.
+  - name: SkinsRestorer
+    source: modrinth
+    slug: skinsrestorer
+    loaders: [velocity]

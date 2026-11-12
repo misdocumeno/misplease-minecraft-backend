@@ -2,7 +2,11 @@ config-version = "4.0"
 
 bind = "0.0.0.0:25577"
 online-mode = false
+# Modern forwarding required for correct UUIDs/skins on offline-mode backends.
+# Secret lives in forwarding.secret (injected from VELOCITY_FORWARDING_SECRET) — must match Paper proxies.velocity.secret.
+player-info-forwarding-mode = "modern"
 # Backends are Paper 26.3 (≈1.21.x). Proxy only has ViaVersion (no ViaBackwards) → clients need modern protocol; MOTD must match that floor.
+# Note: SkinsRestorer warns ViaVersion-on-proxy can flake skin *refresh*; keep until we move Via* to backends.
 motd = "<blue>-<dark_purple><bold>x</bold><blue>-<dark_purple><bold>x</bold><blue>-<dark_purple><bold>x</bold><blue>-<dark_purple><bold>x</bold><blue>-           <dark_purple><bold>MisPlease</bold>            <blue>-<dark_purple><bold>x</bold><blue>-<dark_purple><bold>x</bold><blue>-<dark_purple><bold>x</bold><blue>-<dark_purple><bold>x</bold><blue>-\n<dark_purple><bold>|</bold>  <blue>Survival</blue>  <dark_purple><bold>|</bold>         <blue>misplease.com</blue>         <dark_purple><bold>|</bold>    <blue>1.21+</blue>   <dark_purple><bold>|</bold>"
 show-max-players = 20
 

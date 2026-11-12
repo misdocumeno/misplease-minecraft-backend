@@ -63,6 +63,7 @@ run_args=(
   -e "REDIS_URL=redis://redis:6379/0"
   -e "DB_PASSWORD=smoke"
   -e "DATABASE_URL=postgres://misplease:smoke@db:5432/misplease"
+  -e "VELOCITY_FORWARDING_SECRET=smoke-forwarding-secret"
   -e "JVM_OPTS=$JVM_OPTS"
   # Comma-separated plugin names allowed to be loaded-but-disabled (rare; prefer fixing pins).
   -e "SMOKE_ALLOW_DISABLED=${SMOKE_ALLOW_DISABLED:-}"

@@ -32,6 +32,7 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - DB_PASSWORD=${DB_PASSWORD}
       - DATABASE_URL=postgres://misplease:${DB_PASSWORD}@db:5432/misplease
+      - VELOCITY_FORWARDING_SECRET=${VELOCITY_FORWARDING_SECRET:-}
     volumes:
       - ./infra/velocity/config:/config:ro
       - ./infra/velocity/data:/data
@@ -74,8 +75,9 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - DB_PASSWORD=${DB_PASSWORD}
       - DATABASE_URL=postgres://misplease:${DB_PASSWORD}@db:5432/misplease
+      - VELOCITY_FORWARDING_SECRET=${VELOCITY_FORWARDING_SECRET:-}
       # Flags from live prod main (itzg) + preferSparkPlugin for baked jars.
-      - JVM_OPTS=-Xms256M -Xmx3G -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC -Dorg.maxgamer.quickshop.util.envcheck.skip.SIGNATURE_VERIFY -Dpaper.preferSparkPlugin=true --add-modules=jdk.incubator.vector
+      - JVM_OPTS=-Xms256M -Xmx3G -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC -Dorg.maxgamer.quickshop.util.envcheck.skip.SIGNATURE_VERIFY -Dpaper.preferSparkPlugin=true --add-modules=jdk.incubator.vector}
       - RCON_PASSWORD=${RCON_PASSWORD:-}
     volumes:
       - ./infra/minecraft/main/config:/config:ro
@@ -121,6 +123,7 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - DB_PASSWORD=${DB_PASSWORD}
       - DATABASE_URL=postgres://misplease:${DB_PASSWORD}@db:5432/misplease
+      - VELOCITY_FORWARDING_SECRET=${VELOCITY_FORWARDING_SECRET:-}
       # Flags from live prod tech (itzg) + preferSparkPlugin for baked jars.
       - JVM_OPTS=-Xms256M -Xmx2G -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Dpaper.preferSparkPlugin=true
       - RCON_PASSWORD=${RCON_PASSWORD:-}

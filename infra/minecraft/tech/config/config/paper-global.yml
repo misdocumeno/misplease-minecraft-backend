@@ -114,9 +114,10 @@ proxies:
     online-mode: true
   proxy-protocol: false
   velocity:
-    enabled: false
-    online-mode: true
-    secret: ''
+    enabled: true
+    # Must match Velocity online-mode (false = offline proxy + custom auth).
+    online-mode: false
+    secret: '__MISPLEASE_VELOCITY_SECRET__'
 scoreboards:
   save-empty-scoreboard-teams: true
   track-plugin-scoreboards: false
