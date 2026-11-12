@@ -574,6 +574,9 @@ def pin_dotenv_image_tag(tag: str) -> None:
 
 
 def compose_pull_up(tag: str) -> str:
+    """Pull + up. Prefer :$tag. Fall back to :dev only for agent-only commits
+    (no images workflow). If :$tag is missing, raise so we do not mark applied
+    against stale :dev from a race with images still building."""
     env = compose_env(tag)
     log(f"IMAGE_TAG={tag}")
     pull = subprocess.run(
@@ -585,12 +588,12 @@ def compose_pull_up(tag: str) -> str:
     )
     used = tag
     if pull.returncode != 0:
-        log(f"pull :{tag} failed — falling back to IMAGE_TAG=dev")
-        used = "dev"
-        env = compose_env(used)
-        run(
-            ["docker", "compose", "-f", COMPOSE_FILE, "pull", *SERVICES],
-            env=env,
+        # Agent-only commits never get :$sha tags — :dev is intentional.
+        # Image-building commits must wait for promote-sha-tags; do not apply
+        # stale :dev and then no-op when set-wanted repeats the same sha.
+        raise RuntimeError(
+            f"compose pull IMAGE_TAG={tag} failed — tags not ready yet "
+            "(will retry; not falling back to :dev for compose applies)"
         )
     run(
         [
