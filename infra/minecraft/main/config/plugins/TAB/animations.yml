@@ -1,0 +1,8 @@
+# Header brand pulse (similar refresh feel to old TabList interval: 4 ticks).
+brand:
+  change-interval: 200
+  texts:
+    - '&7&lMis&9&lPlease'
+    - '&7&lMis&b&lPlease'
+    - '&f&lMis&9&lPlease'
+    - '&7&lMis&b&lPlease'

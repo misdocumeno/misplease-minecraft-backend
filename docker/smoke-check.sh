@@ -64,11 +64,8 @@ run_args=(
   -e "DB_PASSWORD=smoke"
   -e "DATABASE_URL=postgres://misplease:smoke@db:5432/misplease"
   -e "JVM_OPTS=$JVM_OPTS"
-  # Plugins that self-disable on Paper 26.3 without a Paper "Error occurred while enabling" line:
-  # - CoreProtect CE 24.1: upstream max 26.2
-  # - TabList 5.7.7: abandoned; hard version gate (see montlikadani/TabList#546)
-  # Remove each name when a compatible jar is locked.
-  -e "SMOKE_ALLOW_DISABLED=${SMOKE_ALLOW_DISABLED:-CoreProtect,TabList}"
+  # Comma-separated plugin names allowed to be loaded-but-disabled (rare; prefer fixing pins).
+  -e "SMOKE_ALLOW_DISABLED=${SMOKE_ALLOW_DISABLED:-}"
   -v "$CONFIG_DIR:/config:ro"
   -v "$DATA:/data"
 )

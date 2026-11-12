@@ -26,9 +26,6 @@ plugins:
   - name: ChunkyBorder
     source: modrinth
     slug: chunkyborder
-  - name: CoreProtect
-    source: modrinth
-    slug: coreprotect
   - name: DeathCoordinates
     source: spiget
     id: "43318"
@@ -127,10 +124,12 @@ plugins:
   - name: Vault
     source: github
     repo: MilkBowl/Vault
-  - name: TabList
-    source: github
-    repo: montlikadani/TabList
-    jar: /^TabList-bukkit-/
+  # Replaces abandoned montlikadani/TabList (hard version gate on Paper 26.3).
+  - name: TAB
+    source: modrinth
+    slug: tab-was-taken
+    version: "6.2.1"
+    asset: TAB v6.2.1.jar
   - name: ImageFrame
     source: modrinth
     slug: imageframe

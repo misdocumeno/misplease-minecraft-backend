@@ -1,10 +1,10 @@
 server:
   name: paper
   source: papermc
-  version: 26.3+244
-  filename: paper-26.3-244.jar
-  url: https://fill-data.papermc.io/v1/objects/9601f9a26a2a52a0f2c807cf1abf691f96ee4fb287878313b601cebc2c51eabf/paper-26.3-244.jar
-  sha256: 9601f9a26a2a52a0f2c807cf1abf691f96ee4fb287878313b601cebc2c51eabf
+  version: 26.3+249
+  filename: paper-26.3-249.jar
+  url: https://fill-data.papermc.io/v1/objects/4c734aeb4da98845934af1e5481f0df7c80ad3ca50d272319ffe2b0e8a187c8a/paper-26.3-249.jar
+  sha256: 4c734aeb4da98845934af1e5481f0df7c80ad3ca50d272319ffe2b0e8a187c8a
   minecraft:
     - "26.3"
 plugins:
@@ -90,47 +90,12 @@ plugins:
       - 26.1.2
       - "26.2"
       - "26.3"
-  - name: CoreProtect
-    source: modrinth
-    version: "24.1"
-    filename: CoreProtect-CE-24.1.jar
-    url: https://cdn.modrinth.com/data/Lu3KuzdV/versions/3sehX6Sg/CoreProtect-CE-24.1.jar
-    sha512: 76aad727528ddb990bbee5069f8ef3fcd018ae0bcdea89b965be2485e828633eb068672e841be64e550c8474f901a24d8c15c7bd44c2bd6c96244e1e58de0c95
-    minecraft:
-      - 1.16.5
-      - "1.17"
-      - 1.17.1
-      - "1.18"
-      - 1.18.1
-      - 1.18.2
-      - "1.19"
-      - 1.19.1
-      - 1.19.2
-      - 1.19.3
-      - 1.19.4
-      - "1.20"
-      - 1.20.1
-      - 1.20.2
-      - 1.20.3
-      - 1.20.4
-      - 1.20.5
-      - 1.20.6
-      - "1.21"
-      - 1.21.1
-      - 1.21.10
-      - 1.21.11
-      - 1.21.2
-      - 1.21.3
-      - 1.21.4
-      - 1.21.5
-      - 1.21.6
-      - 1.21.7
-      - 1.21.8
-      - 1.21.9
-      - "26.1"
-      - 26.1.1
-      - 26.1.2
-      - "26.2"
+  - name: DeathCoordinates
+    source: spiget
+    version: "455215"
+    filename: DeathCoordinates-1.12.1.jar
+    url: https://cdn.spiget.org/file/spiget-resources/43318.jar
+    sha256: 089e2bcf96c215c9dbecc5414b69379570f1c34f4accf6c926febe50136f8334
   - name: EssentialsX
     source: github
     version: 2.22.0
@@ -336,7 +301,7 @@ plugins:
     sha256: 552a9ad27b2ccf0b6a8e124805220333c125e361a992a8e82deb62088ba831c1
   - name: PlotSquared
     source: git
-    version: 7b2f00dc7cd4abe628490b84ebb13413e03e0533
+    version: b8adab234e45d1357395fc745566d397ff20498b
     filename: PlotSquared.jar
     url: https://github.com/IntellectualSites/PlotSquared.git
     jar: /^plotsquared-bukkit-/
@@ -784,12 +749,15 @@ plugins:
     filename: Vault.jar
     url: https://api.github.com/repos/MilkBowl/Vault/releases/tags/1.7.3
     sha256: a6b5ed97f43a5cf5bbaf00a7c8cd23c5afc9bd003f849875af8b36e6cf77d01d
-  - name: TabList
-    source: github
-    version: v5.7.7
-    filename: TabList-bukkit-v5.7.7.jar
-    url: https://api.github.com/repos/montlikadani/TabList/releases/tags/v5.7.7
-    sha256: 86fd01aae58b2ebac7dee9c77078ea5dbb9742c425fe0afd6cdae6121f2a79f9
+  - name: TAB
+    source: modrinth
+    version: 6.2.1
+    filename: TAB v6.2.1.jar
+    url: https://cdn.modrinth.com/data/gG7VFbG0/versions/HlsRTW5F/TAB%20v6.2.1.jar
+    sha512: 146fff1d94506459b32532d707f11e544da448b7dbfcb16c7a9a4fb91db7be8be272b275f3315e4c2122529a3ac30ccc344654fc013303615679d6a90207b41c
+    minecraft:
+      - "26.2"
+      - "26.3"
   - name: ImageFrame
     source: modrinth
     version: 2026.1.5
@@ -1137,6 +1105,12 @@ plugins:
       - "1.18"
       - 1.17.1
       - "1.17"
+  - name: EpicPluginLib
+    source: github
+    version: "3.0"
+    filename: epicpluginlib-bukkit.jar
+    url: https://api.github.com/repos/Epicnicity322/EpicPluginLib/releases/tags/3.0
+    sha256: 9f24229ca112ca30e40e4bab9f142f4326cb07f6e3e6c1910d433c4b7866431d
   - name: PlayMoreSounds
     source: github
     version: "4.2"
@@ -1209,6 +1183,12 @@ plugins:
     filename: NoSlimesInMisPark-1.0-SNAPSHOT.jar
     url: https://api.github.com/repos/misdocumeno/NoSlimesInMisPark/releases/tags/v0.1.0
     sha256: 2362ee4a664fae0c44fe4288396f322df6bef0b43a16bfc904d42cb610a64e21
+  - name: OpenInv
+    source: github
+    version: v0.1.0
+    filename: OpenInv-0.1.0.jar
+    url: https://api.github.com/repos/misdocumeno/OpenInv/releases/tags/v0.1.0
+    sha256: 76d342cdc71416959008bde236248c7935985f81ac9656f2ce268b4d0b553b83
   - name: PermissionShops
     source: github
     version: v0.1.0
@@ -1245,6 +1225,12 @@ plugins:
     filename: WorldGameMode-0.1.0-SNAPSHOT.jar
     url: https://api.github.com/repos/misdocumeno/WorldGameMode/releases/tags/v0.1.1
     sha256: 933f925c1b703bdac8f0e6b89b82ce0cc7e8e7a7d2624b20b1851c25b9fbb7d6
+  - name: WorldGamerules
+    source: github
+    version: v0.1.0
+    filename: WorldGamerules-0.1.0.jar
+    url: https://api.github.com/repos/misdocumeno/WorldGamerules/releases/tags/v0.1.0
+    sha256: ac83f29023ece2479f7855ac2bc6cbc89eff7b824df896651e33202280ca31e2
   - name: WorldPrinter
     source: github
     version: v0.1.1
@@ -1263,27 +1249,3 @@ plugins:
     filename: QuickShop.jar
     url: https://api.github.com/repos/misdocumeno/QuickShop-Reremake/releases/tags/v5.1.2.5-misplease.1
     sha256: 4d3c502ed2095339b7cb836e8a76d64eb4f78548e29e2d849488deac26b7f8fb
-  - name: DeathCoordinates
-    source: spiget
-    version: "455215"
-    filename: DeathCoordinates-1.12.1.jar
-    url: https://cdn.spiget.org/file/spiget-resources/43318.jar
-    sha256: 089e2bcf96c215c9dbecc5414b69379570f1c34f4accf6c926febe50136f8334
-  - name: WorldGamerules
-    source: github
-    version: v0.1.0
-    filename: WorldGamerules-0.1.0.jar
-    url: https://api.github.com/repos/misdocumeno/WorldGamerules/releases/tags/v0.1.0
-    sha256: ac83f29023ece2479f7855ac2bc6cbc89eff7b824df896651e33202280ca31e2
-  - name: OpenInv
-    source: github
-    version: v0.1.0
-    filename: OpenInv-0.1.0.jar
-    url: https://api.github.com/repos/misdocumeno/OpenInv/releases/tags/v0.1.0
-    sha256: 76d342cdc71416959008bde236248c7935985f81ac9656f2ce268b4d0b553b83
-  - name: EpicPluginLib
-    source: github
-    version: "3.0"
-    filename: epicpluginlib-bukkit.jar
-    url: https://api.github.com/repos/Epicnicity322/EpicPluginLib/releases/tags/3.0
-    sha256: 9f24229ca112ca30e40e4bab9f142f4326cb07f6e3e6c1910d433c4b7866431d

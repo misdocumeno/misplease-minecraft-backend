@@ -1,0 +1,118 @@
+# Ported from TabList tablist.yml (header/footer + warps guide).
+# Docs: https://github.com/NEZNAMY/TAB/wiki
+
+header-footer:
+  enabled: true
+  designs:
+    default:
+      header:
+        - '&5&m============================================'
+        - ''
+        - '%animation:brand%'
+        - '&7✦ &5&lmisplease.com.ar &7✦'
+        - '&6Ping:&r %ping%&7ms'
+        - ''
+      footer:
+        - '&e&l Jugadores:&6 %online%&7'
+        - ''
+        - '&5&m============================================'
+        - ''
+        - '&7&l◆&6&lWARPS&7&l◆'
+        - ''
+        - '&2&l  world:                 world2:             recursos: '
+        - '&7tienda                     casasvip                    bosque'
+        - '&7comida               protectionstones               abedul'
+        - '&7casas                      banco                      jungla'
+        - '&7      departamentos                 bolsa                      desierto          '
+        - '&7parcelas                                                  mesa   '
+        - '&7mispark                                                   hielo  '
+        - '&7misparknorth                                                           '
+        - '&7arena                                                           '
+        - ''
+        - '&5&m============================================'
+
+tablist-name-formatting:
+  enabled: true
+  disable-condition: '%world%=disabledworld'
+
+scoreboard-teams:
+  enabled: true
+  enable-collision: true
+  invisible-nametags: false
+  sorting-types:
+    - 'GROUPS:owner,admin,mod,helper,builder,vip,default'
+    - 'PLACEHOLDER_A_TO_Z:%player%'
+  case-sensitive-sorting: false
+  can-see-friendly-invisibles: false
+  disable-condition: '%world%=disabledworld'
+
+playerlist-objective:
+  enabled: true
+  value: '%ping%'
+  fancy-value: '&7%ping%ms'
+  title: ping
+  render-type: INTEGER
+  disable-condition: '%world%=disabledworld'
+
+belowname-objective:
+  enabled: false
+
+prevent-spectator-effect:
+  enabled: false
+
+bossbar:
+  enabled: false
+
+scoreboard:
+  enabled: false
+
+layout:
+  enabled: false
+
+ping-spoof:
+  enabled: false
+
+# Network tab is owned by velocity-tablist-broadcast — keep TAB local to this Paper JVM.
+global-playerlist:
+  enabled: false
+
+placeholders:
+  date-format: dd/MM/yyyy
+  time-format: HH:mm
+  time-offset: -3
+  register-tab-expansion: false
+
+placeholder-refresh-intervals:
+  default-refresh-interval: 500
+  '%ping%': 1000
+  '%online%': 1000
+
+assign-groups-by-permissions: false
+primary-group-finding-list:
+  - owner
+  - admin
+  - mod
+  - helper
+  - builder
+  - vip
+  - default
+
+permission-refresh-interval: 1000
+debug: false
+
+mysql:
+  enabled: false
+
+proxy-support:
+  enabled: false
+
+components:
+  minimessage-support: true
+  disable-shadow-for-heads: true
+
+config-version: 7
+
+per-world-playerlist:
+  enabled: false
+
+compensate-for-packetevents-bug: false
