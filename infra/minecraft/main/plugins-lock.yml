@@ -1,10 +1,10 @@
 server:
-  name: paper
-  source: papermc
-  version: 26.3+249
-  filename: paper-26.3-249.jar
-  url: https://fill-data.papermc.io/v1/objects/4c734aeb4da98845934af1e5481f0df7c80ad3ca50d272319ffe2b0e8a187c8a/paper-26.3-249.jar
-  sha256: 4c734aeb4da98845934af1e5481f0df7c80ad3ca50d272319ffe2b0e8a187c8a
+  name: purpur
+  source: purpur
+  version: 26.3+2658
+  filename: purpur-26.3-2658.jar
+  url: https://api.purpurmc.org/v2/purpur/26.3/2658/download
+  sha256: ef2f19ec2ff15273b020e08cd46bf95a36296243864337b068e25f5b75c02e3f
   minecraft:
     - "26.3"
 plugins:

@@ -3,11 +3,12 @@
 # plugins share one repo (EssentialsX*) or when the slug/repo label would differ
 # from the lock name.
 # jar: exact name/path or /regex/ (YAML has no regex type). Git matches repo-relative path and basename.
-# server.version = Paper *line*; builds float on `plugin-lock update`. Also feeds source:git JVM/bytecode hints.
-# Upgrade: bump this line, then plugin-lock update.
+# server.version = Purpur *line* (same numbering as Paper); builds float on `plugin-lock update`.
+# Also feeds source:git JVM/bytecode hints. Upgrade: bump this line, then plugin-lock update.
+# Main stays on Purpur (not Paper) — Pufferfish/Purpur tunables in config/pufferfish.yml + config/purpur.yml.
 server:
-  source: papermc
-  id: paper
+  source: purpur
+  id: purpur
   version: "26.3"
 
 plugins:
