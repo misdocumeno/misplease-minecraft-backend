@@ -226,6 +226,7 @@ services:
       - >-
           apk add --no-cache bash docker-cli docker-cli-compose git openssh-client redis
           >/dev/null
+          && pip install --no-cache-dir -q -r /app/requirements.txt
           && exec python -u /app/agent.py run
     environment:
       MISPLEASE_ROOT: ${MISPLEASE_HOST_ROOT:-/home/mis/misplease}

@@ -33,9 +33,6 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(os.environ.get("MISPLEASE_ROOT", "/home/mis/misplease"))
-# Container runs `python /app/agent.py`; keep sibling imports working.
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from rcon import RconError, rcon_command  # noqa: E402
 COMPOSE_FILE = os.environ.get("COMPOSE_FILE", "docker-compose.prod.yml")
 STATE_FILE = Path(os.environ.get("DEPLOY_STATE_FILE", str(ROOT / ".deploy-state.json")))
 LEGACY_LAST_GOOD = ROOT / ".deploy-last-good.json"
@@ -341,25 +338,13 @@ def load_hot_reload_rules() -> list[dict[str, Any]]:
 
 
 def _parse_hot_reload_minimal(text: str) -> list[dict[str, Any]]:
-    """Parse the checked-in hot-reload.yml without PyYAML."""
+    """Parse the checked-in hot-reload.yml without PyYAML (id/paths/rcon)."""
     rules: list[dict[str, Any]] = []
     rule: dict[str, Any] | None = None
     section: str | None = None
-    target: dict[str, Any] | None = None
-    sync: dict[str, str] | None = None
-
-    def flush_target() -> None:
-        nonlocal target, sync
-        if rule is not None and target is not None:
-            if sync:
-                target["sync"] = sync
-            rule.setdefault("targets", []).append(target)
-        target = None
-        sync = None
 
     def flush_rule() -> None:
         nonlocal rule
-        flush_target()
         if rule is not None:
             rules.append(rule)
         rule = None
@@ -373,7 +358,7 @@ def _parse_hot_reload_minimal(text: str) -> list[dict[str, Any]]:
         m = re.match(r"^  - id:\s*(\S+)\s*$", line)
         if m:
             flush_rule()
-            rule = {"id": m.group(1), "paths": [], "targets": []}
+            rule = {"id": m.group(1), "paths": []}
             section = None
             continue
         if rule is None:
@@ -381,40 +366,76 @@ def _parse_hot_reload_minimal(text: str) -> list[dict[str, Any]]:
         if re.match(r"^    paths:\s*$", line):
             section = "paths"
             continue
-        if re.match(r"^    targets:\s*$", line):
-            section = "targets"
+        m = re.match(r'^    rcon:\s*["\']?([^"\']+)["\']?\s*$', line)
+        if m:
+            rule["rcon"] = m.group(1).strip()
+            section = None
             continue
         if section == "paths":
-            m = re.match(r'^      -\s+(\S+)\s*$', line)
+            m = re.match(r"^      -\s+(\S+)\s*$", line)
             if m:
                 rule["paths"].append(m.group(1))
-            continue
-        if section == "targets":
-            m = re.match(r"^      - server:\s*(\S+)\s*$", line)
-            if m:
-                flush_target()
-                target = {"server": m.group(1)}
-                sync = None
-                continue
-            if target is None:
-                continue
-            if re.match(r"^        sync:\s*$", line):
-                sync = {}
-                continue
-            m = re.match(r"^          from:\s+(\S+)\s*$", line)
-            if m and sync is not None:
-                sync["from"] = m.group(1)
-                continue
-            m = re.match(r"^          to:\s+(\S+)\s*$", line)
-            if m and sync is not None:
-                sync["to"] = m.group(1)
-                continue
-            m = re.match(r"^        rcon:\s+(\S+)\s*$", line)
-            if m:
-                target["rcon"] = m.group(1)
-                continue
     flush_rule()
     return rules
+
+
+def infer_targets_from_paths(paths: list[str]) -> list[dict[str, Any]]:
+    """Map config path globs → sync from/to + compose server name."""
+    targets: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for raw in paths:
+        g = raw.replace("\\", "/").rstrip("/")
+        if g.endswith("/**"):
+            g = g[:-3]
+        m = re.match(
+            r"^infra/minecraft/([^/]+)/config/plugins/([^/]+)$", g
+        )
+        if m:
+            server, plugin = m.group(1), m.group(2)
+            key = (server, plugin)
+            if key in seen:
+                continue
+            seen.add(key)
+            targets.append(
+                {
+                    "server": server,
+                    "sync": {
+                        "from": f"infra/minecraft/{server}/config/plugins/{plugin}",
+                        "to": f"infra/minecraft/{server}/data/state/plugins/{plugin}",
+                    },
+                }
+            )
+            continue
+        m = re.match(r"^infra/velocity/config/plugins/([^/]+)$", g)
+        if m:
+            plugin = m.group(1)
+            key = ("velocity", plugin)
+            if key in seen:
+                continue
+            seen.add(key)
+            targets.append(
+                {
+                    "server": "velocity",
+                    "sync": {
+                        "from": f"infra/velocity/config/plugins/{plugin}",
+                        "to": f"infra/velocity/data/state/plugins/{plugin}",
+                    },
+                }
+            )
+            continue
+        raise ValueError(
+            f"cannot infer sync from path {raw!r} "
+            "(expected infra/minecraft/<server>/config/plugins/<Plugin>/** "
+            "or infra/velocity/config/plugins/<Plugin>/**)"
+        )
+    return targets
+
+
+def send_rcon(host: str, command: str) -> str:
+    from mcrcon import MCRcon
+
+    with MCRcon(host, RCON_PASSWORD, port=RCON_PORT) as mcr:
+        return mcr.command(command) or ""
 
 
 def path_matches(globs: list[str], path: str) -> bool:
@@ -525,7 +546,7 @@ def apply_hot_reload(sha: str, rules: list[dict[str, Any]]) -> bool:
     try:
         if not rules:
             # Empty diff or agent-only: pin checkout; recreate deployer so a new
-            # Python process loads agent.py / rcon.py / compose env changes.
+            # Python process loads agent.py / requirements / compose env changes.
             git_pin(sha)
             st = load_state()
             st["applied"] = sha
@@ -543,23 +564,31 @@ def apply_hot_reload(sha: str, rules: list[dict[str, Any]]) -> bool:
         git_pin(sha)
 
         for rule in rules:
-            for target in rule.get("targets") or []:
+            cmd = rule.get("rcon")
+            if not cmd:
+                alert(f"hot-reload rule {rule.get('id')} missing rcon")
+                return False
+            try:
+                targets = infer_targets_from_paths(list(rule.get("paths") or []))
+            except ValueError as e:
+                alert(f"hot-reload infer failed: {e}")
+                return False
+            for target in targets:
                 sync = target.get("sync") or {}
                 src = sync.get("from")
                 dest = sync.get("to")
                 if src and dest:
                     sync_tree(str(src), str(dest))
-                cmd = target.get("rcon")
                 server = target.get("server")
-                if not cmd or not server:
+                if not server:
                     continue
                 host = SERVER_HOST.get(str(server), str(server))
                 log(f"rcon {server} ({host}:{RCON_PORT}): {cmd}")
                 try:
-                    resp = rcon_command(host, RCON_PASSWORD, str(cmd), port=RCON_PORT)
+                    resp = send_rcon(host, str(cmd))
                     if resp.strip():
                         log(f"rcon response: {resp.strip()[:500]}")
-                except (RconError, OSError, TimeoutError) as e:
+                except (OSError, TimeoutError, Exception) as e:
                     alert(f"hot-reload RCON failed on {server}: {e}")
                     return False
 

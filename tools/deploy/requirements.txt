@@ -1,0 +1,2 @@
+# Deployer agent deps (pip install in the ops deployer container).
+mcrcon==0.7.0
