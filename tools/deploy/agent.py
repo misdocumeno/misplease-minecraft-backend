@@ -429,8 +429,19 @@ def path_matches(globs: list[str], path: str) -> bool:
     return False
 
 
+# Repo paths that only affect the host agent / CD pin — git reset, no compose.
+_AGENT_ONLY_GLOBS = [
+    "tools/deploy/**",
+    ".github/workflows/deploy.yml",
+    ".env.example",
+]
+
+
 def classify_hot_reload(applied: str | None, wanted: str) -> list[dict[str, Any]] | None:
-    """Return matched rules if hot-reload-only; None if full compose deploy required."""
+    """Return matched rules if hot-reload-only; None if full compose deploy required.
+
+    Empty list means git-pin-only (no RCON) — agent-only commits or empty diff.
+    """
     if not applied:
         return None
     try:
@@ -439,7 +450,9 @@ def classify_hot_reload(applied: str | None, wanted: str) -> list[dict[str, Any]
         log(f"diff failed ({e}) — full deploy")
         return None
     if not changed:
-        # Same tree; treat as hot no-op success path (caller marks applied).
+        return []
+    if all(path_matches(_AGENT_ONLY_GLOBS, p) for p in changed):
+        log(f"agent-only diff ({len(changed)} paths) — git pin, no compose")
         return []
     rules = load_hot_reload_rules()
     if not rules:
