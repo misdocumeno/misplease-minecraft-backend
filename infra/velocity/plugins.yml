@@ -11,9 +11,7 @@ plugins:
     slug: luckperms
     loaders: [velocity]
     jar: /^LuckPerms-Velocity-/
-  - name: ViaVersion
-    source: modrinth
-    slug: viaversion
+  # ViaVersion/ViaBackwards live on Paper backends (not here) — SR + cleaner proxy path.
   # Proxy + every backend. Commands/storage on Velocity = network-wide /skin.
   - name: SkinsRestorer
     source: modrinth

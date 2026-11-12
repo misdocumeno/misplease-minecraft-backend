@@ -42,3 +42,10 @@ plugins:
   - name: SkinsRestorer
     source: modrinth
     slug: skinsrestorer
+  # Via* on backends (not Velocity). VV = older clients; VB = newer clients than this Paper.
+  - name: ViaVersion
+    source: modrinth
+    slug: viaversion
+  - name: ViaBackwards
+    source: modrinth
+    slug: viabackwards
