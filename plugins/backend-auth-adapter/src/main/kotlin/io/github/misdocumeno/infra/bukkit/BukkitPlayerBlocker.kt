@@ -49,6 +49,9 @@ class BukkitPlayerBlocker(private val plugin: Plugin) : PlayerBlocker {
 
         p.removePotionEffect(PotionEffectType.BLINDNESS)
 
+        // PlayerCommandSendEvent left only /login while unauthenticated; refresh Brigadier.
+        p.updateCommands()
+
         if (!wasHidden) return@onMain
 
         // The entity tracker sends the spawn packet after PlayerJoinEvent.
