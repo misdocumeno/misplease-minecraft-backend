@@ -236,6 +236,9 @@ services:
       EMPTY_SECONDS: ${DEPLOY_EMPTY_SECONDS:-60}
       HEALTH_TIMEOUT_S: ${DEPLOY_HEALTH_TIMEOUT_S:-180}
       DEPLOY_ALERT_WEBHOOK: ${DEPLOY_ALERT_WEBHOOK:-}
+      # RCON stays unpublished (no host ports). Deployer reaches main/tech:25575 on the compose network only.
+      RCON_PASSWORD: ${RCON_PASSWORD:-}
+      RCON_PORT: "25575"
       GIT_SSH_COMMAND: ssh -i /root/.ssh/misplease_deploy -o IdentitiesOnly=yes -o UserKnownHostsFile=/root/.ssh/known_hosts -o StrictHostKeyChecking=yes
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock

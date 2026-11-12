@@ -1,13 +1,19 @@
-# After a successful images push on main, pin wanted SHA on the host.
-# The ops `deployer` container reconciles wanted → pull/up when the proxy
-# has been empty (no Actions wait — no 6h job timeout on play sessions).
+# Pin wanted SHA on the host. The ops `deployer` reconciles:
+#   - hot-reload.yml-only diffs → sync overlay upper + RCON (live)
+#   - anything else → empty gate + compose pull/up + health
+#
+# Triggers:
+#   - every push to main (config-only pushes skip images but still set wanted)
+#   - successful images workflow_run (image tags ready for compose)
+#   - workflow_dispatch
 #
 # HARD RULE: never attach pull_request / fork workflows to runs-on: [self-hosted]
-# (docker.sock = root on the host). Only trusted main (via images→deploy) and
-# workflow_dispatch.
+# (docker.sock = root on the host). Only trusted main and workflow_dispatch.
 name: deploy
 
 on:
+  push:
+    branches: [main]
   workflow_run:
     workflows: [images]
     types: [completed]
@@ -29,6 +35,7 @@ jobs:
   set-wanted:
     if: >
       github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'push' ||
       (github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.event == 'push' &&
        github.event.workflow_run.head_branch == 'main')

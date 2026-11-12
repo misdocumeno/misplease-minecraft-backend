@@ -86,10 +86,14 @@ jobs:
               - 'plugins/backend-*/**'
             plugins_velocity:
               - 'plugins/velocity-*/**'
+            # Config-only hot-reload paths (see tools/deploy/hot-reload.yml) must NOT
+            # rebuild images — the deployer syncs + RCON instead.
             main:
               - 'infra/minecraft/main/**'
+              - '!infra/minecraft/main/config/plugins/BetterWarps/**'
             tech:
               - 'infra/minecraft/tech/**'
+              - '!infra/minecraft/tech/config/plugins/BetterWarps/**'
             velocity:
               - 'infra/velocity/**'
 

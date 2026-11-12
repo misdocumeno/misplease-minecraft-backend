@@ -210,7 +210,7 @@ plugins:
   - name: BetterWarps
     source: github
     repo: misdocumeno/BetterWarps
-    version: v0.1.2
+    version: v0.1.3
   - name: BiomePrinter
     source: github
     repo: misdocumeno/BiomePrinter

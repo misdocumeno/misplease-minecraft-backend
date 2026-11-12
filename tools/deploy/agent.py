@@ -3,28 +3,25 @@
 
 State file (host): $MISPLEASE_ROOT/.deploy-state.json
   wanted   — pin to apply (Actions writes via: agent.py set-wanted)
-  applied  — last SHA we put on the wire (success or failed attempt)
-  lastGood — last healthy snapshot (sha + image digests)
+  applied  — last SHA successfully applied (compose or hot-reload)
+  lastGood — last healthy *image* snapshot (sha + digests); compose path only
 
-Redis is NOT used for wanted. Only for:
-  - presence empty-gate (misplease:presence:proxy)
-  - maintenance flag (Velocity plugin)
+If every path in applied→wanted matches tools/deploy/hot-reload.yml:
+  git pin → sync config into overlay upper (data/state) → RCON reload (live).
+Else:
+  wait empty → maintenance → git pin → compose pull/up → health.
 
-Loop:
-  Redis maintenance set and not mid-apply → no-op
-  wanted == applied → no-op
-  else empty ≥ EMPTY_SECONDS → maintenance → git pin → pull/up → health
-  success → lastGood/applied = sha, clear maintenance
-  fail → applied = sha; if wanted still that sha → wanted = lastGood;
-         next loop applies lastGood (maintenance cleared so reconcile can run)
+Redis is NOT used for wanted. Only presence empty-gate + maintenance (compose).
 """
 
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -36,12 +33,23 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(os.environ.get("MISPLEASE_ROOT", "/home/mis/misplease"))
+# Container runs `python /app/agent.py`; keep sibling imports working.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from rcon import RconError, rcon_command  # noqa: E402
 COMPOSE_FILE = os.environ.get("COMPOSE_FILE", "docker-compose.prod.yml")
 STATE_FILE = Path(os.environ.get("DEPLOY_STATE_FILE", str(ROOT / ".deploy-state.json")))
 LEGACY_LAST_GOOD = ROOT / ".deploy-last-good.json"
+HOT_RELOAD_FILE = Path(
+    os.environ.get(
+        "HOT_RELOAD_FILE",
+        str(Path(__file__).resolve().parent / "hot-reload.yml"),
+    )
+)
 POLL_SECONDS = int(os.environ.get("POLL_SECONDS", "15"))
 EMPTY_SECONDS = int(os.environ.get("EMPTY_SECONDS", "60"))
 HEALTH_TIMEOUT_S = int(os.environ.get("HEALTH_TIMEOUT_S", "180"))
+RCON_PASSWORD = os.environ.get("RCON_PASSWORD", "")
+RCON_PORT = int(os.environ.get("RCON_PORT", "25575"))
 MAINTENANCE_KEY = os.environ.get("MAINTENANCE_KEY", "misplease:maintenance")
 MAINTENANCE_VALUE = os.environ.get(
     "MAINTENANCE_VALUE",
@@ -57,6 +65,13 @@ HEALTH_SCRIPT = Path(
     )
 )
 ALERT_WEBHOOK = os.environ.get("DEPLOY_ALERT_WEBHOOK", "")
+
+# Compose service name → Docker DNS name on the project network.
+SERVER_HOST = {
+    "main": "main",
+    "tech": "tech",
+    "velocity": "velocity",
+}
 
 _applying = False
 
@@ -122,7 +137,6 @@ def maintenance_on() -> bool:
 
 
 def empty_age_seconds() -> int | None:
-    """Seconds proxy has been empty, or None if busy / redis/presence unavailable."""
     r = redis_cli("GET", "misplease:presence:proxy")
     if r.returncode != 0 or not r.stdout.strip():
         return None
@@ -200,7 +214,6 @@ def load_state() -> dict[str, Any]:
 
 
 def chown_like_root(path: Path) -> None:
-    """Match ownership of MISPLEASE_ROOT (deployer is root; host user is usually mis)."""
     try:
         st = ROOT.stat()
         os.chown(path, st.st_uid, st.st_gid)
@@ -257,7 +270,6 @@ def run(
 
 
 def fix_git_ownership() -> None:
-    """Deployer runs as root; leave .git owned like the stack dir so host `git pull` works."""
     git_dir = ROOT / ".git"
     if not git_dir.is_dir():
         return
@@ -269,6 +281,19 @@ def fix_git_ownership() -> None:
         )
     except OSError as e:
         log(f"chown .git skipped: {e}")
+
+
+def git_fetch(sha: str) -> None:
+    if not (ROOT / ".git").is_dir():
+        raise RuntimeError("no .git in ROOT")
+    run(
+        ["git", "config", "--global", "--add", "safe.directory", str(ROOT)],
+        check=False,
+    )
+    try:
+        run(["git", "fetch", "--depth=1", "origin", sha])
+    finally:
+        fix_git_ownership()
 
 
 def git_pin(sha: str) -> None:
@@ -284,6 +309,232 @@ def git_pin(sha: str) -> None:
         run(["git", "reset", "--hard", "FETCH_HEAD"])
     finally:
         fix_git_ownership()
+
+
+def git_diff_names(old_sha: str, new_sha: str) -> list[str]:
+    """List paths changed from old_sha to new_sha (both must be fetchable)."""
+    git_fetch(old_sha)
+    git_fetch(new_sha)
+    r = subprocess.run(
+        ["git", "diff", "--name-only", old_sha, new_sha],
+        cwd=str(ROOT),
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return [ln.strip() for ln in r.stdout.splitlines() if ln.strip()]
+
+
+def load_hot_reload_rules() -> list[dict[str, Any]]:
+    if not HOT_RELOAD_FILE.is_file():
+        return []
+    # Tiny YAML subset: use PyYAML if present, else a minimal loader for our file shape.
+    text = HOT_RELOAD_FILE.read_text(encoding="utf-8")
+    try:
+        import yaml  # type: ignore
+
+        doc = yaml.safe_load(text) or {}
+        return list(doc.get("rules") or [])
+    except ImportError:
+        pass
+    return _parse_hot_reload_minimal(text)
+
+
+def _parse_hot_reload_minimal(text: str) -> list[dict[str, Any]]:
+    """Parse the checked-in hot-reload.yml without PyYAML."""
+    rules: list[dict[str, Any]] = []
+    rule: dict[str, Any] | None = None
+    section: str | None = None
+    target: dict[str, Any] | None = None
+    sync: dict[str, str] | None = None
+
+    def flush_target() -> None:
+        nonlocal target, sync
+        if rule is not None and target is not None:
+            if sync:
+                target["sync"] = sync
+            rule.setdefault("targets", []).append(target)
+        target = None
+        sync = None
+
+    def flush_rule() -> None:
+        nonlocal rule
+        flush_target()
+        if rule is not None:
+            rules.append(rule)
+        rule = None
+
+    for raw in text.splitlines():
+        line = raw.split("#", 1)[0].rstrip()
+        if not line.strip():
+            continue
+        if re.match(r"^rules:\s*$", line):
+            continue
+        m = re.match(r"^  - id:\s*(\S+)\s*$", line)
+        if m:
+            flush_rule()
+            rule = {"id": m.group(1), "paths": [], "targets": []}
+            section = None
+            continue
+        if rule is None:
+            continue
+        if re.match(r"^    paths:\s*$", line):
+            section = "paths"
+            continue
+        if re.match(r"^    targets:\s*$", line):
+            section = "targets"
+            continue
+        if section == "paths":
+            m = re.match(r'^      -\s+(\S+)\s*$', line)
+            if m:
+                rule["paths"].append(m.group(1))
+            continue
+        if section == "targets":
+            m = re.match(r"^      - server:\s*(\S+)\s*$", line)
+            if m:
+                flush_target()
+                target = {"server": m.group(1)}
+                sync = None
+                continue
+            if target is None:
+                continue
+            if re.match(r"^        sync:\s*$", line):
+                sync = {}
+                continue
+            m = re.match(r"^          from:\s+(\S+)\s*$", line)
+            if m and sync is not None:
+                sync["from"] = m.group(1)
+                continue
+            m = re.match(r"^          to:\s+(\S+)\s*$", line)
+            if m and sync is not None:
+                sync["to"] = m.group(1)
+                continue
+            m = re.match(r"^        rcon:\s+(\S+)\s*$", line)
+            if m:
+                target["rcon"] = m.group(1)
+                continue
+    flush_rule()
+    return rules
+
+
+def path_matches(globs: list[str], path: str) -> bool:
+    path = path.replace("\\", "/")
+    for g in globs:
+        g = g.replace("\\", "/")
+        if fnmatch.fnmatch(path, g):
+            return True
+        # 'dir/**' should also match files under dir
+        if g.endswith("/**") and (path == g[:-3] or path.startswith(g[:-2])):
+            return True
+    return False
+
+
+def classify_hot_reload(applied: str | None, wanted: str) -> list[dict[str, Any]] | None:
+    """Return matched rules if hot-reload-only; None if full compose deploy required."""
+    if not applied:
+        return None
+    try:
+        changed = git_diff_names(applied, wanted)
+    except subprocess.CalledProcessError as e:
+        log(f"diff failed ({e}) — full deploy")
+        return None
+    if not changed:
+        # Same tree; treat as hot no-op success path (caller marks applied).
+        return []
+    rules = load_hot_reload_rules()
+    if not rules:
+        return None
+    matched: list[dict[str, Any]] = []
+    for path in changed:
+        hit = [r for r in rules if path_matches(list(r.get("paths") or []), path)]
+        if not hit:
+            log(f"path not hot-reloadable: {path}")
+            return None
+        for r in hit:
+            if r not in matched:
+                matched.append(r)
+    return matched
+
+
+def sync_tree(src_rel: str, dest_rel: str) -> None:
+    src = ROOT / src_rel
+    dest = ROOT / dest_rel
+    if not src.is_dir():
+        raise FileNotFoundError(f"hot-reload sync missing source: {src}")
+    dest.mkdir(parents=True, exist_ok=True)
+    # Replace dest contents with src (tracked config only).
+    for child in dest.iterdir():
+        if child.is_dir():
+            shutil.rmtree(child)
+        else:
+            child.unlink()
+    for child in src.iterdir():
+        target = dest / child.name
+        if child.is_dir():
+            shutil.copytree(child, target)
+        else:
+            shutil.copy2(child, target)
+    log(f"synced {src_rel} → {dest_rel}")
+
+
+def apply_hot_reload(sha: str, rules: list[dict[str, Any]]) -> bool:
+    global _applying
+    _applying = True
+    st = load_state()
+    st["applying"] = True
+    save_state(st)
+    try:
+        if not rules:
+            git_pin(sha)
+            st = load_state()
+            st["applied"] = sha
+            st["applying"] = False
+            save_state(st)
+            log(f"hot-reload no-op (empty diff) {sha}")
+            return True
+
+        if not RCON_PASSWORD:
+            alert("hot-reload needs RCON_PASSWORD in deployer env — abort")
+            return False
+
+        log(f"hot-reload applying {sha} rules={[r.get('id') for r in rules]}")
+        git_pin(sha)
+
+        for rule in rules:
+            for target in rule.get("targets") or []:
+                sync = target.get("sync") or {}
+                src = sync.get("from")
+                dest = sync.get("to")
+                if src and dest:
+                    sync_tree(str(src), str(dest))
+                cmd = target.get("rcon")
+                server = target.get("server")
+                if not cmd or not server:
+                    continue
+                host = SERVER_HOST.get(str(server), str(server))
+                log(f"rcon {server} ({host}:{RCON_PORT}): {cmd}")
+                try:
+                    resp = rcon_command(host, RCON_PASSWORD, str(cmd), port=RCON_PORT)
+                    if resp.strip():
+                        log(f"rcon response: {resp.strip()[:500]}")
+                except (RconError, OSError, TimeoutError) as e:
+                    alert(f"hot-reload RCON failed on {server}: {e}")
+                    return False
+
+        st = load_state()
+        st["applied"] = sha
+        st["applying"] = False
+        save_state(st)
+        log(f"hot-reload OK {sha}")
+        return True
+    except Exception:
+        raise
+    finally:
+        _applying = False
+        st = load_state()
+        if st.get("applying"):
+            st["applying"] = False
+            save_state(st)
 
 
 def image_digest(service: str) -> str | None:
@@ -385,14 +636,14 @@ def write_last_good(st: dict[str, Any], sha: str) -> dict[str, Any]:
     return st
 
 
-def apply_sha(sha: str) -> bool:
+def apply_compose(sha: str) -> bool:
     global _applying
     _applying = True
     st = load_state()
     st["applying"] = True
     save_state(st)
     try:
-        log(f"enabling maintenance — applying {sha}")
+        log(f"enabling maintenance — compose applying {sha}")
         maintenance_set()
         time.sleep(2)
         if empty_age_seconds() is None:
@@ -411,10 +662,10 @@ def apply_sha(sha: str) -> bool:
             st["applying"] = False
             save_state(st)
             maintenance_clear()
-            log(f"apply OK {sha}")
+            log(f"compose apply OK {sha}")
             return True
 
-        log(f"apply FAILED health for {sha}")
+        log(f"compose apply FAILED health for {sha}")
         st["applied"] = sha
         if st.get("wanted") == sha:
             lg = last_good_sha(st)
@@ -438,7 +689,6 @@ def apply_sha(sha: str) -> bool:
         alert(f"Deploy {sha} failed health — newer wanted={st.get('wanted')}")
         return False
     except Exception:
-        # git/compose blew up — do not leave the proxy in maintenance forever.
         maintenance_clear()
         raise
     finally:
@@ -472,24 +722,33 @@ def tick() -> None:
     if wanted == applied:
         return
 
+    wanted_s = str(wanted)
+    applied_s = str(applied) if applied else None
+
+    matched = classify_hot_reload(applied_s, wanted_s)
+    if matched is not None:
+        log(f"classify hot-reload wanted={wanted_s} rules={[r.get('id') for r in matched]}")
+        apply_hot_reload(wanted_s, matched)
+        return
+
     age = empty_age_seconds()
     if age is None:
         return
     if age < EMPTY_SECONDS:
         log(
-            f"pending deploy wanted={wanted} applied={applied} "
+            f"pending compose wanted={wanted_s} applied={applied_s} "
             f"— empty {age}s / {EMPTY_SECONDS}s"
         )
         return
 
-    log(f"proxy empty {age}s — applying wanted={wanted}")
-    apply_sha(str(wanted))
+    log(f"proxy empty {age}s — compose applying wanted={wanted_s}")
+    apply_compose(wanted_s)
 
 
 def loop() -> None:
     log(
         f"deploy agent start root={ROOT} state={STATE_FILE} "
-        f"poll={POLL_SECONDS}s empty>={EMPTY_SECONDS}s"
+        f"poll={POLL_SECONDS}s empty>={EMPTY_SECONDS}s hot-reload={HOT_RELOAD_FILE}"
     )
     if not ROOT.is_dir():
         raise SystemExit(f"MISPLEASE_ROOT missing: {ROOT}")
@@ -506,7 +765,6 @@ def loop() -> None:
 
 
 def cmd_set_wanted(sha: str) -> None:
-    # Full 40-char object name only — short / padded junk must not enter the pin.
     if not re.fullmatch(r"[0-9a-f]{40}", sha):
         raise SystemExit(f"invalid sha (need full 40 hex chars): {sha}")
     st = load_state()

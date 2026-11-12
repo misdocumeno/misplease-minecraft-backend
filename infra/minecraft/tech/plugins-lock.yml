@@ -148,10 +148,10 @@ plugins:
     sha256: 76d342cdc71416959008bde236248c7935985f81ac9656f2ce268b4d0b553b83
   - name: BetterWarps
     source: github
-    version: v0.1.2
+    version: v0.1.3
     filename: BetterWarps-1.0-SNAPSHOT.jar
-    url: https://api.github.com/repos/misdocumeno/BetterWarps/releases/tags/v0.1.2
-    sha256: 92b7dc64ff9dc07024a15f20e9fa5de4871238635be480a5e307c86393908477
+    url: https://api.github.com/repos/misdocumeno/BetterWarps/releases/tags/v0.1.3
+    sha256: a38bde8b9471174d9d8580cd53e00ee9e7701691b06c51d106e98969283c8fc5
   - name: SkinsRestorer
     source: modrinth
     version: 15.12.6

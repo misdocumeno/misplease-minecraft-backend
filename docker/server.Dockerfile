@@ -112,10 +112,9 @@ RUN set -eux; \
     test -n "$(find /opt/misplease/jars -name "${PLUGIN_PREFIX}*.jar" -print -quit)"
 
 COPY docker/entrypoint.sh /opt/misplease/entrypoint.sh
-COPY docker/config-hotreload.sh /opt/misplease/config-hotreload.sh
 
-RUN sed -i 's/\r$//' /opt/misplease/entrypoint.sh /opt/misplease/config-hotreload.sh \
-    && chmod +x /opt/misplease/entrypoint.sh /opt/misplease/config-hotreload.sh
+RUN sed -i 's/\r$//' /opt/misplease/entrypoint.sh \
+    && chmod +x /opt/misplease/entrypoint.sh
 
 WORKDIR /data
 USER root
