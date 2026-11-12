@@ -26,10 +26,20 @@ object LoginCommandLogFilter : AbstractFilter() {
     private var installed = false
 
     override fun filter(event: LogEvent): Filter.Result {
-        // Prefer format over formattedMessage — avoid param rendering on the async log path.
-        val msg = event.message?.format ?: event.message?.formattedMessage
-            ?: return Filter.Result.NEUTRAL
-        return if (sensitive.containsMatchIn(msg)) Filter.Result.DENY else Filter.Result.NEUTRAL
+        // Paper often uses "{} issued server command: {}" as format — /login only appears
+        // in formattedMessage / parameters. Check all of those.
+        val message = event.message ?: return Filter.Result.NEUTRAL
+        val format = message.format.orEmpty()
+        if (sensitive.containsMatchIn(format)) return Filter.Result.DENY
+        val formatted = runCatching { message.formattedMessage }.getOrNull().orEmpty()
+        if (sensitive.containsMatchIn(formatted)) return Filter.Result.DENY
+        val params = message.parameters ?: return Filter.Result.NEUTRAL
+        for (param in params) {
+            if (param != null && sensitive.containsMatchIn(param.toString())) {
+                return Filter.Result.DENY
+            }
+        }
+        return Filter.Result.NEUTRAL
     }
 
     fun install() {

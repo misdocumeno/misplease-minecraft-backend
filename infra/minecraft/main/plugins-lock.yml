@@ -1143,10 +1143,10 @@ plugins:
     sha256: 76ce40194de1c923683fadf9ea5d2d16bf440c609a4b1ade4dba932b47c0bf07
   - name: BetterWarps
     source: github
-    version: v0.1.1
+    version: v0.1.2
     filename: BetterWarps-1.0-SNAPSHOT.jar
-    url: https://api.github.com/repos/misdocumeno/BetterWarps/releases/tags/v0.1.1
-    sha256: 901f7ad054c9d097acefb7434b8dc39d3540113b386408994c1234792cf05bc0
+    url: https://api.github.com/repos/misdocumeno/BetterWarps/releases/tags/v0.1.2
+    sha256: 92b7dc64ff9dc07024a15f20e9fa5de4871238635be480a5e307c86393908477
   - name: BiomePrinter
     source: github
     version: v0.1.1
@@ -1221,10 +1221,10 @@ plugins:
     sha256: 9822ed12f8ebdc049bbe0dd0c7805c5704ab65d4800760f4eaacd676ee328672
   - name: WorldGameMode
     source: github
-    version: v0.1.1
-    filename: WorldGameMode-0.1.0-SNAPSHOT.jar
-    url: https://api.github.com/repos/misdocumeno/WorldGameMode/releases/tags/v0.1.1
-    sha256: 933f925c1b703bdac8f0e6b89b82ce0cc7e8e7a7d2624b20b1851c25b9fbb7d6
+    version: v0.1.2
+    filename: WorldGameMode-0.1.2.jar
+    url: https://api.github.com/repos/misdocumeno/WorldGameMode/releases/tags/v0.1.2
+    sha256: 4a5fec63bbd03c31a7b91f60a701f0ec5c655425af3a337646023215e91cee6e
   - name: WorldGamerules
     source: github
     version: v0.1.0

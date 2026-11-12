@@ -142,6 +142,12 @@ if [ "$KIND" != "proxy" ]; then
   args+=(--nogui)
 fi
 
+# Hot-reload allowlisted plugin configs from /config → overlay upper (BetterWarps first).
+# Plugins must watch their data-folder config themselves (see BetterWarps ConfigFileWatcher).
+if [ "$KIND" != "proxy" ] && [ -x /opt/misplease/config-hotreload.sh ]; then
+  /opt/misplease/config-hotreload.sh &
+fi
+
 cd "$MERGED"
 echo "starting $server_jar"
 if id -u 1000 >/dev/null 2>&1; then

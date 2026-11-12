@@ -210,7 +210,7 @@ plugins:
   - name: BetterWarps
     source: github
     repo: misdocumeno/BetterWarps
-    version: v0.1.1
+    version: v0.1.2
   - name: BiomePrinter
     source: github
     repo: misdocumeno/BiomePrinter
@@ -251,6 +251,7 @@ plugins:
   - name: WorldGameMode
     source: github
     repo: misdocumeno/WorldGameMode
+    version: v0.1.2
   - name: WorldGamerules
     source: github
     repo: misdocumeno/WorldGamerules

@@ -1,11 +1,14 @@
 package io.github.misdocumeno.application
 
 import io.github.misdocumeno.domain.AuthState
+import org.bukkit.entity.Player
+import org.bukkit.plugin.java.JavaPlugin
 
 class PlayerSession(
     private val blocker: PlayerBlocker,
     private val feedback: AuthFeedback,
     private val timeout: AuthTimeout,
+    private val plugin: JavaPlugin,
 ) {
 
     private var state = PlayerSessionState(AuthState.CHECKING, null)
@@ -31,11 +34,21 @@ class PlayerSession(
             }
         } else {
             blocker.unblock(player)
+            // PlayerCommandSendEvent stripped to /login while unauth; refresh Brigadier tree.
+            if (old.authState != AuthState.AUTHENTICATED) {
+                refreshClientCommands(player)
+            }
             // only show feedback after an actual login
             if (old.authState == AuthState.UNAUTHENTICATED) {
                 feedback.onAuthenticated(player)
                 timeout.cancelTimeout(player)
             }
         }
+    }
+
+    private fun refreshClientCommands(player: Player) {
+        plugin.server.scheduler.runTask(plugin, Runnable {
+            if (player.isOnline) player.updateCommands()
+        })
     }
 }

@@ -53,7 +53,7 @@ class BackendAuthAdapterPlugin : JavaPlugin() {
         val feedback = BukkitAuthFeedback(config)
         val timeout = BukkitAuthTimeout(scope, this, config)
 
-        val sessionManager = SessionManager { PlayerSession(blocker, feedback, timeout) }
+        val sessionManager = SessionManager { PlayerSession(blocker, feedback, timeout, this) }
 
         server.pluginManager.registerEvents(
             AuthEventListener(sessionManager, checkSession, scope),
