@@ -1,9 +1,9 @@
 # Preprod + prod: pull images from GHCR only (never build on the host).
 #   docker compose -f docker-compose.prod.yml pull
 #   docker compose -f docker-compose.prod.yml up -d
-# Ops sidecars (runner + restic), same file, optional profile:
+# Ops sidecars (runner + deployer + restic), same file, optional profile:
 #   docker compose -f docker-compose.prod.yml --profile ops up -d
-# CD only touches game services (see tools/deploy); runner/backup stay up.
+# CD only touches game services (see tools/deploy); runner/deployer/backup stay up.
 #
 # IMAGE_TAG defaults to `dev` (what images.yml pushes on main). Pin to a sha for rollbacks.
 
@@ -211,6 +211,39 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+
+  # Reconciles .deploy-state.json wanted → compose. Actions only runs set-wanted.
+  # No depends_on redis: pin is a file; redis is only for presence/maintenance.
+  # Recreating redis must not restart this container mid-apply.
+  deployer:
+    profiles: ["ops"]
+    image: python:3.13-alpine
+    container_name: misplease-deployer
+    restart: unless-stopped
+    entrypoint:
+      - /bin/sh
+      - -c
+      - >-
+          apk add --no-cache bash docker-cli docker-cli-compose git openssh-client redis
+          >/dev/null
+          && exec python -u /app/agent.py run
+    environment:
+      MISPLEASE_ROOT: ${MISPLEASE_HOST_ROOT:-/home/mis/misplease}
+      COMPOSE_FILE: docker-compose.prod.yml
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_URL: redis://default:${REDIS_PASSWORD}@redis:6379/0
+      POLL_SECONDS: ${DEPLOY_POLL_SECONDS:-15}
+      EMPTY_SECONDS: ${DEPLOY_EMPTY_SECONDS:-60}
+      HEALTH_TIMEOUT_S: ${DEPLOY_HEALTH_TIMEOUT_S:-180}
+      DEPLOY_ALERT_WEBHOOK: ${DEPLOY_ALERT_WEBHOOK:-}
+      GIT_SSH_COMMAND: ssh -i /root/.ssh/misplease_deploy -o IdentitiesOnly=yes -o UserKnownHostsFile=/root/.ssh/known_hosts -o StrictHostKeyChecking=yes
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${MISPLEASE_HOST_ROOT:-/home/mis/misplease}:${MISPLEASE_HOST_ROOT:-/home/mis/misplease}
+      - ./tools/deploy:/app:ro
+      - ${MISPLEASE_SSH_DIR:-/home/mis/.ssh}/misplease_deploy:/root/.ssh/misplease_deploy:ro
+      - ${MISPLEASE_SSH_DIR:-/home/mis/.ssh}/known_hosts:/root/.ssh/known_hosts:ro
+      - ${MISPLEASE_DOCKER_CONFIG:-/home/mis/.docker/config.json}:/root/.docker/config.json:ro
 
   backup:
     profiles: ["ops"]

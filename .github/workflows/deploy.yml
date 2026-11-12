@@ -1,13 +1,10 @@
-# After a successful images push on main, deploy on the self-hosted runner
-# (GitHub label `self-hosted` — see docs for self-hosted runners).
-# If anyone is online, the job stays pending until the proxy has been empty for
-# EMPTY_SECONDS (default 60). Newer deploys queue (do not cancel mid-compose —
-# cancel-in-progress left half-created containers on preprod).
+# After a successful images push on main, pin wanted SHA on the host.
+# The ops `deployer` container reconciles wanted → pull/up when the proxy
+# has been empty (no Actions wait — no 6h job timeout on play sessions).
 #
 # HARD RULE: never attach pull_request / fork workflows to runs-on: [self-hosted]
 # (docker.sock = root on the host). Only trusted main (via images→deploy) and
-# workflow_dispatch. After empty grace, deploy enables Redis maintenance so
-# Velocity denies joins for the bounce window.
+# workflow_dispatch.
 name: deploy
 
 on:
@@ -16,60 +13,39 @@ on:
     types: [completed]
   workflow_dispatch:
     inputs:
-      empty_seconds:
-        description: Seconds the proxy must stay empty before compose up
+      sha:
+        description: Git SHA to set as deploy wanted (default = this commit)
         required: false
-        default: "60"
+        default: ""
 
 concurrency:
-  group: misplease-prod-deploy
-  cancel-in-progress: false
+  group: misplease-deploy-wanted
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  deploy:
+  set-wanted:
     if: >
       github.event_name == 'workflow_dispatch' ||
       (github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.event == 'push' &&
        github.event.workflow_run.head_branch == 'main')
-    # Docs: begin with self-hosted, then OS/arch defaults GitHub assigns on register.
     runs-on: [self-hosted, linux, x64]
     steps:
-      - name: Checkout deploy script
+      - name: Checkout set-wanted helper
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
-      - name: Wait empty + compose pull/up + health/rollback
+      - name: Write .deploy-state.json wanted
         env:
           MISPLEASE_ROOT: ${{ vars.MISPLEASE_ROOT }}
-          COMPOSE_FILE: docker-compose.prod.yml
-          EMPTY_SECONDS: ${{ github.event.inputs.empty_seconds || '60' }}
-          POLL_SECONDS: "5"
-          MAX_WAIT_SECONDS: "0"
-          HEALTH_TIMEOUT_S: "180"
-          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
-          # Prefer Redis SoT (compose runner injects REDIS_URL / REDIS_PASSWORD into the job env).
-          REDIS_URL: ${{ vars.REDIS_URL }}
-          # Optional Discord (or compatible) webhook — set as repo/org Actions secret when ready.
           DEPLOY_ALERT_WEBHOOK: ${{ secrets.DEPLOY_ALERT_WEBHOOK }}
+          WANTED_SHA: ${{ github.event.inputs.sha || github.event.workflow_run.head_sha || github.sha }}
         run: |
           set -euo pipefail
-          # Must be the host absolute path (compose bind mounts are daemon-side).
           export MISPLEASE_ROOT="${MISPLEASE_ROOT:-/home/mis/misplease}"
-          if [[ -z "${REDIS_URL:-}" ]] && [[ -n "${REDIS_PASSWORD:-}" ]]; then
-            export REDIS_URL="redis://default:${REDIS_PASSWORD}@redis:6379/0"
-          fi
-          if ! command -v redis-cli >/dev/null; then
-            sudo apt-get update -qq && sudo apt-get install -y -qq redis-tools
-          fi
-          mkdir -p /tmp/misplease-deploy
-          cp "${GITHUB_WORKSPACE}/tools/deploy/wait-empty-and-deploy.sh" /tmp/misplease-deploy/
-          cp "${GITHUB_WORKSPACE}/tools/deploy/post-deploy-health.sh" /tmp/misplease-deploy/
-          chmod +x /tmp/misplease-deploy/*.sh
-          # Health script path next to the deploy script (not the host checkout).
-          export HEALTH_SCRIPT=/tmp/misplease-deploy/post-deploy-health.sh
-          /tmp/misplease-deploy/wait-empty-and-deploy.sh
+          python3 "${GITHUB_WORKSPACE}/tools/deploy/agent.py" set-wanted "${WANTED_SHA}"
+          python3 "${GITHUB_WORKSPACE}/tools/deploy/agent.py" status

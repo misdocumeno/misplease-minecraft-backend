@@ -6,7 +6,11 @@
 .env.*
 !.env.example
 
-# CD last-good snapshot (host only; written by deploy script)
+# CD state on host (wanted / applied / lastGood — written by deployer agent)
+.deploy-state.json
+.deploy-state.json.tmp
+.deploy-state.*.tmp
+# Legacy name (agent migrates once into .deploy-state.json)
 .deploy-last-good.json
 .deploy-last-good.json.tmp
 
@@ -18,6 +22,8 @@ id_rsa
 id_rsa.pub
 
 # Build output
+**/__pycache__/
+**/*.py[cod]
 **/build/
 **/.gradle/
 **/bin/
