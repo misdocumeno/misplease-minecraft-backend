@@ -124,8 +124,14 @@ compose_pull_up() {
   export IMAGE_TAG="$tag"
   echo "IMAGE_TAG=$IMAGE_TAG"
   echo "docker compose -f $COMPOSE_FILE pull $SERVICES"
-  docker compose -f "$COMPOSE_FILE" pull $SERVICES || docker compose -f "$COMPOSE_FILE" pull
-  echo "docker compose -f $COMPOSE_FILE up -d --remove-orphans $SERVICES"
+  # paths-filter may skip cells for this sha — then :$sha is missing for auth/etc.
+  # Prefer immutable sha; fall back to :dev (still current for rebuilt cells).
+  if ! docker compose -f "$COMPOSE_FILE" pull $SERVICES; then
+    echo "pull :$tag failed (incomplete matrix tags?) — falling back to IMAGE_TAG=dev" >&2
+    export IMAGE_TAG=dev
+    docker compose -f "$COMPOSE_FILE" pull $SERVICES
+  fi
+  echo "docker compose -f $COMPOSE_FILE up -d --remove-orphans $SERVICES (IMAGE_TAG=$IMAGE_TAG)"
   docker compose -f "$COMPOSE_FILE" up -d --remove-orphans $SERVICES
 }
 
