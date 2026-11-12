@@ -64,8 +64,11 @@ run_args=(
   -e "DB_PASSWORD=smoke"
   -e "DATABASE_URL=postgres://misplease:smoke@db:5432/misplease"
   -e "JVM_OPTS=$JVM_OPTS"
-  # CoreProtect CE 24.1 self-disables on Paper 26.3 (upstream max 26.2). Drop when a 26.3 build exists.
-  -e "SMOKE_ALLOW_DISABLED=${SMOKE_ALLOW_DISABLED:-CoreProtect}"
+  # Plugins that self-disable on Paper 26.3 without a Paper "Error occurred while enabling" line:
+  # - CoreProtect CE 24.1: upstream max 26.2
+  # - TabList 5.7.7: abandoned; hard version gate (see montlikadani/TabList#546)
+  # Remove each name when a compatible jar is locked.
+  -e "SMOKE_ALLOW_DISABLED=${SMOKE_ALLOW_DISABLED:-CoreProtect,TabList}"
   -v "$CONFIG_DIR:/config:ro"
   -v "$DATA:/data"
 )
