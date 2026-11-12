@@ -199,6 +199,15 @@ def load_state() -> dict[str, Any]:
     return default_state()
 
 
+def chown_like_root(path: Path) -> None:
+    """Match ownership of MISPLEASE_ROOT (deployer is root; host user is usually mis)."""
+    try:
+        st = ROOT.stat()
+        os.chown(path, st.st_uid, st.st_gid)
+    except OSError:
+        pass
+
+
 def save_state(st: dict[str, Any]) -> None:
     st = dict(st)
     st["updatedAt"] = _now()
@@ -211,6 +220,7 @@ def save_state(st: dict[str, Any]) -> None:
             json.dump(st, f, indent=2)
             f.write("\n")
         os.replace(tmp_name, STATE_FILE)
+        chown_like_root(STATE_FILE)
     except Exception:
         try:
             os.unlink(tmp_name)
@@ -246,6 +256,21 @@ def run(
     )
 
 
+def fix_git_ownership() -> None:
+    """Deployer runs as root; leave .git owned like the stack dir so host `git pull` works."""
+    git_dir = ROOT / ".git"
+    if not git_dir.is_dir():
+        return
+    try:
+        st = ROOT.stat()
+        run(
+            ["chown", "-R", f"{st.st_uid}:{st.st_gid}", str(git_dir)],
+            check=False,
+        )
+    except OSError as e:
+        log(f"chown .git skipped: {e}")
+
+
 def git_pin(sha: str) -> None:
     if not (ROOT / ".git").is_dir():
         log("no .git in ROOT — skip git pin")
@@ -254,8 +279,11 @@ def git_pin(sha: str) -> None:
         ["git", "config", "--global", "--add", "safe.directory", str(ROOT)],
         check=False,
     )
-    run(["git", "fetch", "--depth=1", "origin", sha])
-    run(["git", "reset", "--hard", "FETCH_HEAD"])
+    try:
+        run(["git", "fetch", "--depth=1", "origin", sha])
+        run(["git", "reset", "--hard", "FETCH_HEAD"])
+    finally:
+        fix_git_ownership()
 
 
 def image_digest(service: str) -> str | None:
