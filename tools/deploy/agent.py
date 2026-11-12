@@ -429,12 +429,15 @@ def path_matches(globs: list[str], path: str) -> bool:
     return False
 
 
-# Repo paths that only affect the host agent / CD pin — git reset, no compose.
+# Repo paths that only affect the host agent / CD pin — git reset, no game compose.
+# The deployer container itself is force-recreated so the new Python process loads.
 _AGENT_ONLY_GLOBS = [
     "tools/deploy/**",
     ".github/workflows/deploy.yml",
     ".env.example",
 ]
+
+_OPS_SERVICES = ["deployer"]
 
 
 def classify_hot_reload(applied: str | None, wanted: str) -> list[dict[str, Any]] | None:
@@ -452,7 +455,10 @@ def classify_hot_reload(applied: str | None, wanted: str) -> list[dict[str, Any]
     if not changed:
         return []
     if all(path_matches(_AGENT_ONLY_GLOBS, p) for p in changed):
-        log(f"agent-only diff ({len(changed)} paths) — git pin, no compose")
+        log(
+            f"agent-only diff ({len(changed)} paths) — "
+            "git pin + recreate deployer (no game bounce)"
+        )
         return []
     rules = load_hot_reload_rules()
     if not rules:
@@ -467,6 +473,26 @@ def classify_hot_reload(applied: str | None, wanted: str) -> list[dict[str, Any]
             if r not in matched:
                 matched.append(r)
     return matched
+
+
+def recreate_ops_deployer() -> None:
+    """Reload agent code / compose env for the ops deployer sidecar."""
+    run(
+        [
+            "docker",
+            "compose",
+            "-f",
+            COMPOSE_FILE,
+            "--profile",
+            "ops",
+            "up",
+            "-d",
+            "--force-recreate",
+            "--no-deps",
+            *_OPS_SERVICES,
+        ],
+        check=False,
+    )
 
 
 def sync_tree(src_rel: str, dest_rel: str) -> None:
@@ -498,12 +524,15 @@ def apply_hot_reload(sha: str, rules: list[dict[str, Any]]) -> bool:
     save_state(st)
     try:
         if not rules:
+            # Empty diff or agent-only: pin checkout; recreate deployer so a new
+            # Python process loads agent.py / rcon.py / compose env changes.
             git_pin(sha)
             st = load_state()
             st["applied"] = sha
             st["applying"] = False
             save_state(st)
-            log(f"hot-reload no-op (empty diff) {sha}")
+            log(f"agent-only/git-pin OK {sha} — recreating deployer")
+            recreate_ops_deployer()
             return True
 
         if not RCON_PASSWORD:

@@ -1,24 +1,39 @@
 # Declarative config hot-reload for the ops deployer agent.
 # If every path in applied→wanted matches a rule below, the agent syncs
-# files into the overlay upper (data/state) and runs RCON — no compose up.
+# files into the overlay upper (data/state) and runs RCON — no game compose up.
 # Anything else → full image deploy (empty gate + compose).
+#
+# Matching is per-rule: only rules whose `paths` hit the diff run.
+# Keep one rule per server (or per plugin+server) so main-only edits
+# do not RCON tech, and vice versa.
+#
+# sync.from = git-tracked config on the host (also bind-mounted as /config:ro).
+# sync.to   = overlay upper on the host (…/data/state/…); writing here is what
+#             the running JVM sees without recreating the container.
+#
+# rcon: use the plugin.yml `name` as namespace prefix (PluginName:command)
+# so short commands like `reload` do not hit the wrong plugin.
 #
 # Do NOT list plugins whose tracked config contains secret placeholders
 # (LuckPerms, etc.) — those are injected only at container entrypoint.
 
 rules:
-  - id: betterwarps
+  - id: betterwarps-main
     paths:
       - infra/minecraft/main/config/plugins/BetterWarps/**
-      - infra/minecraft/tech/config/plugins/BetterWarps/**
     targets:
       - server: main
         sync:
           from: infra/minecraft/main/config/plugins/BetterWarps
           to: infra/minecraft/main/data/state/plugins/BetterWarps
-        rcon: warpsreload
+        rcon: "BetterWarps:warpsreload"
+
+  - id: betterwarps-tech
+    paths:
+      - infra/minecraft/tech/config/plugins/BetterWarps/**
+    targets:
       - server: tech
         sync:
           from: infra/minecraft/tech/config/plugins/BetterWarps
           to: infra/minecraft/tech/data/state/plugins/BetterWarps
-        rcon: warpsreload
+        rcon: "BetterWarps:warpsreload"
