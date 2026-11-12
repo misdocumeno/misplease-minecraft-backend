@@ -405,7 +405,6 @@ def apply_sha(sha: str) -> bool:
         ok = run_health()
         st = load_state()
         if ok:
-            # Prefer immutable sha in .env; "dev" fallback still records git sha.
             pin_dotenv_image_tag(used_tag)
             st["applied"] = sha
             st = write_last_good(st, sha)
@@ -424,7 +423,6 @@ def apply_sha(sha: str) -> bool:
                 st["wanted"] = lg
                 st["applying"] = False
                 save_state(st)
-                # Clear so the next tick can arm maintenance again for lastGood.
                 maintenance_clear()
                 alert(f"Deploy {sha} failed health — wanted rewound to {lg}")
                 return False
@@ -434,12 +432,15 @@ def apply_sha(sha: str) -> bool:
             st["applying"] = False
             save_state(st)
             return False
-        # Newer wanted already set — leave it; clear maintenance for next apply.
         st["applying"] = False
         save_state(st)
         maintenance_clear()
         alert(f"Deploy {sha} failed health — newer wanted={st.get('wanted')}")
         return False
+    except Exception:
+        # git/compose blew up — do not leave the proxy in maintenance forever.
+        maintenance_clear()
+        raise
     finally:
         _applying = False
         st = load_state()
@@ -505,8 +506,9 @@ def loop() -> None:
 
 
 def cmd_set_wanted(sha: str) -> None:
-    if not re.fullmatch(r"[0-9a-f]{7,40}", sha):
-        raise SystemExit(f"invalid sha: {sha}")
+    # Full 40-char object name only — short / padded junk must not enter the pin.
+    if not re.fullmatch(r"[0-9a-f]{40}", sha):
+        raise SystemExit(f"invalid sha (need full 40 hex chars): {sha}")
     st = load_state()
     prev = st.get("wanted")
     st["wanted"] = sha
