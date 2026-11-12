@@ -10,6 +10,9 @@ import java.util.jar.JarFile
  * After startup, every plugin jar under plugins/ that declares plugin.yml or
  * paper-plugin.yml must be loaded and enabled. Emits a single grep-friendly line
  * for docker/smoke-check.sh. No-op outside smoke boots.
+ *
+ * SMOKE_ALLOW_DISABLED: comma-separated plugin names that may self-disable
+ * (e.g. CoreProtect until an official Paper 26.3 build exists).
  */
 class BackendSmokeCheckPlugin : JavaPlugin(), Listener {
     override fun onEnable() {
@@ -23,10 +26,18 @@ class BackendSmokeCheckPlugin : JavaPlugin(), Listener {
     @EventHandler
     fun onServerLoad(event: ServerLoadEvent) {
         if (event.type != ServerLoadEvent.LoadType.STARTUP) return
-        runCheck()
+        // After POSTWORLD enables + one tick (catches plugins that disable themselves in onEnable).
+        server.scheduler.runTask(this, Runnable { runCheck() })
     }
 
     private fun runCheck() {
+        val allowDisabled = System.getenv("SMOKE_ALLOW_DISABLED")
+            ?.split(',')
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.toSet()
+            .orEmpty()
+
         val pluginsDir = dataFolder.parentFile
             ?: error("plugins dir missing")
         val jars = pluginsDir.listFiles { f -> f.isFile && f.name.endsWith(".jar", ignoreCase = true) }
@@ -35,6 +46,7 @@ class BackendSmokeCheckPlugin : JavaPlugin(), Listener {
 
         val failures = mutableListOf<String>()
         var expected = 0
+        var allowed = 0
 
         for (jar in jars) {
             val name = readPluginName(jar) ?: continue
@@ -42,12 +54,19 @@ class BackendSmokeCheckPlugin : JavaPlugin(), Listener {
             val plugin = server.pluginManager.getPlugin(name)
             when {
                 plugin == null -> failures += "$name (${jar.name}: not loaded)"
-                !plugin.isEnabled -> failures += "$name (${jar.name}: disabled)"
+                !plugin.isEnabled -> {
+                    if (name in allowDisabled) {
+                        allowed++
+                        logger.warning("[SmokeCheck] allow-disabled: $name (${jar.name})")
+                    } else {
+                        failures += "$name (${jar.name}: disabled)"
+                    }
+                }
             }
         }
 
         if (failures.isEmpty()) {
-            logger.info("[SmokeCheck] OK: $expected plugins")
+            logger.info("[SmokeCheck] OK: $expected plugins" + if (allowed > 0) " (allow-disabled=$allowed)" else "")
         } else {
             logger.severe("[SmokeCheck] FAIL: ${failures.joinToString("; ")}")
         }
