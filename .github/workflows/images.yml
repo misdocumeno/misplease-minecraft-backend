@@ -384,8 +384,11 @@ jobs:
             "${{ matrix.kind }}" \
             "${{ matrix.config }}"
 
+      # success() is explicit: a failed build/smoke must not retag :dev / :$sha.
+      # Matrix fail-fast is false, so a sibling cell (e.g. tech) can still push its own
+      # image if this cell failed — that is intentional parallelism, not a broken gate.
       - name: Push to GHCR
-        if: env.PUSH_IMAGES == 'true'
+        if: success() && env.PUSH_IMAGES == 'true'
         run: |
           set -eux
           image="ghcr.io/${{ github.repository }}/${{ matrix.name }}"
