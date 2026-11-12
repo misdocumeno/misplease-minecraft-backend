@@ -1,0 +1,7 @@
+name: backend-smoke-check
+main: io.github.misdocumeno.BackendSmokeCheckPlugin
+version: 0.1.0-SNAPSHOT
+api-version: '1.20'
+description: CI-only plugin load assertion (SERVER_ID=smoke / SMOKE_PLAIN=1)
+authors: [Mis]
+load: POSTWORLD

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Boot a baked server/proxy image with empty state + git configs; fail on plugin enable errors.
+# Boot a baked server/proxy image with empty state + git configs; fail on plugin load/enable errors.
 set -euo pipefail
 
 IMAGE="${1:?image tag}"
@@ -48,6 +48,10 @@ for _ in $(seq 1 30); do
   sleep 1
 done
 
+# Heap stays small for CI. Non-heap flags match prod main today, plus preferSparkPlugin
+# for the baked-image stack. Sources: docker-compose*.yml, .env.example, live prod cmdline.
+JVM_OPTS="-Xms256M -Xmx${HEAP_MX} -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC -Dorg.maxgamer.quickshop.util.envcheck.skip.SIGNATURE_VERIFY -Dpaper.preferSparkPlugin=true --add-modules=jdk.incubator.vector"
+
 run_args=(
   -d --name "$NAME" --network "$NET"
   --cap-add SYS_ADMIN
@@ -59,21 +63,28 @@ run_args=(
   -e "REDIS_URL=redis://redis:6379/0"
   -e "DB_PASSWORD=smoke"
   -e "DATABASE_URL=postgres://misplease:smoke@db:5432/misplease"
-  # SIGNATURE_VERIFY: own QuickShop build is unsigned; same flag as docker-compose main.
-  -e "JVM_OPTS=-Xms256M -Xmx${HEAP_MX} -XX:+UseG1GC -Dpaper.preferSparkPlugin=true -Dorg.maxgamer.quickshop.util.envcheck.skip.SIGNATURE_VERIFY"
+  -e "JVM_OPTS=$JVM_OPTS"
   -v "$CONFIG_DIR:/config:ro"
   -v "$DATA:/data"
 )
 
 docker run "${run_args[@]}" "$IMAGE" >/dev/null
 
-# Paper prints Done AFTER delayed init (incl. runTaskLater(1)). That is real
-# readiness — do not accept earlier plugin markers (they can race before Done).
+# Paper order (current): ServerLoadEvent(STARTUP) → delayed init → "Done (".
+# backend-smoke-check logs [SmokeCheck] during ServerLoadEvent (before Done).
+# Wait for both so we do not depend on that ordering staying forever.
 deadline=$((SECONDS + TIMEOUT_S))
 last_ping=0
 while (( SECONDS < deadline )); do
   docker logs "$NAME" >"$LOG" 2>&1 || true
-  if grep -q 'Done (' "$LOG"; then
+  done_ok=false
+  smoke_ok=true
+  grep -q 'Done (' "$LOG" && done_ok=true
+  if [ "$KIND" = "server" ]; then
+    smoke_ok=false
+    grep -qE '\[SmokeCheck\] (OK|FAIL)' "$LOG" && smoke_ok=true
+  fi
+  if $done_ok && $smoke_ok; then
     break
   fi
   if ! docker ps -q -f "name=^/${NAME}$" | grep -q .; then
@@ -102,19 +113,36 @@ if ! grep -q 'Done (' "$LOG"; then
   exit 1
 fi
 
-# Hard failures: a plugin did not enable.
-if grep -E 'Error occurred while enabling |Unsupported server version detected:|Could not load [^\n]* plugin' "$LOG" >/tmp/smoke-errors.txt; then
-  echo "smoke failed: plugin enable errors" >&2
+# Done ( does not mean every plugin loaded. The JVM has no plugin-load exit status;
+# Paper keeps running and only logs. Match Paper logger names (stable) plus known phrases.
+FAIL_RE='Error occurred while enabling |Unsupported server version detected:|Could not load |UnknownDependencyException|\[DirectoryProviderSource\]|\[ModernPluginLoadingStrategy\]|Directory .*\.jar. does not contain a (paper-)?plugin\.yml'
+if grep -E "$FAIL_RE" "$LOG" >/tmp/smoke-errors.txt; then
+  echo "smoke failed: plugin load/enable errors" >&2
   cat /tmp/smoke-errors.txt >&2
   echo "---- stack context ----" >&2
-  # Print each enable-error line plus the following stack (until a blank/"Done"/next plugin line).
-  awk '
-    /Error occurred while enabling |Unsupported server version detected:|Could not load .* plugin/ { show=40; print; next }
+  awk -v re="$FAIL_RE" '
+    $0 ~ re { show=40; print; next }
     show > 0 { print; show--; if ($0 ~ /^[[:space:]]*$/) show=0 }
   ' "$LOG" >&2
   echo "---- last 60 log lines ----" >&2
   tail -n 60 "$LOG" >&2
   exit 1
+fi
+
+# Final assertion (Paper only): backend-smoke-check scans jars vs PluginManager.
+# Avoids brittle color parsing of /plugins; emits one grep-friendly line.
+if [ "$KIND" = "server" ]; then
+  if grep -q '\[SmokeCheck\] FAIL' "$LOG"; then
+    echo "smoke failed: SmokeCheck reported plugin load failures" >&2
+    grep '\[SmokeCheck\]' "$LOG" >&2 || true
+    exit 1
+  fi
+  if ! grep -q '\[SmokeCheck\] OK' "$LOG"; then
+    echo "smoke failed: missing [SmokeCheck] OK line (plugin not in image?)" >&2
+    grep '\[SmokeCheck\]' "$LOG" >&2 || true
+    exit 1
+  fi
+  grep '\[SmokeCheck\]' "$LOG" || true
 fi
 
 # Always surface warnings (Paper/Velocity/log4j). Do not fail the job on WARN alone.

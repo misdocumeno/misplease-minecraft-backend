@@ -67,7 +67,10 @@ done
 if [ -n "$(find "$JARS" -mindepth 1 -maxdepth 1 -name '*.jar' -print -quit)" ]; then
   cp -a "$JARS"/*.jar "$LOWER/plugins/"
 fi
+# Drop stale plugin jars from the overlay upper layer so image jars win.
 find "$STATE/plugins" -mindepth 1 -maxdepth 1 \( -type f -o -type l \) -name '*.jar' -delete 2>/dev/null || true
+# Defensive: a real directory literally named *.jar would shadow the image jar.
+find "$STATE/plugins" -mindepth 1 -maxdepth 1 -type d -name '*.jar' -exec rm -rf {} + 2>/dev/null || true
 
 if [ -z "$(find "$LOWER/plugins" -mindepth 1 -maxdepth 1 -name '*.jar' -print -quit)" ]; then
   echo "the image has no plugin jars" >&2

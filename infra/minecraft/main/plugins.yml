@@ -147,11 +147,13 @@ plugins:
     source: jenkins
     server: https://ci.lucko.me
     job: ExtraContexts
+  # Prefer the bukkit plugin jar. spark-*-paper.jar is the module Paper shades in;
+  # it has no plugin.yml, so Paper logs a misleading "Directory '….jar' does not contain…".
   - name: spark
     source: jenkins
     server: https://ci.lucko.me
     job: spark
-    jar: /^spark-.*-paper\.jar$/
+    jar: /^spark-.*-bukkit\.jar$/
   - name: Jobs
     source: spiget
     id: "4216"
@@ -174,6 +176,11 @@ plugins:
   - name: EconomyShopGUI
     source: modrinth
     slug: economyshopgui
+  - name: EpicPluginLib
+    source: github
+    repo: Epicnicity322/EpicPluginLib
+    version: "3.0"
+    jar: /^epicpluginlib-bukkit\.jar$/
   - name: PlayMoreSounds
     source: github
     repo: chrisrnj/PlayMoreSounds

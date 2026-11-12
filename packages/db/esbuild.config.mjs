@@ -7,8 +7,9 @@ await build({
     platform: 'node',
     target: 'node24',
     bundle: true,
-    format: 'cjs',
+    format: 'esm',
     sourcemap: true,
     logLevel: 'info',
+    // Keep deps external; Node resolves them from the workspace install.
     external: [...Object.keys(pkg.dependencies || {})],
 })

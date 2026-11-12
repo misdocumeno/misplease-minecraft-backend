@@ -26,6 +26,7 @@ include(
     "backend-global-teleporter",
     "backend-location-resolver",
     "backend-restarter",
+    "backend-smoke-check",
     "backend-tp-command",
     "velocity-auth-adapter",
     "velocity-chat-control",

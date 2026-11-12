@@ -58,7 +58,8 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - DB_PASSWORD=${DB_PASSWORD}
       - DATABASE_URL=postgres://misplease:${DB_PASSWORD}@db:5432/misplease
-      - JVM_OPTS=${MAIN_JVM_OPTS:--Xms1G -Xmx5G -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC -Dorg.maxgamer.quickshop.util.envcheck.skip.SIGNATURE_VERIFY -Dpaper.preferSparkPlugin=true --add-modules=jdk.incubator.vector}
+      # Default = live prod main cmdline + preferSparkPlugin. Override heaps via MAIN_JVM_OPTS.
+      - JVM_OPTS=${MAIN_JVM_OPTS:--Xms256M -Xmx3G -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC -Dorg.maxgamer.quickshop.util.envcheck.skip.SIGNATURE_VERIFY -Dpaper.preferSparkPlugin=true --add-modules=jdk.incubator.vector}
       - RCON_PASSWORD=${RCON_PASSWORD:-}
     volumes:
       - ./infra/minecraft/main/config:/config:ro
@@ -92,7 +93,8 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - DB_PASSWORD=${DB_PASSWORD}
       - DATABASE_URL=postgres://misplease:${DB_PASSWORD}@db:5432/misplease
-      - JVM_OPTS=${TECH_JVM_OPTS:--Xms512M -Xmx4G -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Dpaper.preferSparkPlugin=true}
+      # Default = live prod tech cmdline + preferSparkPlugin. Override heaps via TECH_JVM_OPTS.
+      - JVM_OPTS=${TECH_JVM_OPTS:--Xms256M -Xmx2G -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Dpaper.preferSparkPlugin=true}
       - RCON_PASSWORD=${RCON_PASSWORD:-}
     volumes:
       - ./infra/minecraft/tech/config:/config:ro
