@@ -34,6 +34,10 @@ plugins:
     source: github
     repo: misdocumeno/OpenInv
     version: v0.1.0
+  - name: BetterWarps
+    source: github
+    repo: misdocumeno/BetterWarps
+    version: v0.1.1
   # Same jar on Velocity + backends; proxy owns /skin + storage (global).
   - name: SkinsRestorer
     source: modrinth

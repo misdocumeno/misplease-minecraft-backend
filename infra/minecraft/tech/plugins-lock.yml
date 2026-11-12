@@ -146,6 +146,12 @@ plugins:
     filename: OpenInv-0.1.0.jar
     url: https://api.github.com/repos/misdocumeno/OpenInv/releases/tags/v0.1.0
     sha256: 76d342cdc71416959008bde236248c7935985f81ac9656f2ce268b4d0b553b83
+  - name: BetterWarps
+    source: github
+    version: v0.1.1
+    filename: BetterWarps-1.0-SNAPSHOT.jar
+    url: https://api.github.com/repos/misdocumeno/BetterWarps/releases/tags/v0.1.1
+    sha256: 901f7ad054c9d097acefb7434b8dc39d3540113b386408994c1234792cf05bc0
   - name: SkinsRestorer
     source: modrinth
     version: 15.12.6
