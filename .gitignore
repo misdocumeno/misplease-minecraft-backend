@@ -6,6 +6,10 @@
 .env.*
 !.env.example
 
+# CD last-good snapshot (host only; written by deploy script)
+.deploy-last-good.json
+.deploy-last-good.json.tmp
+
 # SSH keys
 *.pem
 id_ed25519

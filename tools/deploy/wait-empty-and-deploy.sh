@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Wait until Redis presence reports proxy empty for EMPTY_SECONDS, then
 # enable Velocity maintenance (block new joins), hard-reset checkout to DEPLOY_SHA,
-# docker compose pull + up, then clear maintenance.
+# docker compose pull + up, post-deploy health, save last-good / rollback on failure,
+# then clear maintenance.
 #
 # Empty age uses presence.updatedAt while empty=true — if the proxy has already
 # been empty longer than EMPTY_SECONDS when the job starts, deploy arms immediately
@@ -12,6 +13,11 @@
 #
 # Runner lives in compose (docker.sock) on the same network as redis — Redis is
 # the only gate (no presence.json). Schema: see velocity-presence Presence DTO.
+#
+# Last-good: $ROOT/.deploy-last-good.json (gitignored). On successful health,
+# records git sha + image digests. On health failure, resets to that snapshot
+# (IMAGE_TAG=sha — images.yml also pushes :$sha) and re-ups. Alert via
+# DEPLOY_ALERT_WEBHOOK (Discord-compatible JSON {"content":"..."}) or stdout.
 set -euo pipefail
 
 ROOT="${MISPLEASE_ROOT:-/home/mis/misplease}"
@@ -20,8 +26,14 @@ EMPTY_SECONDS="${EMPTY_SECONDS:-60}"
 POLL_SECONDS="${POLL_SECONDS:-5}"
 MAX_WAIT_SECONDS="${MAX_WAIT_SECONDS:-0}"
 DEPLOY_SHA="${DEPLOY_SHA:-}"
+HEALTH_TIMEOUT_S="${HEALTH_TIMEOUT_S:-180}"
 MAINTENANCE_KEY="${MAINTENANCE_KEY:-misplease:maintenance}"
 MAINTENANCE_VALUE="${MAINTENANCE_VALUE:-{\"enabled\":true,\"message\":\"&cServidor en mantenimiento. Probá de nuevo en unos minutos.\"}}"
+LAST_GOOD_FILE="${LAST_GOOD_FILE:-$ROOT/.deploy-last-good.json}"
+SERVICES="velocity main tech auth db-migrate db redis"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HEALTH_SCRIPT="${HEALTH_SCRIPT:-$SCRIPT_DIR/post-deploy-health.sh}"
 
 if [[ -z "${REDIS_URL:-}" ]]; then
   if [[ -n "${REDIS_PASSWORD:-}" ]]; then
@@ -42,6 +54,90 @@ redis_cli() {
   redis-cli --no-auth-warning "$@"
 }
 
+alert() {
+  local msg="$1"
+  echo "DEPLOY ALERT: $msg" >&2
+  if [[ -n "${DEPLOY_ALERT_WEBHOOK:-}" ]]; then
+    # Discord incoming webhook accepts {"content":"..."}; other hooks can adapt later.
+    curl -fsS -X POST -H 'Content-Type: application/json' \
+      -d "$(printf '%s' "$msg" | python3 -c 'import json,sys; print(json.dumps({"content": sys.stdin.read()[:1800]}))')" \
+      "$DEPLOY_ALERT_WEBHOOK" >/dev/null || echo "alert webhook failed" >&2
+  fi
+}
+
+read_last_good_sha() {
+  if [[ ! -f "$LAST_GOOD_FILE" ]]; then
+    return 1
+  fi
+  if command -v python3 >/dev/null 2>&1; then
+    python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("sha",""))' "$LAST_GOOD_FILE"
+  else
+    node -e 'const j=require(process.argv[1]); process.stdout.write(j.sha||"")' "$LAST_GOOD_FILE"
+  fi
+}
+
+image_digest() {
+  local svc="$1"
+  local cid
+  cid="$(docker compose -f "$COMPOSE_FILE" ps -q "$svc" 2>/dev/null || true)"
+  [[ -n "$cid" ]] || return 0
+  docker inspect -f '{{index .Image}}' "$cid" 2>/dev/null | head -n1 || true
+}
+
+write_last_good() {
+  local sha="$1"
+  local tmp="${LAST_GOOD_FILE}.tmp"
+  local main_img tech_img vel_img auth_img
+  main_img="$(image_digest main)"
+  tech_img="$(image_digest tech)"
+  vel_img="$(image_digest velocity)"
+  auth_img="$(image_digest auth)"
+  if command -v python3 >/dev/null 2>&1; then
+    LAST_GOOD_SHA="$sha" \
+    MAIN_IMG="$main_img" TECH_IMG="$tech_img" VEL_IMG="$vel_img" AUTH_IMG="$auth_img" \
+    python3 - <<'PY' >"$tmp"
+import json, os, sys
+from datetime import datetime, timezone
+doc = {
+  "sha": os.environ["LAST_GOOD_SHA"],
+  "savedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+  "images": {
+    "velocity": os.environ.get("VEL_IMG") or None,
+    "main": os.environ.get("MAIN_IMG") or None,
+    "tech": os.environ.get("TECH_IMG") or None,
+    "auth": os.environ.get("AUTH_IMG") or None,
+  },
+}
+json.dump(doc, sys.stdout, indent=2)
+sys.stdout.write("\n")
+PY
+  else
+    printf '{\n  "sha": "%s",\n  "savedAt": "%s",\n  "images": {\n    "velocity": "%s",\n    "main": "%s",\n    "tech": "%s",\n    "auth": "%s"\n  }\n}\n' \
+      "$sha" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$vel_img" "$main_img" "$tech_img" "$auth_img" >"$tmp"
+  fi
+  mv -f "$tmp" "$LAST_GOOD_FILE"
+  echo "wrote last-good $LAST_GOOD_FILE (sha=$sha)"
+}
+
+compose_pull_up() {
+  local tag="$1"
+  export IMAGE_TAG="$tag"
+  echo "IMAGE_TAG=$IMAGE_TAG"
+  echo "docker compose -f $COMPOSE_FILE pull $SERVICES"
+  docker compose -f "$COMPOSE_FILE" pull $SERVICES || docker compose -f "$COMPOSE_FILE" pull
+  echo "docker compose -f $COMPOSE_FILE up -d --remove-orphans $SERVICES"
+  docker compose -f "$COMPOSE_FILE" up -d --remove-orphans $SERVICES
+}
+
+git_pin() {
+  local sha="$1"
+  echo "git fetch + hard reset $sha"
+  git config --global --add safe.directory "$ROOT"
+  export GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-ssh -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new}"
+  git fetch --depth=1 origin "$sha"
+  git reset --hard FETCH_HEAD
+}
+
 cd "$ROOT"
 
 if [[ ! -f "$COMPOSE_FILE" ]]; then
@@ -52,6 +148,10 @@ fi
 if ! command -v redis-cli >/dev/null 2>&1; then
   echo "redis-cli required" >&2
   exit 1
+fi
+
+if [[ ! -x "$HEALTH_SCRIPT" ]]; then
+  chmod +x "$HEALTH_SCRIPT" || true
 fi
 
 maintenance_on=0
@@ -157,31 +257,66 @@ if ! empty_age_seconds >/dev/null; then
   exit 1
 fi
 
-if [[ -n "$DEPLOY_SHA" ]] && [[ -d .git ]]; then
-  echo "git fetch + hard reset $DEPLOY_SHA"
-  # Runner container uid ≠ host checkout owner (docker bind-mount).
-  git config --global --add safe.directory "$ROOT"
-  # Deploy key is mounted at /root/.ssh (see github-runner service).
-  export GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-ssh -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new}"
-  # Shallow fetch of a SHA often has no merge-base with the previous shallow
-  # tip ("refusing to merge unrelated histories"). Deploy trees are disposable:
-  # pin exactly to DEPLOY_SHA (.env / data dirs stay untracked).
-  git fetch --depth=1 origin "$DEPLOY_SHA"
-  git reset --hard FETCH_HEAD
+if [[ -z "$DEPLOY_SHA" ]]; then
+  DEPLOY_SHA="$(git rev-parse HEAD)"
+  echo "DEPLOY_SHA unset — using current HEAD $DEPLOY_SHA"
 fi
 
-# Only game/auth services — never recreate github-runner/backup mid-deploy.
-SERVICES="velocity main tech auth db-migrate db redis"
+if [[ -d .git ]]; then
+  git_pin "$DEPLOY_SHA"
+fi
 
-echo "docker compose -f $COMPOSE_FILE pull $SERVICES"
-docker compose -f "$COMPOSE_FILE" pull $SERVICES || docker compose -f "$COMPOSE_FILE" pull
+# Pin images to the commit tag images.yml pushes alongside :dev.
+compose_pull_up "$DEPLOY_SHA"
 
-echo "docker compose -f $COMPOSE_FILE up -d --remove-orphans $SERVICES"
-docker compose -f "$COMPOSE_FILE" up -d --remove-orphans $SERVICES
+health_ok=0
+if "$HEALTH_SCRIPT" "$COMPOSE_FILE" "$HEALTH_TIMEOUT_S"; then
+  health_ok=1
+else
+  echo "post-deploy health FAILED for $DEPLOY_SHA" >&2
+fi
 
-echo "deploy finished — clearing maintenance"
-clear_maintenance
+if [[ "$health_ok" -eq 1 ]]; then
+  write_last_good "$DEPLOY_SHA"
+  echo "deploy finished — clearing maintenance"
+  clear_maintenance
+  trap - EXIT
+  echo "done"
+  docker compose -f "$COMPOSE_FILE" ps
+  exit 0
+fi
+
+# --- rollback ---
+last_sha="$(read_last_good_sha || true)"
+if [[ -z "$last_sha" ]]; then
+  alert "Deploy $DEPLOY_SHA failed health check and no .deploy-last-good.json — leaving maintenance ON"
+  # Keep maintenance so players do not join a broken stack.
+  trap - EXIT
+  exit 1
+fi
+
+if [[ "$last_sha" == "$DEPLOY_SHA" ]]; then
+  alert "Deploy $DEPLOY_SHA failed health check; last-good is the same sha — cannot rollback, maintenance ON"
+  trap - EXIT
+  exit 1
+fi
+
+alert "Deploy $DEPLOY_SHA failed health — rolling back to last-good $last_sha"
+if [[ -d .git ]]; then
+  git_pin "$last_sha"
+fi
+compose_pull_up "$last_sha"
+
+if "$HEALTH_SCRIPT" "$COMPOSE_FILE" "$HEALTH_TIMEOUT_S"; then
+  alert "Rollback to $last_sha succeeded after failed deploy $DEPLOY_SHA"
+  echo "rollback healthy — clearing maintenance"
+  clear_maintenance
+  trap - EXIT
+  docker compose -f "$COMPOSE_FILE" ps
+  # Non-zero so Actions marks the deploy red even though the stack recovered.
+  exit 1
+fi
+
+alert "Rollback to $last_sha ALSO failed health after bad deploy $DEPLOY_SHA — maintenance left ON"
 trap - EXIT
-
-echo "done"
-docker compose -f "$COMPOSE_FILE" ps
+exit 1

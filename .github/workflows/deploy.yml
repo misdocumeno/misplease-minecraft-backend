@@ -43,16 +43,19 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
-      - name: Wait empty + compose pull/up
+      - name: Wait empty + compose pull/up + health/rollback
         env:
           MISPLEASE_ROOT: ${{ vars.MISPLEASE_ROOT }}
           COMPOSE_FILE: docker-compose.prod.yml
           EMPTY_SECONDS: ${{ github.event.inputs.empty_seconds || '60' }}
           POLL_SECONDS: "5"
           MAX_WAIT_SECONDS: "0"
+          HEALTH_TIMEOUT_S: "180"
           DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
           # Prefer Redis SoT (compose runner injects REDIS_URL / REDIS_PASSWORD into the job env).
           REDIS_URL: ${{ vars.REDIS_URL }}
+          # Optional Discord (or compatible) webhook — set as repo/org Actions secret when ready.
+          DEPLOY_ALERT_WEBHOOK: ${{ secrets.DEPLOY_ALERT_WEBHOOK }}
         run: |
           set -euo pipefail
           # Must be the host absolute path (compose bind mounts are daemon-side).
@@ -63,6 +66,10 @@ jobs:
           if ! command -v redis-cli >/dev/null; then
             sudo apt-get update -qq && sudo apt-get install -y -qq redis-tools
           fi
-          cp "${GITHUB_WORKSPACE}/tools/deploy/wait-empty-and-deploy.sh" /tmp/misplease-wait-empty-and-deploy.sh
-          chmod +x /tmp/misplease-wait-empty-and-deploy.sh
-          /tmp/misplease-wait-empty-and-deploy.sh
+          mkdir -p /tmp/misplease-deploy
+          cp "${GITHUB_WORKSPACE}/tools/deploy/wait-empty-and-deploy.sh" /tmp/misplease-deploy/
+          cp "${GITHUB_WORKSPACE}/tools/deploy/post-deploy-health.sh" /tmp/misplease-deploy/
+          chmod +x /tmp/misplease-deploy/*.sh
+          # Health script path next to the deploy script (not the host checkout).
+          export HEALTH_SCRIPT=/tmp/misplease-deploy/post-deploy-health.sh
+          /tmp/misplease-deploy/wait-empty-and-deploy.sh

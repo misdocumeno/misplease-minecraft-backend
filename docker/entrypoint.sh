@@ -100,10 +100,18 @@ else
   fi
 fi
 
-# Java drops to uid 1000. Config is copied into $LOWER as root; without chown,
-# overlay keeps those dirs root:root and plugins cannot create sibling files
-# (TAB groups.yml, config rewrites, etc.). $DATA covers upper/workdir.
-chown -R 1000:1000 "$LOWER" "$DATA" 2>/dev/null || true
+# Java runs as uid/gid 1000 (setpriv below). /config is often root-owned on the
+# host (git reset from the runner container); cp -a into $LOWER keeps that.
+# Overlay exposes lowerdir ownership: a root:root 755 plugin dir blocks uid 1000
+# from creating siblings (TAB groups.yml) or copy-up rewrites. Always chown the
+# lower tree + $DATA (upper/workdir) before exec — do not rely on host UIDs.
+if id -u 1000 >/dev/null 2>&1; then
+  if ! chown -R 1000:1000 "$LOWER" "$DATA"; then
+    echo "warning: chown 1000:1000 of overlay lower/data failed" >&2
+  fi
+else
+  echo "warning: uid 1000 missing; java may not write plugin config dirs" >&2
+fi
 
 server_jar="$(find /opt/misplease/server -maxdepth 1 -type f -name '*.jar' -print -quit)"
 if [ -z "$server_jar" ]; then
