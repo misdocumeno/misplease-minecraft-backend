@@ -17,3 +17,11 @@ plugins:
     source: modrinth
     slug: skinsrestorer
     loaders: [velocity]
+  # Standard RCON on the proxy (Velocity has none built-in). Bind stays on the
+  # compose network only — do not publish the port. Same password as Paper RCON.
+  # Velocircon (code-lime): actively maintained, env overrides, ~3k Modrinth dl.
+  - name: Velocircon
+    source: modrinth
+    slug: velocircon
+    version: "1.0.7"
+    loaders: [velocity]

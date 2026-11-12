@@ -1,29 +1,24 @@
-# Declarative config hot-reload for the ops deployer agent.
-# If every path in applied→wanted matches a rule below → sync + RCON (no game compose).
-# Anything else → full image deploy (empty gate + compose).
+# Config hot-reload for the ops deployer agent.
 #
-# Matching is per-rule: only rules whose `paths` hit the diff run.
-# Keep one rule per server (or plugin+server) so main-only edits do not RCON tech.
+# `paths` are relative to each server's `config/plugins/` tree:
+#   infra/minecraft/<server>/config/plugins/
+#   infra/velocity/config/plugins/
 #
-# sync from/to are inferred from paths of the form:
-#   infra/minecraft/<server>/config/plugins/<Plugin>/**
-#   → from …/config/plugins/<Plugin>
-#   → to   …/data/state/plugins/<Plugin>
-#   → RCON host = <server>
-# (velocity: infra/velocity/config/plugins/<Plugin>/** → data/state likewise)
+# For each changed file under those roots, if it matches a rule path the agent
+# syncs that plugin into that server's data/state and runs `rcon` on the
+# affected service (Paper built-in RCON; Velocity via Velocircon). Proxy
+# restarts drop every online player, so prefer this path over compose bounce.
 #
-# rcon: plugin.yml `name` as namespace prefix (PluginName:command).
+# One rule covers all servers: main-only edits only touch main; tech-only → tech;
+# velocity config → velocity.
+#
+# rcon: plugin.yml `name` as namespace (PluginName:command).
 #
 # Do NOT list plugins whose tracked config contains secret placeholders
 # (LuckPerms, etc.) — those are injected only at container entrypoint.
 
 rules:
-  - id: betterwarps-main
+  - id: betterwarps
     paths:
-      - infra/minecraft/main/config/plugins/BetterWarps/**
-    rcon: BetterWarps:warpsreload
-
-  - id: betterwarps-tech
-    paths:
-      - infra/minecraft/tech/config/plugins/BetterWarps/**
+      - BetterWarps/**
     rcon: BetterWarps:warpsreload

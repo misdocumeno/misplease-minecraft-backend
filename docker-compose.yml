@@ -33,6 +33,11 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DATABASE_URL=postgres://misplease:${DB_PASSWORD}@db:5432/misplease
       - VELOCITY_FORWARDING_SECRET=${VELOCITY_FORWARDING_SECRET:-}
+      # Velocircon: standard RCON on the compose network only (not published).
+      - VELOCIRCON__ENABLE=true
+      - VELOCIRCON__HOST=0.0.0.0
+      - VELOCIRCON__PORT=25575
+      - VELOCIRCON__PASSWORD=${RCON_PASSWORD:-}
     volumes:
       - ./infra/velocity/config:/config:ro
       - ./infra/velocity/data:/data

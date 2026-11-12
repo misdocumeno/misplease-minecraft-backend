@@ -27,6 +27,11 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DATABASE_URL=postgres://misplease:${DB_PASSWORD}@db:5432/misplease
       - VELOCITY_FORWARDING_SECRET=${VELOCITY_FORWARDING_SECRET}
+      # Velocircon: standard RCON on the compose network only (not published).
+      - VELOCIRCON__ENABLE=true
+      - VELOCIRCON__HOST=0.0.0.0
+      - VELOCIRCON__PORT=25575
+      - VELOCIRCON__PASSWORD=${RCON_PASSWORD:-}
     volumes:
       - ./infra/velocity/config:/config:ro
       - ./infra/velocity/data:/data
@@ -237,7 +242,7 @@ services:
       EMPTY_SECONDS: ${DEPLOY_EMPTY_SECONDS:-60}
       HEALTH_TIMEOUT_S: ${DEPLOY_HEALTH_TIMEOUT_S:-180}
       DEPLOY_ALERT_WEBHOOK: ${DEPLOY_ALERT_WEBHOOK:-}
-      # RCON stays unpublished (no host ports). Deployer reaches main/tech:25575 on the compose network only.
+      # RCON stays unpublished (no host ports). Deployer reaches main/tech/velocity:25575 on the compose network only.
       RCON_PASSWORD: ${RCON_PASSWORD:-}
       RCON_PORT: "25575"
       GIT_SSH_COMMAND: ssh -i /root/.ssh/misplease_deploy -o IdentitiesOnly=yes -o UserKnownHostsFile=/root/.ssh/known_hosts -o StrictHostKeyChecking=yes

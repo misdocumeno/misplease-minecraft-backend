@@ -379,58 +379,6 @@ def _parse_hot_reload_minimal(text: str) -> list[dict[str, Any]]:
     return rules
 
 
-def infer_targets_from_paths(paths: list[str]) -> list[dict[str, Any]]:
-    """Map config path globs → sync from/to + compose server name."""
-    targets: list[dict[str, Any]] = []
-    seen: set[tuple[str, str]] = set()
-    for raw in paths:
-        g = raw.replace("\\", "/").rstrip("/")
-        if g.endswith("/**"):
-            g = g[:-3]
-        m = re.match(
-            r"^infra/minecraft/([^/]+)/config/plugins/([^/]+)$", g
-        )
-        if m:
-            server, plugin = m.group(1), m.group(2)
-            key = (server, plugin)
-            if key in seen:
-                continue
-            seen.add(key)
-            targets.append(
-                {
-                    "server": server,
-                    "sync": {
-                        "from": f"infra/minecraft/{server}/config/plugins/{plugin}",
-                        "to": f"infra/minecraft/{server}/data/state/plugins/{plugin}",
-                    },
-                }
-            )
-            continue
-        m = re.match(r"^infra/velocity/config/plugins/([^/]+)$", g)
-        if m:
-            plugin = m.group(1)
-            key = ("velocity", plugin)
-            if key in seen:
-                continue
-            seen.add(key)
-            targets.append(
-                {
-                    "server": "velocity",
-                    "sync": {
-                        "from": f"infra/velocity/config/plugins/{plugin}",
-                        "to": f"infra/velocity/data/state/plugins/{plugin}",
-                    },
-                }
-            )
-            continue
-        raise ValueError(
-            f"cannot infer sync from path {raw!r} "
-            "(expected infra/minecraft/<server>/config/plugins/<Plugin>/** "
-            "or infra/velocity/config/plugins/<Plugin>/**)"
-        )
-    return targets
-
-
 def send_rcon(host: str, command: str) -> str:
     from mcrcon import MCRcon
 
@@ -450,6 +398,40 @@ def path_matches(globs: list[str], path: str) -> bool:
     return False
 
 
+def parse_plugins_config_path(path: str) -> tuple[str, str, str] | None:
+    """If path is under a server plugins config tree, return (server, kind, rel).
+
+    kind is 'paper' (minecraft/<server>) or 'proxy' (velocity).
+    rel is relative to that server's config/plugins/.
+    """
+    path = path.replace("\\", "/")
+    m = re.match(r"^infra/minecraft/([^/]+)/config/plugins/(.*)$", path)
+    if m:
+        return m.group(1), "paper", m.group(2)
+    m = re.match(r"^infra/velocity/config/plugins/(.*)$", path)
+    if m:
+        return "velocity", "proxy", m.group(1)
+    return None
+
+
+def plugin_folder(rel: str) -> str | None:
+    rel = rel.replace("\\", "/").strip("/")
+    if not rel:
+        return None
+    return rel.split("/", 1)[0]
+
+
+def sync_paths_for(server: str, kind: str, plugin: str) -> tuple[str, str]:
+    if kind == "proxy":
+        base = "infra/velocity"
+    else:
+        base = f"infra/minecraft/{server}"
+    return (
+        f"{base}/config/plugins/{plugin}",
+        f"{base}/data/state/plugins/{plugin}",
+    )
+
+
 # Repo paths that only affect the host agent / CD pin — git reset, no game compose.
 # The deployer container itself is force-recreated so the new Python process loads.
 _AGENT_ONLY_GLOBS = [
@@ -462,9 +444,10 @@ _OPS_SERVICES = ["deployer"]
 
 
 def classify_hot_reload(applied: str | None, wanted: str) -> list[dict[str, Any]] | None:
-    """Return matched rules if hot-reload-only; None if full compose deploy required.
+    """Return hot-reload actions, [] for agent-only/empty, or None for full compose.
 
-    Empty list means git-pin-only (no RCON) — agent-only commits or empty diff.
+    Each action: {rule_id, server, kind, plugin, rcon}.
+    Rule `paths` are relative to config/plugins/ on every server/proxy.
     """
     if not applied:
         return None
@@ -475,25 +458,50 @@ def classify_hot_reload(applied: str | None, wanted: str) -> list[dict[str, Any]
         return None
     if not changed:
         return []
-    if all(path_matches(_AGENT_ONLY_GLOBS, p) for p in changed):
+
+    non_agent = [p for p in changed if not path_matches(_AGENT_ONLY_GLOBS, p)]
+    if not non_agent:
         log(
             f"agent-only diff ({len(changed)} paths) — "
             "git pin + recreate deployer (no game bounce)"
         )
         return []
+
     rules = load_hot_reload_rules()
     if not rules:
         return None
-    matched: list[dict[str, Any]] = []
-    for path in changed:
-        hit = [r for r in rules if path_matches(list(r.get("paths") or []), path)]
-        if not hit:
+
+    actions: list[dict[str, Any]] = []
+    seen: set[tuple[str, str, str]] = set()
+    for path in non_agent:
+        parsed = parse_plugins_config_path(path)
+        if not parsed:
             log(f"path not hot-reloadable: {path}")
             return None
+        server, kind, rel = parsed
+        hit = [r for r in rules if path_matches(list(r.get("paths") or []), rel)]
+        if not hit:
+            log(f"path not hot-reloadable: {path} (rel={rel})")
+            return None
+        plugin = plugin_folder(rel)
+        if not plugin:
+            log(f"path not hot-reloadable (empty plugin): {path}")
+            return None
         for r in hit:
-            if r not in matched:
-                matched.append(r)
-    return matched
+            key = (str(r.get("id")), server, plugin)
+            if key in seen:
+                continue
+            seen.add(key)
+            actions.append(
+                {
+                    "rule_id": r.get("id"),
+                    "server": server,
+                    "kind": kind,
+                    "plugin": plugin,
+                    "rcon": r.get("rcon"),
+                }
+            )
+    return actions
 
 
 def recreate_ops_deployer() -> None:
@@ -537,14 +545,18 @@ def sync_tree(src_rel: str, dest_rel: str) -> None:
     log(f"synced {src_rel} → {dest_rel}")
 
 
-def apply_hot_reload(sha: str, rules: list[dict[str, Any]]) -> bool:
+def apply_hot_reload(sha: str, actions: list[dict[str, Any]]) -> bool:
+    """Apply classify_hot_reload actions: sync plugin config trees + RCON reload.
+
+    actions entries: {rule_id, server, kind, plugin, rcon}.
+    """
     global _applying
     _applying = True
     st = load_state()
     st["applying"] = True
     save_state(st)
     try:
-        if not rules:
+        if not actions:
             # Empty diff or agent-only: pin checkout; recreate deployer so a new
             # Python process loads agent.py / requirements / compose env changes.
             git_pin(sha)
@@ -560,37 +572,38 @@ def apply_hot_reload(sha: str, rules: list[dict[str, Any]]) -> bool:
             alert("hot-reload needs RCON_PASSWORD in deployer env — abort")
             return False
 
-        log(f"hot-reload applying {sha} rules={[r.get('id') for r in rules]}")
+        log(
+            "hot-reload applying "
+            f"{sha} actions={[a.get('rule_id') for a in actions]}"
+        )
         git_pin(sha)
 
-        for rule in rules:
-            cmd = rule.get("rcon")
+        for action in actions:
+            server = str(action.get("server") or "")
+            kind = str(action.get("kind") or "")
+            plugin = str(action.get("plugin") or "")
+            cmd = action.get("rcon")
+            if not server or not kind or not plugin:
+                alert(f"hot-reload action incomplete: {action}")
+                return False
             if not cmd:
-                alert(f"hot-reload rule {rule.get('id')} missing rcon")
+                alert(f"hot-reload rule {action.get('rule_id')} missing rcon")
                 return False
+            src, dest = sync_paths_for(server, kind, plugin)
             try:
-                targets = infer_targets_from_paths(list(rule.get("paths") or []))
-            except ValueError as e:
-                alert(f"hot-reload infer failed: {e}")
+                sync_tree(src, dest)
+            except FileNotFoundError as e:
+                alert(f"hot-reload sync failed: {e}")
                 return False
-            for target in targets:
-                sync = target.get("sync") or {}
-                src = sync.get("from")
-                dest = sync.get("to")
-                if src and dest:
-                    sync_tree(str(src), str(dest))
-                server = target.get("server")
-                if not server:
-                    continue
-                host = SERVER_HOST.get(str(server), str(server))
-                log(f"rcon {server} ({host}:{RCON_PORT}): {cmd}")
-                try:
-                    resp = send_rcon(host, str(cmd))
-                    if resp.strip():
-                        log(f"rcon response: {resp.strip()[:500]}")
-                except (OSError, TimeoutError, Exception) as e:
-                    alert(f"hot-reload RCON failed on {server}: {e}")
-                    return False
+            host = SERVER_HOST.get(server, server)
+            log(f"rcon {server} ({host}:{RCON_PORT}): {cmd}")
+            try:
+                resp = send_rcon(host, str(cmd))
+                if resp.strip():
+                    log(f"rcon response: {resp.strip()[:500]}")
+            except (OSError, TimeoutError, Exception) as e:
+                alert(f"hot-reload RCON failed on {server}: {e}")
+                return False
 
         st = load_state()
         st["applied"] = sha

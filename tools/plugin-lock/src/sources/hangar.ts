@@ -36,13 +36,26 @@ function projectPath(id: string): string {
   return `${encodeURIComponent(author)}/${encodeURIComponent(slug)}`
 }
 
-function paperGameVersions(version: HangarVersion): string[] | undefined {
-  return version.platformDependencies?.PAPER ?? version.platformDependencies?.PURPUR
+function hangarPlatform(version: HangarVersion): "PAPER" | "PURPUR" | "VELOCITY" | undefined {
+  // Prefer Paper/Purpur so dual-platform Hangar releases keep locking backends.
+  // Velocity-only plugins (Velocircon) fall through to VELOCITY.
+  if (version.downloads.PAPER) return "PAPER"
+  if (version.downloads.PURPUR) return "PURPUR"
+  if (version.downloads.VELOCITY) return "VELOCITY"
+  return undefined
+}
+
+function hangarGameVersions(version: HangarVersion): string[] | undefined {
+  const platform = hangarPlatform(version)
+  if (!platform) return undefined
+  return version.platformDependencies?.[platform]
 }
 
 function toResolved(plugin: DesiredPlugin, version: HangarVersion): ResolvedArtifact {
-  const platform = version.downloads.PAPER ? "PAPER" : version.downloads.PURPUR ? "PURPUR" : undefined
-  if (!platform) throw new Error(`hangar version ${version.name} has no Paper or Purpur jar`)
+  const platform = hangarPlatform(version)
+  if (!platform) {
+    throw new Error(`hangar version ${version.name} has no Paper, Purpur, or Velocity jar`)
+  }
   const download = version.downloads[platform]
   if (!download.downloadUrl || download.externalUrl) {
     throw new Error(`hangar version ${version.name} is an external link`)
@@ -90,10 +103,10 @@ export async function resolveHangar(plugin: DesiredPlugin): Promise<ResolvedArti
 
   const matches = await listChannelVersions(plugin)
   if (plugin.minecraftCeiling) {
-    const chosen = pickNewestFittingCeiling(matches, paperGameVersions, plugin.minecraftCeiling)
+    const chosen = pickNewestFittingCeiling(matches, hangarGameVersions, plugin.minecraftCeiling)
     if (!chosen) {
       throw new Error(
-        `hangar has no ${channelName(plugin.channel)} Paper/Purpur jar with a game version ≤ ${plugin.minecraftCeiling}`,
+        `hangar has no ${channelName(plugin.channel)} Paper/Purpur/Velocity jar with a game version ≤ ${plugin.minecraftCeiling}`,
       )
     }
     return toResolved(plugin, chosen)
