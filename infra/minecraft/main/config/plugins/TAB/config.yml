@@ -77,6 +77,7 @@ global-playerlist:
   enabled: false
 
 placeholders:
+  locale: en-US
   date-format: dd/MM/yyyy
   time-format: HH:mm
   time-offset: -3

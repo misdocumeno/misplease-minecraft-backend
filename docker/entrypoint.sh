@@ -100,8 +100,10 @@ else
   fi
 fi
 
-# Java drops to uid 1000; anything we copied/created as root must be writable.
-chown -R 1000:1000 "$DATA" 2>/dev/null || true
+# Java drops to uid 1000. Config is copied into $LOWER as root; without chown,
+# overlay keeps those dirs root:root and plugins cannot create sibling files
+# (TAB groups.yml, config rewrites, etc.). $DATA covers upper/workdir.
+chown -R 1000:1000 "$LOWER" "$DATA" 2>/dev/null || true
 
 server_jar="$(find /opt/misplease/server -maxdepth 1 -type f -name '*.jar' -print -quit)"
 if [ -z "$server_jar" ]; then
