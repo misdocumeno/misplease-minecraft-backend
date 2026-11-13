@@ -36,7 +36,7 @@ no-name-specified-home: '§5§lWarps §8§l>> §4Especificá el nombre para este
 home-already-exists: '§5§lWarps §8§l>> §4Ya tenés un home con ese nombre.'
 home-default-description: ''
 home-added: '§5§lWarps §8§l>> §2¡Home creado!'
-home-does-not-exists-chat: '§5§lWarps §8§l>> §4¡Ese home no existe!'
+home-does-not-exists-chat: '§5§lWarps §8§l>> §4¡Ese home no existe! [hotreload-ok]'
 home-does-not-exists-title: '§4:('
 home-does-not-exists-subtitle: '§fEso no existe'
 no-name-specified-del-home: '§5§lWarps §8§l>> §4Especificá el nombre del home que queres borrar.'
