@@ -2,18 +2,20 @@
 #   - hot-reload.yml-only diffs → sync overlay upper + RCON (live)
 #   - anything else → empty gate + compose pull/up + health
 #
-# Triggers:
-#   - every push to main (config-only pushes skip images but still set wanted)
-#   - successful images workflow_run (image tags ready for compose)
-#   - workflow_dispatch
+# Triggers (never race images):
+#   - successful `images` workflow_run on main push (after build+smoke+GHCR tags)
+#   - workflow_dispatch (manual pin)
+#   - push that only touches deploy agent / this workflow (no image rebuild)
+#
+# Do NOT trigger on every main push in parallel with `images`: that pinned wanted
+# before tags existed and before smoke. Failed smoke → images conclusion≠success
+# → set-wanted must not run.
 #
 # HARD RULE: never attach pull_request / fork workflows to runs-on: [self-hosted]
 # (docker.sock = root on the host). Only trusted main and workflow_dispatch.
 name: deploy
 
 on:
-  push:
-    branches: [main]
   workflow_run:
     workflows: [images]
     types: [completed]
@@ -23,6 +25,11 @@ on:
         description: Git SHA to set as deploy wanted (default = this commit)
         required: false
         default: ""
+  push:
+    branches: [main]
+    paths:
+      - "tools/deploy/**"
+      - ".github/workflows/deploy.yml"
 
 concurrency:
   group: misplease-deploy-wanted

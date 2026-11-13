@@ -1,7 +1,7 @@
 # Applied on enable and whenever a world loads.
 # Merge: defaults → aliases.<alias> → worlds.<world> (world wins).
-# worlds listed → only those worlds; empty/missing worlds → defaults on every world.
-# worlds.<name>: alias: <alias>  — or a bare string meaning only that alias.
+# defaults apply to every loaded world; excludes skips a world entirely.
+# worlds.<name> only for alias / overrides (hubs with defaults alone need no entry).
 defaults:
   do_mob_spawning: false
   mob_griefing: false
@@ -19,17 +19,9 @@ aliases:
     do_fire_tick: true
     tnt_explodes: true
 
+excludes: []
+
 worlds:
-  # hubs / city — defaults only
-  world: {}
-  world2: {}
-  newspawn: {}
-  spawn_recursos2: {}
-  spawn_nether: {}
-  spawn_the_end: {}
-  spawn_overworld: {}
-  SuperiorWorld: {}
-  # gameplay survival
   survival:
     alias: survival
   recursos2:
