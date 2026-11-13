@@ -1203,10 +1203,10 @@ plugins:
     sha256: f20e4635228c39d1bc9977ead30dcb0973b2e2c4cf77bb9677340033351c4dce
   - name: PortalRoutes
     source: github
-    version: v0.1.4
-    filename: PortalRoutes-0.1.4.jar
-    url: https://api.github.com/repos/misdocumeno/PortalRoutes/releases/tags/v0.1.4
-    sha256: 552432d1e4fa806d2fff7b17854ea4a3c96d68e4c34b41990e5db1260c3880f2
+    version: v0.1.5
+    filename: PortalRoutes-0.1.5.jar
+    url: https://api.github.com/repos/misdocumeno/PortalRoutes/releases/tags/v0.1.5
+    sha256: 41185c6e2f46879d86ea962bdb9d46f6615a0aa7cd8a49ff18145d4657897593
   - name: TheBestRTP
     source: github
     version: v0.1.0

@@ -245,11 +245,9 @@ newspawn:
         '4':
             - ''
         '3':
-            - '&7       &8&7Registrate con&8'
-            - '&7      &8&7Inicia sesión con&8'
+            - '&7     Creá tu cuenta en'
         '2':
-            - '  &8/register *contraseña*'
-            - '    &8/login *contraseña*'
+            - '      &5misplease.com'
         '1':
             - '&7&m+--------------------+'
 world2:

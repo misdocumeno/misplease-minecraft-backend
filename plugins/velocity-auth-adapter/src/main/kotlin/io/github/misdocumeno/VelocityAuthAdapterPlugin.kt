@@ -88,7 +88,7 @@ class VelocityAuthAdapterPlugin @Inject constructor(
 
             UsernameCaseCheckResult.NotFound ->
                 event.result = PreLoginEvent.PreLoginComponentResult.denied(
-                    Component.text("Register on misplease.com.ar")
+                    Component.text("Register on misplease.com")
                 )
 
             is UsernameCaseCheckResult.WrongCase ->

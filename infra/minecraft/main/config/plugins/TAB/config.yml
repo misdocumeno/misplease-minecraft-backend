@@ -9,7 +9,7 @@ header-footer:
         - '&5&m============================================'
         - ''
         - '%animation:brand%'
-        - '&7✦ &5&lmisplease.com.ar &7✦'
+        - '&7✦ &5&lmisplease.com &7✦'
         - '&6Ping:&r %ping%&7ms'
         - ''
       footer:

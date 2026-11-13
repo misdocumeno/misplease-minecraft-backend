@@ -1,10 +1,12 @@
-# Nether → spawn_nether hub; End → spawn_the_end hub (not temporal/permanent end worlds).
+# Nether → spawn_nether hub; End → spawn_the_end hub.
+# Each route lists types so nether/end from the same world do not collide.
 portal-types:
   - NETHER_PORTAL
   - END_PORTAL
 
 routes:
   - name: survival-to-nether-hub
+    types: [NETHER_PORTAL]
     from:
       world: survival
     to:
@@ -16,6 +18,7 @@ routes:
       pitch: 0.0
 
   - name: world-to-nether-hub
+    types: [NETHER_PORTAL]
     from:
       world: world
     to:
@@ -26,7 +29,20 @@ routes:
       yaw: 0.0
       pitch: 0.0
 
+  - name: spawn-recursos-to-nether-hub
+    types: [NETHER_PORTAL]
+    from:
+      world: spawn_recursos2
+    to:
+      world: spawn_nether
+      x: 0.5
+      y: 64.0
+      z: 0.5
+      yaw: 0.0
+      pitch: 0.0
+
   - name: survival-to-end-hub
+    types: [END_PORTAL]
     from:
       world: survival
     to:
@@ -38,8 +54,21 @@ routes:
       pitch: 0.0
 
   - name: world-to-end-hub
+    types: [END_PORTAL]
     from:
       world: world
+    to:
+      world: spawn_the_end
+      x: -24.5
+      y: 72.0
+      z: -576.5
+      yaw: 0.0
+      pitch: 0.0
+
+  - name: spawn-recursos-to-end-hub
+    types: [END_PORTAL]
+    from:
+      world: spawn_recursos2
     to:
       world: spawn_the_end
       x: -24.5

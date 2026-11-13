@@ -242,7 +242,7 @@ plugins:
   - name: PortalRoutes
     source: github
     repo: misdocumeno/PortalRoutes
-    version: v0.1.4
+    version: v0.1.5
   - name: TheBestRTP
     source: github
     repo: misdocumeno/TheBestRTP
