@@ -389,3 +389,9 @@ plugins:
     filename: WorldGamerules-0.1.4.jar
     url: https://api.github.com/repos/misdocumeno/WorldGamerules/releases/tags/v0.1.4
     sha256: 9bf9974fc6de893e7d2d7667f2244dcaffb7e6e1f6a3898b5a224c1c0b4affb0
+  - name: Floodgate
+    source: geysermc
+    version: 2.2.5-b141
+    filename: floodgate-spigot.jar
+    url: https://download.geysermc.org/v2/projects/floodgate/versions/2.2.5/builds/141/downloads/spigot
+    sha256: 21570aff9ce17d6983928e8552777760e1ede5050026b04c686b0ae112e6fd7e

@@ -243,3 +243,15 @@ plugins:
       - 26.1.2
       - "26.2"
       - "26.3"
+  - name: Floodgate
+    source: geysermc
+    version: 2.2.5-b141
+    filename: floodgate-velocity.jar
+    url: https://download.geysermc.org/v2/projects/floodgate/versions/2.2.5/builds/141/downloads/velocity
+    sha256: 649835022de37ff09255fc626d4bfe7bc2a3b926d07b0dfaf1f51e12bf37001d
+  - name: Geyser
+    source: geysermc
+    version: 2.12.1-b1302
+    filename: Geyser-Velocity.jar
+    url: https://download.geysermc.org/v2/projects/geyser/versions/2.12.1/builds/1302/downloads/velocity
+    sha256: 0a5716a8b6811ed8d1f26b668e3ccd30f5a59cdcfef3b95b56f40528ab75a7ab

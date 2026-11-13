@@ -82,6 +82,19 @@ elif [ "$KIND" != "proxy" ] && grep -q '__MISPLEASE_VELOCITY_SECRET__' "$LOWER/c
   echo "warning: VELOCITY_FORWARDING_SECRET unset; Paper velocity secret placeholder left empty" >&2
 fi
 
+# Floodgate key (Geyser crossplay). Same key on proxy + every Paper backend.
+# Prefer FLOODGATE_KEY_B64 (base64 of key.pem); else FLOODGATE_KEY_PEM; else overlay file.
+mkdir -p "$LOWER/plugins/floodgate"
+if [ -n "${FLOODGATE_KEY_B64:-}" ]; then
+  printf '%s' "$FLOODGATE_KEY_B64" | base64 -d >"$LOWER/plugins/floodgate/key.pem"
+  rm -f -- "$STATE/plugins/floodgate/key.pem"
+elif [ -n "${FLOODGATE_KEY_PEM:-}" ]; then
+  printf '%s\n' "$FLOODGATE_KEY_PEM" >"$LOWER/plugins/floodgate/key.pem"
+  rm -f -- "$STATE/plugins/floodgate/key.pem"
+elif [ ! -f "$STATE/plugins/floodgate/key.pem" ] && [ ! -f "$LOWER/plugins/floodgate/key.pem" ]; then
+  echo "warning: no Floodgate key (FLOODGATE_KEY_B64 / FLOODGATE_KEY_PEM / state key.pem)" >&2
+fi
+
 if [ -n "$(find "$JARS" -mindepth 1 -maxdepth 1 -name '*.jar' -print -quit)" ]; then
   cp -a "$JARS"/*.jar "$LOWER/plugins/"
 fi

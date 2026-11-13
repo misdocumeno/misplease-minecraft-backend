@@ -8,6 +8,7 @@ import { resolvePurpur } from "./sources/purpur.ts"
 import { resolveGit } from "./sources/git.ts"
 import { resolveJenkins } from "./sources/jenkins.ts"
 import { resolveSpiget } from "./sources/spiget.ts"
+import { resolveGeysermc } from "./sources/geysermc.ts"
 
 async function resolve(plugin: DesiredPlugin): Promise<ResolvedArtifact> {
   switch (plugin.source) {
@@ -27,6 +28,8 @@ async function resolve(plugin: DesiredPlugin): Promise<ResolvedArtifact> {
       return resolveGit(plugin)
     case "jenkins":
       return resolveJenkins(plugin)
+    case "geysermc":
+      return resolveGeysermc(plugin)
     default:
       throw new Error(`unknown source ${plugin.source || "(empty)"}`)
   }

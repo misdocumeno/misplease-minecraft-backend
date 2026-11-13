@@ -53,3 +53,7 @@ plugins:
   - name: ViaBackwards
     source: modrinth
     slug: viabackwards
+  - name: Floodgate
+    source: geysermc
+    id: floodgate
+    asset: spigot

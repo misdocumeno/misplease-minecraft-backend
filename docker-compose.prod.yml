@@ -32,11 +32,17 @@ services:
       - VELOCIRCON__HOST=0.0.0.0
       - VELOCIRCON__PORT=25575
       - VELOCIRCON__PASSWORD=${RCON_PASSWORD:-}
+      # Floodgate key.pem (PEM body). Same value on velocity/main/tech.
+      - FLOODGATE_KEY_PEM=${FLOODGATE_KEY_PEM:-}
+      - FLOODGATE_KEY_B64=${FLOODGATE_KEY_B64:-}
     volumes:
       - ./infra/velocity/config:/config:ro
       - ./infra/velocity/data:/data
     ports:
       - 25565:25577
+      # Bedrock (Geyser-Velocity). UDP required; TCP helps newer Bedrock transports.
+      - 19132:19132/udp
+      - 19132:19132/tcp
     depends_on:
       db-migrate:
         condition: service_completed_successfully
@@ -65,6 +71,8 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DATABASE_URL=postgres://misplease:${DB_PASSWORD}@db:5432/misplease
       - VELOCITY_FORWARDING_SECRET=${VELOCITY_FORWARDING_SECRET}
+      - FLOODGATE_KEY_PEM=${FLOODGATE_KEY_PEM:-}
+      - FLOODGATE_KEY_B64=${FLOODGATE_KEY_B64:-}
       # Default = live prod main cmdline + preferSparkPlugin. Override heaps via MAIN_JVM_OPTS.
       - JVM_OPTS=${MAIN_JVM_OPTS:--Xms256M -Xmx3G -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC -Dorg.maxgamer.quickshop.util.envcheck.skip.SIGNATURE_VERIFY -Dpaper.preferSparkPlugin=true --add-modules=jdk.incubator.vector}
       - RCON_PASSWORD=${RCON_PASSWORD:-}
@@ -101,6 +109,8 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DATABASE_URL=postgres://misplease:${DB_PASSWORD}@db:5432/misplease
       - VELOCITY_FORWARDING_SECRET=${VELOCITY_FORWARDING_SECRET}
+      - FLOODGATE_KEY_PEM=${FLOODGATE_KEY_PEM:-}
+      - FLOODGATE_KEY_B64=${FLOODGATE_KEY_B64:-}
       # Default = live prod tech cmdline + preferSparkPlugin. Override heaps via TECH_JVM_OPTS.
       - JVM_OPTS=${TECH_JVM_OPTS:--Xms256M -Xmx2G -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Dpaper.preferSparkPlugin=true}
       - RCON_PASSWORD=${RCON_PASSWORD:-}

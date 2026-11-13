@@ -1,0 +1,54 @@
+# Bedrock listener on the proxy. Floodgate on the same JVM sets auth-type.
+bedrock:
+  address: 0.0.0.0
+  port: 19132
+  clone-remote-port: false
+  motd1: "MisPlease"
+  motd2: "Survival · misplease.com · 1.20+"
+  server-name: "MisPlease"
+  compression-level: 6
+  enable-proxy-protocol: false
+
+remote:
+  # Plugin on Velocity: auto → this proxy + Floodgate.
+  address: auto
+  port: 25577
+  auth-type: floodgate
+  use-proxy-protocol: false
+  forward-hostname: false
+
+floodgate-key-file: key.pem
+
+passthrough-motd: true
+passthrough-player-counts: true
+legacy-ping-passthrough: false
+ping-passthrough-interval: 3
+
+max-players: 20
+debug-mode: false
+general-thread-pool: 32
+allow-third-party-capes: true
+allow-third-party-ears: false
+show-cooldown: title
+show-coordinates: true
+disable-bedrock-scaffolding: false
+emote-offhand-workaround: "disabled"
+default-locale: en_us
+cache-images: 0
+allow-custom-skulls: true
+add-non-bedrock-items: true
+above-bedrock-nether-building: false
+force-resource-packs: false
+xbox-achievements-enabled: false
+
+metrics:
+  enabled: false
+  uuid: 00000000-0000-0000-0000-000000000000
+
+scoreboard-packet-threshold: 20
+enable-proxy-connections: false
+mtu: 1400
+use-direct-connection: true
+disable-compression: true
+
+config-version: 4

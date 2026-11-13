@@ -151,6 +151,11 @@ plugins:
   - name: ViaBackwards
     source: modrinth
     slug: viabackwards
+  # Floodgate on backends for skins/API; Geyser lives only on Velocity.
+  - name: Floodgate
+    source: geysermc
+    id: floodgate
+    asset: spigot
   - name: AdvancedPlHide
     source: modrinth
     slug: advancedplhide

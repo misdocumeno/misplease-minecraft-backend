@@ -25,3 +25,13 @@ plugins:
     slug: velocircon
     version: "1.0.7"
     loaders: [velocity]
+  # Bedrock crossplay: Geyser on proxy only; Floodgate on proxy (+ Paper for API/skins).
+  # Official jars via download.geysermc.org (Floodgate Velocity/Spigot are not on Modrinth).
+  - name: Geyser
+    source: geysermc
+    id: geyser
+    asset: velocity
+  - name: Floodgate
+    source: geysermc
+    id: floodgate
+    asset: velocity
