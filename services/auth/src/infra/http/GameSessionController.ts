@@ -34,7 +34,8 @@ export class GameSessionController {
 
     private async invalidate(req: Request, res: Response) {
         const { username } = z.object({ username: z.string() }).parse(req.body)
-        this.sessionInvalidateUseCase.execute(username)
+        // Must await: otherwise reconnect can race and still see the Redis session.
+        await this.sessionInvalidateUseCase.execute(username)
         res.status(200).json({ type: 'Success' })
     }
 

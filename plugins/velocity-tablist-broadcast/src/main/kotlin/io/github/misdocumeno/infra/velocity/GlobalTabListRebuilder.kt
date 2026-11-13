@@ -28,8 +28,11 @@ class GlobalTabListRebuilder(
 
         authed.forEach { viewer ->
             val here = serverName(viewer)
+            // If currentServer is not ready yet, skip — a delayed rebuild will retry.
+            if (here == null) return@forEach
+
             val onThisServer = proxy.allPlayers
-                .filter { here != null && serverName(it) == here }
+                .filter { serverName(it) == here }
                 .map { it.uniqueId }
                 .toSet()
             val remote = authed.filter { it.uniqueId !in onThisServer }

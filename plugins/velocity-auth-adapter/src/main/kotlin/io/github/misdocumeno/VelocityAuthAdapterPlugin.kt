@@ -20,7 +20,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
 
@@ -73,8 +72,15 @@ class VelocityAuthAdapterPlugin @Inject constructor(
 
     @Subscribe
     fun onDisconnect(event: DisconnectEvent) {
-        scope.launch {
-            invalidator.invalidate(event.player.username)
+        // Any disconnect (quit, timeout, kick, incomplete login). Block so Redis
+        // is cleared before a fast reconnect can reuse the session.
+        val username = event.player.username
+        runBlocking {
+            try {
+                invalidator.invalidate(username)
+            } catch (e: Exception) {
+                // Best-effort: still allow disconnect to finish.
+            }
         }
     }
 

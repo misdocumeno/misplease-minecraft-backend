@@ -2,9 +2,13 @@ package io.github.misdocumeno.infra.velocity
 
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.player.ServerPostConnectEvent
+import com.velocitypowered.api.proxy.ProxyServer
 import io.github.misdocumeno.domain.AuthenticatedRepository
+import java.util.concurrent.TimeUnit
 
 class VelocityEventListener(
+    private val plugin: Any,
+    private val proxy: ProxyServer,
     private val authRepo: AuthenticatedRepository,
     private val rebuilder: GlobalTabListRebuilder,
 ) {
@@ -18,10 +22,13 @@ class VelocityEventListener(
             // the player has just connected.
             // hide players until they /login with valid credentials
             event.player.tabList.clearAll()
-        } else {
-            // the player changed servers. that triggers PLAYER_INFO
-            // in both backends, so we have to rebuild it again
-            rebuilder.rebuildGlobalTabList()
+            return
         }
+        // Delay so currentServer / local PLAYER_INFO are settled (empty tab on
+        // first tech join otherwise).
+        proxy.scheduler
+            .buildTask(plugin) { rebuilder.rebuildGlobalTabList() }
+            .delay(250, TimeUnit.MILLISECONDS)
+            .schedule()
     }
 }

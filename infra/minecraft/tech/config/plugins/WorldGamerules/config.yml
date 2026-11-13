@@ -1,3 +1,3 @@
-# keep_inventory on every loaded world (overworld / nether / end).
+# keepInventory on every loaded world (overworld / nether / end).
 defaults:
-  keep_inventory: true
+  keepInventory: true

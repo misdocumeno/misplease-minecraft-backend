@@ -1,23 +1,24 @@
 # Applied on enable and whenever a world loads.
 # Merge: defaults → aliases.<alias> → worlds.<world> (world wins).
 # defaults apply to every loaded world; excludes skips a world entirely.
-# worlds.<name> only for alias / overrides (hubs with defaults alone need no entry).
+# Paper/Bukkit gamerules are camelCase (doMobSpawning). snake_case is accepted
+# and normalized by the plugin; spawn_phantoms → doInsomnia.
 defaults:
-  do_mob_spawning: false
-  mob_griefing: false
-  spawn_phantoms: false
-  do_fire_tick: false
-  tnt_explodes: false
-  keep_inventory: true
-  send_command_feedback: false
+  doMobSpawning: false
+  mobGriefing: false
+  doInsomnia: false
+  doFireTick: false
+  tntExplodes: false
+  keepInventory: true
+  sendCommandFeedback: false
 
 aliases:
   survival:
-    do_mob_spawning: true
-    mob_griefing: true
-    spawn_phantoms: true
-    do_fire_tick: true
-    tnt_explodes: true
+    doMobSpawning: true
+    mobGriefing: true
+    doInsomnia: true
+    doFireTick: true
+    tntExplodes: true
 
 excludes: []
 
