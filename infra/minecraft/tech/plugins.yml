@@ -27,6 +27,10 @@ plugins:
     source: modrinth
     slug: worldguard
     version: "7.0.18"
+  - name: WorldGamerules
+    source: github
+    repo: misdocumeno/WorldGamerules
+    version: v0.1.2
   - name: GriefPrevention
     source: modrinth
     slug: griefprevention

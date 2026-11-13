@@ -1,37 +1,46 @@
 # Applied on enable and whenever a world loads.
-# defaults apply first; worlds.<name> overrides (omit a world to leave it alone).
+# Merge: defaults → aliases.<alias> → worlds.<world> (world wins).
+# worlds listed → only those worlds; empty/missing worlds → defaults on every world.
+# worlds.<name>: alias: <alias>  — or a bare string meaning only that alias.
 defaults:
-  announceAdvancements: false
-  doFireTick: false
-  keepInventory: true
-  mobGriefing: false
-  sendCommandFeedback: false
-  # 26.3+: phantoms use spawn_phantoms (doInsomnia is gone). Default on except city world.
-  spawn_phantoms: true
+  do_mob_spawning: false
+  mob_griefing: false
+  spawn_phantoms: false
+  do_fire_tick: false
+  tnt_explodes: false
+  keep_inventory: true
+  send_command_feedback: false
+
+aliases:
+  survival:
+    do_mob_spawning: true
+    mob_griefing: true
+    spawn_phantoms: true
+    do_fire_tick: true
+    tnt_explodes: true
 
 worlds:
-  world:
-    spawn_phantoms: false
+  # hubs / city — defaults only
+  world: {}
   world2: {}
   newspawn: {}
   spawn_recursos2: {}
-  recursos2: {}
-  recursos_custom: {}
   spawn_nether: {}
-  nether: {}
-  nether_noreset: {}
   spawn_the_end: {}
-  world_the_end_noreset:
-    tntExplodes: false
-  end: {}
   spawn_overworld: {}
+  SuperiorWorld: {}
+  # gameplay survival
   survival:
-    mobGriefing: true
-  SuperiorWorld:
-    keepInventory: true
-    spawn_phantoms: false
-  test:
-    keepInventory: true
-  chapi_buildings:
-    keepInventory: true
-    doMobSpawning: false
+    alias: survival
+  recursos2:
+    alias: survival
+  recursos_custom:
+    alias: survival
+  nether:
+    alias: survival
+  nether_noreset:
+    alias: survival
+  end:
+    alias: survival
+  world_the_end_noreset:
+    alias: survival

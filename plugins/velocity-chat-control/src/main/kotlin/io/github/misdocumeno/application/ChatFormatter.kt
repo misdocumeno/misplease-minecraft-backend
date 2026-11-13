@@ -13,8 +13,11 @@ class ChatFormatter(
     fun format(intent: ChatIntent): RenderedChatMessage {
         val name = intent.senderNameMiniMessage
             ?: "<gray>${usernames.getUsername(intent.senderUUID) ?: "<unknown>"}</gray>"
+        // Literal <> brackets (gray). Name keeps LP color. Message is always white
+        // so the prefix color does not bleed into the text.
         return RenderedChatMessage(
-            miniMessage = "<$name> ${mm.escapeTags(intent.rawMessage)}",
+            miniMessage =
+                "<gray>\\<</gray>$name<gray>\\></gray> <white>${mm.escapeTags(intent.rawMessage)}</white>",
         )
     }
 }

@@ -616,7 +616,8 @@ enable-ops: true
 #   will be de-opped unless they have the permission node, and the op/deop commands will be
 #   disabled.
 # - It is recommended that you use this option instead of assigning a single '*' permission.
-auto-op: false
+# Shared LP Postgres: grant luckperms.autoop once (e.g. admin group) → OP on main + tech.
+auto-op: true
 
 # Defines if "opped" players should be able to use all LuckPerms commands by default.
 #

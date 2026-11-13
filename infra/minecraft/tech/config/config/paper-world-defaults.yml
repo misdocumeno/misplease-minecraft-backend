@@ -182,8 +182,8 @@ entities:
       - Pos
       - Motion
       - sleeping_pos
-    # Tech: classic iron farm golem spawning above air.
-    iron-golems-can-spawn-in-air: true
+    # false = vanilla spawn rules (no golems on slabs/stairs/hoppers). true breaks slab-capped iron farms.
+    iron-golems-can-spawn-in-air: false
     max-arrow-despawn-invulnerability: 200
     monster-spawn-max-light-level: default
     non-player-arrow-despawn-rate: default

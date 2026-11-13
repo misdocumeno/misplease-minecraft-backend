@@ -383,3 +383,9 @@ plugins:
       - 26.1.2
       - "26.2"
       - "26.3"
+  - name: WorldGamerules
+    source: github
+    version: v0.1.2
+    filename: WorldGamerules-0.1.2.jar
+    url: https://api.github.com/repos/misdocumeno/WorldGamerules/releases/tags/v0.1.2
+    sha256: b1469d12097a81ee58e7fb696af93fcc38dd38b0bc52ea480d65ddd5c85d49a6

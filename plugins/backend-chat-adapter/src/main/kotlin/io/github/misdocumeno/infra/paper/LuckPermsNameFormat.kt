@@ -7,7 +7,7 @@ import org.bukkit.entity.Player
 
 /**
  * Builds a MiniMessage name using LuckPerms prefix/suffix (same source Essentials
- * uses for `{DISPLAYNAME}` when `add-prefix-suffix` is on). Prod `default` is `&3`.
+ * uses for `{DISPLAYNAME}` when `add-prefix-suffix` is on). Prod `default` is `&5` (violet).
  */
 object LuckPermsNameFormat {
     private val mm = MiniMessage.miniMessage()
