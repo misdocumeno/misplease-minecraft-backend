@@ -5,11 +5,11 @@
 #   docker compose -f docker-compose.prod.yml --profile ops up -d
 # CD only touches game services (see tools/deploy); runner/deployer/backup stay up.
 #
-# IMAGE_TAG defaults to `dev` (what images.yml pushes on main). Pin to a sha for rollbacks.
+# IMAGE_TAG must be a full commit sha (set in .env; deployer pins after healthy apply).
 
 services:
   velocity:
-    image: ghcr.io/misdocumeno/misplease-minecraft-backend/velocity:${IMAGE_TAG:-dev}
+    image: ghcr.io/misdocumeno/misplease-minecraft-backend/velocity:${IMAGE_TAG:?set IMAGE_TAG to a commit sha}
     container_name: misplease-proxy
     init: true
     stop_grace_period: 30s
@@ -47,7 +47,7 @@ services:
     restart: unless-stopped
 
   main:
-    image: ghcr.io/misdocumeno/misplease-minecraft-backend/main:${IMAGE_TAG:-dev}
+    image: ghcr.io/misdocumeno/misplease-minecraft-backend/main:${IMAGE_TAG:?set IMAGE_TAG to a commit sha}
     container_name: misplease-main
     init: true
     stop_grace_period: 90s
@@ -83,7 +83,7 @@ services:
     restart: unless-stopped
 
   tech:
-    image: ghcr.io/misdocumeno/misplease-minecraft-backend/tech:${IMAGE_TAG:-dev}
+    image: ghcr.io/misdocumeno/misplease-minecraft-backend/tech:${IMAGE_TAG:?set IMAGE_TAG to a commit sha}
     container_name: misplease-tech
     init: true
     stop_grace_period: 90s
@@ -117,7 +117,7 @@ services:
     restart: unless-stopped
 
   auth:
-    image: ghcr.io/misdocumeno/misplease-minecraft-backend/auth:${IMAGE_TAG:-dev}
+    image: ghcr.io/misdocumeno/misplease-minecraft-backend/auth:${IMAGE_TAG:?set IMAGE_TAG to a commit sha}
     container_name: misplease-auth
     restart: unless-stopped
     environment:
@@ -132,7 +132,7 @@ services:
 
   # Drizzle migrator from @misplease/db (same auth image).
   db-migrate:
-    image: ghcr.io/misdocumeno/misplease-minecraft-backend/auth:${IMAGE_TAG:-dev}
+    image: ghcr.io/misdocumeno/misplease-minecraft-backend/auth:${IMAGE_TAG:?set IMAGE_TAG to a commit sha}
     container_name: misplease-db-migrate
     environment:
       - DATABASE_URL=postgres://misplease:${DB_PASSWORD}@db:5432/misplease

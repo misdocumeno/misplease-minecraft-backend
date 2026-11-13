@@ -97,7 +97,7 @@ fi
 
 # SMOKE_PLAIN=1: copy lower→state and run from /data/state (no overlay).
 # GitHub Actions runners often lack usable kernel overlay; fuse-overlayfs then
-# breaks plugin data dirs. Prod/preprod keep the real overlay path.
+# breaks plugin data dirs. Real hosts keep the overlay path.
 if [ "${SMOKE_PLAIN:-}" = "1" ]; then
   echo "smoke plain mode: copying server tree into $STATE"
   cp -a "$LOWER"/. "$STATE"/
