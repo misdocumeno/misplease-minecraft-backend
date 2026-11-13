@@ -42,6 +42,9 @@ scratch/
 
 # Runtime data (lives on prod /data only — never in git or Windows dev)
 infra/minecraft/**/data/
+infra/velocity/**/data/
+# Postgres bind mount (docker-compose.prod.yml) — never commit cluster files
+infra/db/data/
 **/*.db
 **/playtime.yml
 **/blockOwnerShips.yml

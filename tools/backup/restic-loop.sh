@@ -5,6 +5,9 @@
 #
 # Runs once per day at BACKUP_AT_HOUR:BACKUP_AT_MINUTE (UTC),
 # not "N hours after container start".
+#
+# Postgres: always pg_dump into the restic snapshot. Never rely only on copying
+# the DB bind-mount/data dir (hot files can be inconsistent).
 set -eu
 
 AT_HOUR="${BACKUP_AT_HOUR:-6}"
@@ -31,6 +34,32 @@ seconds_until_next_run() {
   echo "$delta"
 }
 
+# Dump misplease DB to $1. Returns 0 only if the file exists and is non-empty.
+pg_dump_misplease() {
+  out="$1"
+  rm -f "$out"
+  if ! command -v docker >/dev/null 2>&1; then
+    echo "pg_dump: docker CLI missing" >&2
+    return 1
+  fi
+  if [ ! -S /var/run/docker.sock ]; then
+    echo "pg_dump: docker.sock unavailable" >&2
+    return 1
+  fi
+  if ! docker compose -f "$ROOT/$COMPOSE_FILE" exec -T db \
+    pg_dump -U misplease --no-owner misplease >"$out"; then
+    echo "pg_dump: compose exec failed" >&2
+    rm -f "$out"
+    return 1
+  fi
+  if [ ! -s "$out" ]; then
+    echo "pg_dump: empty or missing output" >&2
+    rm -f "$out"
+    return 1
+  fi
+  return 0
+}
+
 echo "restic backup daily at $(printf '%02d:%02d' "$AT_HOUR" "$AT_MINUTE") UTC → $RESTIC_REPOSITORY"
 
 restic snapshots >/dev/null 2>&1 || restic init
@@ -42,13 +71,14 @@ while true; do
 
   stamp="$(date -u +%Y%m%dT%H%M%SZ)"
   dump="$WORKDIR/misplease-$stamp.sql"
-  echo "[$stamp] pg_dump"
-  if command -v docker >/dev/null 2>&1 && [ -S /var/run/docker.sock ]; then
-    docker compose -f "$ROOT/$COMPOSE_FILE" exec -T db \
-      pg_dump -U misplease --no-owner misplease >"$dump" || echo "pg_dump failed" >&2
-  else
-    echo "docker.sock unavailable — skipping SQL dump" >&2
+
+  echo "[$stamp] pg_dump (required)"
+  if ! pg_dump_misplease "$dump"; then
+    echo "[$stamp] SKIP restic backup — pg_dump failed (will retry next day)" >&2
+    rm -f "$dump" || true
+    continue
   fi
+  echo "[$stamp] pg_dump ok ($(wc -c <"$dump") bytes)"
 
   # First-ever snapshot also gets tag `genesis` (kept forever via --keep-tag).
   # Automatic: any run with no existing genesis-tagged snapshot gets --tag genesis.
@@ -58,15 +88,10 @@ while true; do
     echo "[$stamp] tagging this snapshot as genesis"
   fi
 
-  echo "[$stamp] restic backup"
-  if [ -f "$dump" ]; then
-    # shellcheck disable=SC2086
-    restic backup --tag misplease --tag "at=$stamp" $extra_tag /data/infra "$dump" \
-      || echo "restic backup failed" >&2
-  else
-    # shellcheck disable=SC2086
-    restic backup --tag misplease --tag "at=$stamp" $extra_tag /data/infra \
-      || echo "restic backup failed" >&2
+  echo "[$stamp] restic backup (infra + pg_dump)"
+  # shellcheck disable=SC2086
+  if ! restic backup --tag misplease --tag "at=$stamp" $extra_tag /data/infra "$dump"; then
+    echo "[$stamp] restic backup failed" >&2
   fi
   rm -f "$dump" || true
 

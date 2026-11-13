@@ -149,8 +149,11 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_USER=misplease
       - POSTGRES_DB=misplease
+    # Bind under the stack tree (not a named volume) so rsync/restic of the repo
+    # root can see DB files. Still always pg_dump in restic-loop — do not rely on
+    # copying these files alone. PG18 uses /var/lib/postgresql (not …/data).
     volumes:
-      - db-data:/var/lib/postgresql
+      - ./infra/db/data:/var/lib/postgresql
     healthcheck:
       test: ['CMD', 'pg_isready', '-U', 'misplease']
       interval: 10s
@@ -278,5 +281,4 @@ services:
         condition: service_healthy
 
 volumes:
-  db-data:
   github-runner-data:
