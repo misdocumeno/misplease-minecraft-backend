@@ -12,7 +12,8 @@
 # One rule covers all servers: main-only edits only touch main; tech-only → tech;
 # velocity config → velocity.
 #
-# rcon: plugin.yml `name` as namespace (PluginName:command).
+# rcon: Bukkit/Paper lowercases the plugin namespace — use
+# `betterwarps:warpsreload`, not `BetterWarps:warpsreload` (RCON rejects it).
 #
 # Do NOT list plugins whose tracked config contains secret placeholders
 # (LuckPerms, etc.) — those are injected only at container entrypoint.
@@ -21,4 +22,4 @@ rules:
   - id: betterwarps
     paths:
       - BetterWarps/**
-    rcon: BetterWarps:warpsreload
+    rcon: betterwarps:warpsreload

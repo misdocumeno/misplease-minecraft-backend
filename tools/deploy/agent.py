@@ -576,13 +576,19 @@ def apply_hot_reload(sha: str, actions: list[dict[str, Any]]) -> bool:
             "hot-reload applying "
             f"{sha} actions={[a.get('rule_id') for a in actions]}"
         )
+        # Pin first so hot-reload.yml on disk matches wanted (classify may have
+        # read the previous checkout's rcon strings).
         git_pin(sha)
+        rules_by_id = {
+            str(r.get("id")): r for r in load_hot_reload_rules() if r.get("id")
+        }
 
         for action in actions:
             server = str(action.get("server") or "")
             kind = str(action.get("kind") or "")
             plugin = str(action.get("plugin") or "")
-            cmd = action.get("rcon")
+            rule = rules_by_id.get(str(action.get("rule_id") or ""))
+            cmd = (rule or {}).get("rcon") or action.get("rcon")
             if not server or not kind or not plugin:
                 alert(f"hot-reload action incomplete: {action}")
                 return False
@@ -599,8 +605,12 @@ def apply_hot_reload(sha: str, actions: list[dict[str, Any]]) -> bool:
             log(f"rcon {server} ({host}:{RCON_PORT}): {cmd}")
             try:
                 resp = send_rcon(host, str(cmd))
-                if resp.strip():
-                    log(f"rcon response: {resp.strip()[:500]}")
+                text = (resp or "").strip()
+                if text:
+                    log(f"rcon response: {text[:500]}")
+                if "Unknown or incomplete command" in text:
+                    alert(f"hot-reload RCON rejected on {server}: {text[:200]}")
+                    return False
             except (OSError, TimeoutError, Exception) as e:
                 alert(f"hot-reload RCON failed on {server}: {e}")
                 return False
@@ -839,6 +849,12 @@ def loop() -> None:
     )
     if not ROOT.is_dir():
         raise SystemExit(f"MISPLEASE_ROOT missing: {ROOT}")
+    try:
+        import mcrcon  # noqa: F401
+    except ImportError as e:
+        raise SystemExit(
+            f"mcrcon missing in deployer (pip install -r requirements.txt): {e}"
+        ) from e
     recover_crashed_apply()
     while True:
         try:
