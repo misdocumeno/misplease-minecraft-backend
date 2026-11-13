@@ -3,7 +3,9 @@ package io.github.misdocumeno
 import io.github.misdocumeno.application.CheckSession
 import io.github.misdocumeno.application.LoginPlayer
 import io.github.misdocumeno.application.PlayerSession
+import io.github.misdocumeno.application.SessionEvent
 import io.github.misdocumeno.application.SessionManager
+import io.github.misdocumeno.domain.AuthState
 import io.github.misdocumeno.infra.bukkit.AuthEventListener
 import io.github.misdocumeno.infra.bukkit.BlockEventListener
 import io.github.misdocumeno.infra.bukkit.BukkitAuthFeedback
@@ -22,6 +24,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import org.bukkit.plugin.java.JavaPlugin
 import redis.clients.jedis.JedisPool
 
@@ -68,6 +71,24 @@ class BackendAuthAdapterPlugin : JavaPlugin() {
         getCommand("login")!!.setExecutor(
             LoginCommand(sessionManager, loginPlayer, feedback, scope, this),
         )
+
+        // If Velocity cleared Redis (crash/reconcile) while we still think the
+        // player is authed, force UNAUTHENTICATED so they must /login.
+        server.scheduler.runTaskTimerAsynchronously(this, Runnable {
+            for (player in server.onlinePlayers) {
+                val session = sessionManager.get(player.uniqueId) ?: continue
+                if (session.snapshot().authState != AuthState.AUTHENTICATED) continue
+                scope.launch {
+                    val still = checkSession.execute(player.name)
+                    if (!still) {
+                        server.scheduler.runTask(this@BackendAuthAdapterPlugin, Runnable {
+                            sessionManager.get(player.uniqueId)
+                                ?.dispatch(SessionEvent.AuthResult(false))
+                        })
+                    }
+                }
+            }
+        }, 20L * 15, 20L * 15)
     }
 
     override fun onDisable() {
