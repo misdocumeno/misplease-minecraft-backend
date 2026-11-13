@@ -6,8 +6,9 @@ online-mode = false
 # Secret lives in forwarding.secret (injected from VELOCITY_FORWARDING_SECRET) — must match Paper proxies.velocity.secret.
 player-info-forwarding-mode = "modern"
 # Backends are Paper 26.3. Multi-version = ViaVersion+ViaBackwards on main/tech (not on this proxy).
-# MOTD from legacy (E backup). MiniMessage needs <newline> — a TOML \n alone stays one line.
-motd = "<blue>-<dark_purple><bold>x</bold><blue>-<dark_purple><bold>x</bold><blue>-<dark_purple><bold>x</bold><blue>-<dark_purple><bold>x</bold><blue>-           <dark_purple><bold>MisPlease</bold>            <blue>-<dark_purple><bold>x</bold><blue>-<dark_purple><bold>x</bold><blue>-<dark_purple><bold>x</bold><blue>-<dark_purple><bold>x</bold><blue>-<newline><dark_purple><bold>|</bold>  <blue>Survival</blue>  <dark_purple><bold>|</bold>         <blue>misplease.com</blue>         <dark_purple><bold>|</bold>    <blue>1.20+</blue>   <dark_purple><bold>|</bold>"
+# Flat MiniMessage (close every tag). Deep nesting from unclosed colors makes the
+# Java server list ignore the newline and truncate line 1 with "...".
+motd = "<blue>-x-x-x-x-</blue>          <dark_purple><bold>MisPlease</bold></dark_purple>          <blue>-x-x-x-x-</blue><newline><dark_purple><bold>|</bold></dark_purple>  <blue>Survival</blue>  <dark_purple><bold>|</bold></dark_purple>         <blue>misplease.com</blue>         <dark_purple><bold>|</bold></dark_purple>    <blue>1.20+</blue>   <dark_purple><bold>|</bold></dark_purple>"
 show-max-players = 20
 
 [servers]
