@@ -264,8 +264,9 @@ services:
     restart: unless-stopped
     entrypoint: ["/bin/sh", "-c", "apk add --no-cache docker-cli docker-cli-compose >/dev/null && exec /bin/sh /scripts/restic-loop.sh"]
     environment:
-      RESTIC_REPOSITORY: ${RESTIC_REPOSITORY:?}
-      RESTIC_PASSWORD: ${RESTIC_PASSWORD:?}
+      # Optional until restic is wired; backup entrypoint should no-op if unset.
+      RESTIC_REPOSITORY: ${RESTIC_REPOSITORY:-}
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD:-}
       # Wall-clock UTC (not "N hours after container start"). Default 06:00 UTC.
       BACKUP_AT_HOUR: ${BACKUP_AT_HOUR:-6}
       BACKUP_AT_MINUTE: ${BACKUP_AT_MINUTE:-0}

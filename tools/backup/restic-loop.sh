@@ -60,6 +60,11 @@ pg_dump_misplease() {
   return 0
 }
 
+if [ -z "${RESTIC_REPOSITORY:-}" ] || [ -z "${RESTIC_PASSWORD:-}" ]; then
+  echo "RESTIC_REPOSITORY/RESTIC_PASSWORD unset — backup sidecar idle (set in .env to enable)" >&2
+  while true; do sleep 86400; done
+fi
+
 echo "restic backup daily at $(printf '%02d:%02d' "$AT_HOUR" "$AT_MINUTE") UTC → $RESTIC_REPOSITORY"
 
 restic snapshots >/dev/null 2>&1 || restic init
