@@ -53,7 +53,8 @@ MAINTENANCE_VALUE = os.environ.get(
     '{"enabled":true,"message":"&cServidor en mantenimiento. Probá de nuevo en unos minutos."}',
 )
 SERVICES = os.environ.get(
-    "DEPLOY_SERVICES", "velocity main tech auth db-migrate db redis"
+    "DEPLOY_SERVICES",
+    "velocity main tech auth db-migrate db redis resource-pack",
 ).split()
 HEALTH_SCRIPT = Path(
     os.environ.get(
