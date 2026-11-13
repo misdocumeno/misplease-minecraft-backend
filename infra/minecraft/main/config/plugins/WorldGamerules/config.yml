@@ -6,9 +6,12 @@ defaults:
   keepInventory: true
   mobGriefing: false
   sendCommandFeedback: false
+  # 26.3+: phantoms use spawn_phantoms (doInsomnia is gone). Default on except city world.
+  spawn_phantoms: true
 
 worlds:
-  world: {}
+  world:
+    spawn_phantoms: false
   world2: {}
   newspawn: {}
   spawn_recursos2: {}
@@ -26,7 +29,7 @@ worlds:
     mobGriefing: true
   SuperiorWorld:
     keepInventory: true
-    doInsomnia: false
+    spawn_phantoms: false
   test:
     keepInventory: true
   chapi_buildings:

@@ -15,7 +15,7 @@
 
 # This is a simple scoreboard with only the top and bottom lines animated
 simple:
-    titles: '&7&LYour&6&lServer'
+    titles: '&7&lYour&6&lServer'
     scores:
         '13':
             - '&7&m+----------------+'
@@ -84,7 +84,7 @@ conditional:
 world:
     updateTime: 80
     titles:
-        - '&7&LMis&5&lPlease  '
+        - '&7&lMis&5&lPlease  '
     scores:
         '10':
             - '&7&m+--------------+'
@@ -117,7 +117,7 @@ world:
 recursos_custom:
     updateTime: 80
     titles:
-        - '&7&LMis&5&lPlease   '
+        - '&7&lMis&5&lPlease   '
     scores:
         '15':
             - '&7&m+----------------+'
@@ -157,7 +157,7 @@ recursos_custom:
 recursos2:
     updateTime: 80
     titles:
-        - '&7&LMis&5&lPlease   '
+        - '&7&lMis&5&lPlease   '
     scores:
         '12':
             - '&7&m+----------------+'
@@ -186,7 +186,7 @@ recursos2:
 survival:
     updateTime: 80
     titles:
-        - '&7&LMis&5&lPlease   '
+        - '&7&lMis&5&lPlease   '
     scores:
         '12':
             - '&7&m+----------------+'
@@ -215,7 +215,7 @@ survival:
 spawn_recursos2:
     updateTime: 80
     titles:
-        - '&7&LMis&5&lPlease   '
+        - '&7&lMis&5&lPlease   '
     scores:
         '7':
             - '&7&m+-------------+'
@@ -234,14 +234,14 @@ spawn_recursos2:
 newspawn:
     updateTime: 80
     titles:
-        - '&7&LMis&5&lPlease   '
+        - '&7&lMis&5&lPlease   '
     scores:
         '7':
             - '&7&m+--------------------+'
         '6':
-            - '&7&L     ¡Bienvenido a'
+            - '&7&l     ¡Bienvenido a'
         '5':
-            - '         &5&LMis&5&LPlease&7&L!'
+            - '         &5&lMis&5&lPlease&7&l!'
         '4':
             - ''
         '3':
@@ -255,7 +255,7 @@ newspawn:
 world2:
     updateTime: 80
     titles:
-        - '&7&LMis&5&lPlease   '
+        - '&7&lMis&5&lPlease   '
     scores:
         '8':
             - '&7&m+---------------+'
@@ -276,7 +276,7 @@ world2:
 spawn_nether:
     updateTime: 80
     titles:
-        - '&7&LMis&5&lPlease   '
+        - '&7&lMis&5&lPlease   '
     scores:
         '7':
             - '&7&m+-------------+'
@@ -295,7 +295,7 @@ spawn_nether:
 nether:
     updateTime: 80
     titles:
-        - '&7&LMis&5&lPlease   '
+        - '&7&lMis&5&lPlease   '
     scores:
         '12':
             - '&7&m+----------------+'
@@ -324,7 +324,7 @@ nether:
 nether_noreset:
     updateTime: 80
     titles:
-        - '&7&LMis&5&lPlease   '
+        - '&7&lMis&5&lPlease   '
     scores:
         '12':
             - '&7&m+-----------------+'
@@ -353,7 +353,7 @@ nether_noreset:
 spawn_the_end:
     updateTime: 80
     titles:
-        - '&7&LMis&5&lPlease   '
+        - '&7&lMis&5&lPlease   '
     scores:
         '7':
             - '&7&m+------------+'
@@ -372,7 +372,7 @@ spawn_the_end:
 end:
     updateTime: 80
     titles:
-        - '&7&LMis&5&lPlease   '
+        - '&7&lMis&5&lPlease   '
     scores:
         '12':
             - '&7&m+--------------+'
@@ -401,7 +401,7 @@ end:
 world_the_end_noreset:
     updateTime: 80
     titles:
-        - '&7&LMis&5&lPlease   '
+        - '&7&lMis&5&lPlease   '
     scores:
         '12':
             - '&7&m+----------------+'
@@ -430,7 +430,7 @@ world_the_end_noreset:
 SuperiorWorld:
     updateTime: 80
     titles:
-        - '&7&LMis&5&lPlease   '
+        - '&7&lMis&5&lPlease   '
     scores:
         '13':
             - '&7&m+----------------+'
@@ -461,7 +461,7 @@ SuperiorWorld:
 parcelas:
     updateTime: 80
     titles:
-        - '&7&LMis&5&lPlease  '
+        - '&7&lMis&5&lPlease  '
     scores:
         '10':
             - '&7&m+--------------+'
@@ -494,7 +494,7 @@ parcelas:
 creativo:
     updateTime: 80
     titles:
-        - '&7&LMis&5&lPlease   '
+        - '&7&lMis&5&lPlease   '
     scores:
         '7':
             - '&7&m+-------------+'

@@ -177,6 +177,17 @@ services:
       timeout: 5s
       retries: 5
 
+  # Static host for Paper resource-pack URL (server.properties → :24256/...).
+  # Zip lives under main data/state (not in git); cutover/restic keep it on the VM.
+  resource-pack:
+    image: nginx:1.27-alpine
+    container_name: misplease-resource-pack
+    restart: unless-stopped
+    volumes:
+      - ./infra/minecraft/main/data/state/resource-pack/public:/usr/share/nginx/html:ro
+    ports:
+      - 24256:80
+
   # --- ops profile (not required to play) ---
   # Community image wrapping the official actions/runner binary (not published by GitHub).
   github-runner:

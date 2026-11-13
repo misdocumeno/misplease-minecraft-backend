@@ -1,6 +1,4 @@
-# Same behavior as the old backend-nether-hub:
-# NETHER_PORTAL from world / survival → fixed hub in nether.
-# Tweak x/y/z/yaw/pitch to the real hub on deploy.
+# Matches legacy NetherPortal: overworld portals → spawn_nether hub (not temporal nether).
 portal-types:
   - NETHER_PORTAL
 
@@ -9,7 +7,7 @@ routes:
     from:
       world: survival
     to:
-      world: nether
+      world: spawn_nether
       x: 0.5
       y: 64.0
       z: 0.5
@@ -20,7 +18,7 @@ routes:
     from:
       world: world
     to:
-      world: nether
+      world: spawn_nether
       x: 0.5
       y: 64.0
       z: 0.5
