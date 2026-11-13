@@ -27,7 +27,7 @@ class VelocityEventListener(
         // Delay so currentServer / local PLAYER_INFO are settled (empty tab on
         // first tech join otherwise).
         proxy.scheduler
-            .buildTask(plugin) { rebuilder.rebuildGlobalTabList() }
+            .buildTask(plugin, java.lang.Runnable { rebuilder.rebuildGlobalTabList() })
             .delay(250, TimeUnit.MILLISECONDS)
             .schedule()
     }

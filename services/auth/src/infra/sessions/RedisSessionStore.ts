@@ -24,4 +24,18 @@ export class RedisSessionStore implements SessionStore {
         const event: AuthEvent = { type: 'Invalidated', username }
         await this.redis.publish(RedisSessionStore.EVENTS_CHANNEL, JSON.stringify(event))
     }
+
+    async listAuthenticated() {
+        const members = await this.redis.sMembers(RedisSessionStore.AUTH_SET_KEY)
+        return [...members]
+    }
+
+    async clearAll() {
+        const members = await this.listAuthenticated()
+        await this.redis.del(RedisSessionStore.AUTH_SET_KEY)
+        for (const username of members) {
+            const event: AuthEvent = { type: 'Invalidated', username }
+            await this.redis.publish(RedisSessionStore.EVENTS_CHANNEL, JSON.stringify(event))
+        }
+    }
 }

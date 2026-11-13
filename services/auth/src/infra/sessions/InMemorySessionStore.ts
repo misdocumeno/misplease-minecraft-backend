@@ -16,4 +16,13 @@ export class InMemorySessionStore implements SessionStore {
         this.sessions.delete(username)
         return Promise.resolve()
     }
+
+    listAuthenticated() {
+        return Promise.resolve([...this.sessions])
+    }
+
+    clearAll() {
+        this.sessions.clear()
+        return Promise.resolve()
+    }
 }

@@ -3,6 +3,8 @@ import type { Router, Request, Response } from 'express'
 import { CreateGameSessionUseCase } from '@/application/CreateGameSessionUseCase'
 import { IsGameSessionAuthenticatedUseCase } from '@/application/IsGameSessionAuthenticatedUseCase'
 import { InvalidateGameSessionUseCase } from '@/application/InvalidateGameSessionUseCase'
+import { ClearAllGameSessionsUseCase } from '@/application/ClearAllGameSessionsUseCase'
+import { ListAuthenticatedSessionsUseCase } from '@/application/ListAuthenticatedSessionsUseCase'
 
 const LoginBodySchema = z.object({
     username: z.string(),
@@ -14,12 +16,16 @@ export class GameSessionController {
         private readonly sessionCreateUseCase: CreateGameSessionUseCase,
         private readonly authenticatedUseCase: IsGameSessionAuthenticatedUseCase,
         private readonly sessionInvalidateUseCase: InvalidateGameSessionUseCase,
+        private readonly clearAllUseCase: ClearAllGameSessionsUseCase,
+        private readonly listAuthenticatedUseCase: ListAuthenticatedSessionsUseCase,
     ) {}
 
     registerRoutes(router: Router) {
         router.post('/login', this.login.bind(this))
         router.post('/invalidate', this.invalidate.bind(this))
+        router.post('/clear-all', this.clearAll.bind(this))
         router.get('/is-authenticated', this.isAuthenticated.bind(this))
+        router.get('/authenticated', this.listAuthenticated.bind(this))
     }
 
     private async login(req: Request, res: Response) {
@@ -39,9 +45,19 @@ export class GameSessionController {
         res.status(200).json({ type: 'Success' })
     }
 
+    private async clearAll(_req: Request, res: Response) {
+        await this.clearAllUseCase.execute()
+        res.status(200).json({ type: 'Success' })
+    }
+
     private async isAuthenticated(req: Request, res: Response) {
         const { username } = z.object({ username: z.string() }).parse(req.query)
         const authenticated = await this.authenticatedUseCase.execute(username)
         res.json({ authenticated })
+    }
+
+    private async listAuthenticated(_req: Request, res: Response) {
+        const usernames = await this.listAuthenticatedUseCase.execute()
+        res.json({ usernames })
     }
 }

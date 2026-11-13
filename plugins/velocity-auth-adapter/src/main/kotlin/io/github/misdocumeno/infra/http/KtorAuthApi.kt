@@ -8,6 +8,7 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import kotlinx.serialization.Serializable
 
 class KtorAuthApi(private val client: HttpClient) : AuthApi {
 
@@ -23,4 +24,15 @@ class KtorAuthApi(private val client: HttpClient) : AuthApi {
             setBody(Username(username))
         }
     }
+
+    override suspend fun clearAllSessions() {
+        client.post("http://auth:3000/session/clear-all")
+    }
+
+    override suspend fun listAuthenticated(): List<String> {
+        return client.get("http://auth:3000/session/authenticated").body<AuthenticatedList>().usernames
+    }
+
+    @Serializable
+    private data class AuthenticatedList(val usernames: List<String>)
 }

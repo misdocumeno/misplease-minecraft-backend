@@ -10,6 +10,8 @@ import { AuthService } from './domain/services/AuthService'
 import { LegacyAuthMePasswordHasher } from './services/LegacyAuthMePasswordHasher'
 import { IsGameSessionAuthenticatedUseCase } from './application/IsGameSessionAuthenticatedUseCase'
 import { InvalidateGameSessionUseCase } from './application/InvalidateGameSessionUseCase'
+import { ClearAllGameSessionsUseCase } from './application/ClearAllGameSessionsUseCase'
+import { ListAuthenticatedSessionsUseCase } from './application/ListAuthenticatedSessionsUseCase'
 import { AuthController } from './infra/http/AuthController'
 import { LoginUseCase } from './application/LoginUseCase'
 import { RegisterUseCase } from './application/RegisterUseCase'
@@ -46,10 +48,14 @@ async function main() {
     const createSessionUseCase = new CreateGameSessionUseCase(authService, sessionStore)
     const isAuthenticatedUseCase = new IsGameSessionAuthenticatedUseCase(sessionStore)
     const invalidateSessionUseCase = new InvalidateGameSessionUseCase(sessionStore)
+    const clearAllSessionsUseCase = new ClearAllGameSessionsUseCase(sessionStore)
+    const listAuthenticatedUseCase = new ListAuthenticatedSessionsUseCase(sessionStore)
     const sessionController = new GameSessionController(
         createSessionUseCase,
         isAuthenticatedUseCase,
         invalidateSessionUseCase,
+        clearAllSessionsUseCase,
+        listAuthenticatedUseCase,
     )
 
     sessionController.registerRoutes(sessionRouter)
