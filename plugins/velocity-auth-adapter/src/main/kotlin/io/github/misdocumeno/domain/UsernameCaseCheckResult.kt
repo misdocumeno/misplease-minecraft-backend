@@ -3,7 +3,6 @@ package io.github.misdocumeno.domain
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-//  TODO: move to infra, as a DTO, and translate to domain
 @Serializable
 sealed interface UsernameCaseCheckResult {
 
@@ -13,11 +12,9 @@ sealed interface UsernameCaseCheckResult {
 
     @Serializable
     @SerialName("ExactMatch")
-    object ExactMatch : UsernameCaseCheckResult
+    data class ExactMatch(val username: String, val uuid: String) : UsernameCaseCheckResult
 
     @Serializable
     @SerialName("WrongCase")
-    data class WrongCase(val correctUsername: String) : UsernameCaseCheckResult
+    data class WrongCase(val correctUsername: String, val uuid: String) : UsernameCaseCheckResult
 }
-
-

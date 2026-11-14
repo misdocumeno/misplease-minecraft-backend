@@ -10,14 +10,16 @@ disconnect:
   invalid-key: Please connect through the official Geyser
   invalid-arguments-length: Expected {} arguments, got {}. Is Geyser up-to-date?
 
+# Own linking on the proxy only (sqlite jar in plugins/floodgate/).
+# Auth-adapter calls linkPlayer with OfflinePlayer UUID from auth — not global/Mojang.
 player-link:
   enabled: true
   require-link: false
-  enable-own-linking: false
+  enable-own-linking: true
   allowed: true
   link-code-timeout: 300
   type: sqlite
-  enable-global-linking: true
+  enable-global-linking: false
 
 metrics:
   enabled: false

@@ -35,3 +35,8 @@ plugins:
     source: geysermc
     id: floodgate
     asset: velocity
+  # Local linking DB extension — must sit inside plugins/floodgate/ (see entrypoint).
+  - name: FloodgateSqliteDatabase
+    source: geysermc
+    id: floodgatedb
+    asset: sqlite

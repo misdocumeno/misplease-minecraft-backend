@@ -6,4 +6,5 @@
 object MispleaseDeps {
     const val PAPER_API = "io.papermc.paper:paper-api:26.3.build.+"
     const val VELOCITY_API = "com.velocitypowered:velocity-api:4.3.0"
+    const val FLOODGATE_API = "org.geysermc.floodgate:api:2.2.5-SNAPSHOT"
 }

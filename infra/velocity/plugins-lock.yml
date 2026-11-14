@@ -255,3 +255,9 @@ plugins:
     filename: Geyser-Velocity.jar
     url: https://download.geysermc.org/v2/projects/geyser/versions/2.12.1/builds/1302/downloads/velocity
     sha256: 0a5716a8b6811ed8d1f26b668e3ccd30f5a59cdcfef3b95b56f40528ab75a7ab
+  - name: FloodgateSqliteDatabase
+    source: geysermc
+    version: 2.2.5-b138
+    filename: floodgate-sqlite-database.jar
+    url: https://download.geysermc.org/v2/projects/floodgatedb/versions/2.2.5/builds/138/downloads/sqlite
+    sha256: df4ae91e452f7124f11b97d625357b00b13208c056e68c5473e1599b1e443317
