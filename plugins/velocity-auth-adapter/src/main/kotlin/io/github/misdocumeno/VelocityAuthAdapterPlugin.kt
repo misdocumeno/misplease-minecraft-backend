@@ -6,13 +6,11 @@ import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.connection.DisconnectEvent
 import com.velocitypowered.api.event.connection.LoginEvent
 import com.velocitypowered.api.event.connection.PreLoginEvent
-import com.velocitypowered.api.event.player.GameProfileRequestEvent
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
 import com.velocitypowered.api.plugin.Dependency
 import com.velocitypowered.api.plugin.Plugin
 import com.velocitypowered.api.proxy.ProxyServer
-import com.velocitypowered.api.util.GameProfile
 import io.github.misdocumeno.application.SessionInvalidator
 import io.github.misdocumeno.application.UsernameCaseChecker
 import io.github.misdocumeno.domain.AuthApi
@@ -43,9 +41,10 @@ import java.util.concurrent.TimeUnit
  * - Proxy boot/shutdown: clear-all
  * - Reconcile: list authenticated, invalidate anyone not on the proxy
  *
- * Bedrock (Floodgate): strip username prefix, resolve auth UUID, rewrite GameProfile
- * to the same OfflinePlayer identity as Java, and linkPlayer into Floodgate own-linking
- * (sqlite via Floodgate-misplease Guice 7 fix until upstream PR #645 ships).
+ * Bedrock (Floodgate): strip username prefix, resolve auth UUID, persist own-linking
+ * (sqlite via Floodgate-misplease). Do NOT rewrite GameProfile — Floodgate must own the
+ * linked UUID for this session or plugin messages kick with "Only Floodgate players…".
+ * First link → kick "reconnect" so the next handshake loads LinkedPlayer.
  *
  * Backends are the ones that *read* Redis on join to decide /login.
  */
@@ -112,49 +111,15 @@ class VelocityAuthAdapterPlugin @Inject constructor(
                     return@runBlocking
                 }
                 if (denyIfAlreadyOnline(event, result.correctUsername)) return@runBlocking
-                linkFloodgateToAuth(fg, result.uuid, result.correctUsername)
+                ensureFloodgateLinkedOrKick(event, fg, result.uuid, result.correctUsername)
             }
 
             is UsernameCaseCheckResult.ExactMatch -> {
                 if (denyIfAlreadyOnline(event, result.username)) return@runBlocking
                 if (fg != null) {
-                    linkFloodgateToAuth(fg, result.uuid, result.username)
+                    ensureFloodgateLinkedOrKick(event, fg, result.uuid, result.username)
                 }
             }
-        }
-    }
-
-    /**
-     * Floodgate sets the XUID-based profile first; we override LAST with the
-     * offline auth GameProfile so backends/plugins see the same identity as Java.
-     */
-    @Subscribe(order = PostOrder.LAST)
-    fun onGameProfileRequest(event: GameProfileRequestEvent) = runBlocking {
-        val fg = findFloodgatePlayer(event.username) ?: return@runBlocking
-        val lookup = authLookupName(event.username, fg)
-        when (val result = caseChecker.check(lookup)) {
-            is UsernameCaseCheckResult.ExactMatch -> {
-                linkFloodgateToAuth(fg, result.uuid, result.username)
-                event.gameProfile = GameProfile(UUID.fromString(result.uuid), result.username, emptyList())
-                logger.info(
-                    "bedrock profile {} -> {} ({})",
-                    event.username,
-                    result.username,
-                    result.uuid,
-                )
-            }
-            is UsernameCaseCheckResult.WrongCase -> {
-                linkFloodgateToAuth(fg, result.uuid, result.correctUsername)
-                event.gameProfile =
-                    GameProfile(UUID.fromString(result.uuid), result.correctUsername, emptyList())
-                logger.info(
-                    "bedrock profile {} -> {} ({})",
-                    event.username,
-                    result.correctUsername,
-                    result.uuid,
-                )
-            }
-            UsernameCaseCheckResult.NotFound -> Unit
         }
     }
 
@@ -191,6 +156,63 @@ class VelocityAuthAdapterPlugin @Inject constructor(
         return false
     }
 
+    /**
+     * Floodgate only applies LinkedPlayer during handshake. Linking mid-login leaves
+     * FloodgatePlayer unlinked while Velocity may already use the Java UUID → kick.
+     * If this session already has the link in-memory, allow; otherwise persist + reconnect.
+     */
+    private fun ensureFloodgateLinkedOrKick(
+        event: PreLoginEvent,
+        fg: FloodgatePlayer,
+        authUuid: String,
+        authUsername: String,
+    ) {
+        val javaId = UUID.fromString(authUuid)
+        if (fg.isLinked && fg.correctUniqueId == javaId) {
+            return
+        }
+
+        if (!persistFloodgateLink(fg, javaId, authUsername)) {
+            event.result = PreLoginEvent.PreLoginComponentResult.denied(
+                Component.text("No se pudo vincular la cuenta Bedrock. Probá de nuevo."),
+            )
+            return
+        }
+
+        // Link is in sqlite; this FloodgatePlayer still has linkedPlayer=null until re-handshake.
+        event.result = PreLoginEvent.PreLoginComponentResult.denied(
+            Component.text(
+                "Cuenta Xbox vinculada a $authUsername.\nCerrá y volvé a entrar.",
+            ),
+        )
+        logger.info(
+            "bedrock link ready for {} ({}); kicked to re-handshake",
+            authUsername,
+            javaId,
+        )
+    }
+
+    private fun persistFloodgateLink(fg: FloodgatePlayer, javaId: UUID, authUsername: String): Boolean {
+        return try {
+            val link = FloodgateApi.getInstance().playerLink
+            if (link == null || !link.isEnabled) {
+                logger.warn("floodgate player-link disabled; cannot link {}", authUsername)
+                return false
+            }
+            val bedrockId = fg.javaUniqueId
+            val existing = link.getLinkedPlayer(bedrockId).join()
+            if (existing != null && existing.javaUniqueId == javaId) {
+                return true
+            }
+            link.linkPlayer(bedrockId, javaId, authUsername).join()
+            logger.info("floodgate linked {} -> {} ({})", bedrockId, authUsername, javaId)
+            true
+        } catch (e: Exception) {
+            logger.warn("floodgate linkPlayer failed for {}: {}", authUsername, e.message)
+            false
+        }
+    }
+
     private fun authLookupName(username: String, fg: FloodgatePlayer?): String {
         if (fg != null) {
             if (fg.isLinked) return fg.correctUsername
@@ -212,26 +234,6 @@ class VelocityAuthAdapterPlugin @Inject constructor(
         } catch (e: Throwable) {
             logger.debug("floodgate player lookup skipped: {}", e.message)
             null
-        }
-    }
-
-    private fun linkFloodgateToAuth(fg: FloodgatePlayer, authUuid: String, authUsername: String) {
-        try {
-            val link = FloodgateApi.getInstance().playerLink ?: return
-            if (!link.isEnabled) {
-                logger.warn("floodgate player-link disabled; cannot link {}", authUsername)
-                return
-            }
-            val bedrockId = fg.javaUniqueId
-            val javaId = UUID.fromString(authUuid)
-            val existing = link.getLinkedPlayer(bedrockId).join()
-            if (existing != null && existing.javaUniqueId == javaId) {
-                return
-            }
-            link.linkPlayer(bedrockId, javaId, authUsername).join()
-            logger.info("floodgate linked {} -> {} ({})", bedrockId, authUsername, javaId)
-        } catch (e: Exception) {
-            logger.warn("floodgate linkPlayer failed for {}: {}", authUsername, e.message)
         }
     }
 
