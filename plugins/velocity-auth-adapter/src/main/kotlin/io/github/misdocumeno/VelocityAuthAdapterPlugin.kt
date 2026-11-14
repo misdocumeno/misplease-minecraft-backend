@@ -182,7 +182,7 @@ class VelocityAuthAdapterPlugin @Inject constructor(
         // Link is in sqlite; this FloodgatePlayer still has linkedPlayer=null until re-handshake.
         event.result = PreLoginEvent.PreLoginComponentResult.denied(
             Component.text(
-                "Cuenta Xbox vinculada a $authUsername.\nCerrá y volvé a entrar.",
+                "¡Tu cuenta de Bedrock quedó vinculada a $authUsername!\nReconectá para empezar a jugar.",
             ),
         )
         logger.info(
