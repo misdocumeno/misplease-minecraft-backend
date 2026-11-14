@@ -6,9 +6,9 @@ online-mode = false
 # Secret lives in forwarding.secret (injected from VELOCITY_FORWARDING_SECRET) — must match Paper proxies.velocity.secret.
 player-info-forwarding-mode = "modern"
 # Backends are Paper 26.3. Multi-version = ViaVersion+ViaBackwards on main/tech (not on this proxy).
-# Flat MiniMessage (close every tag). Deep nesting from unclosed colors makes the
-# Java server list ignore the newline and truncate line 1 with "...".
-motd = "<blue>-x-x-x-x-</blue>          <dark_purple><bold>MisPlease</bold></dark_purple>          <blue>-x-x-x-x-</blue><newline><dark_purple><bold>|</bold></dark_purple>  <blue>Survival</blue>  <dark_purple><bold>|</bold></dark_purple>         <blue>misplease.com</blue>         <dark_purple><bold>|</bold></dark_purple>    <blue>1.20+</blue>   <dark_purple><bold>|</bold></dark_purple>"
+# Flat MiniMessage (close every tag). Colors from sleep backup: blue dashes +
+# dark_purple bold x; MisPlease/| dark_purple bold; Survival/url/1.20+ blue.
+motd = "<blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue>          <dark_purple><bold>MisPlease</bold></dark_purple>          <blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue><newline><dark_purple><bold>|</bold></dark_purple>  <blue>Survival</blue>  <dark_purple><bold>|</bold></dark_purple>         <blue>misplease.com</blue>         <dark_purple><bold>|</bold></dark_purple>    <blue>1.20+</blue>   <dark_purple><bold>|</bold></dark_purple>"
 show-max-players = 20
 
 [servers]
