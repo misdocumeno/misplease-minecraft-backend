@@ -110,8 +110,9 @@ GriefPrevention:
   LimitTreeGrowth: false
   PistonMovement: EVERYWHERE
   PistonExplosionSound: true
-  FireSpreads: false
-  FireDestroys: false
+  # Global fire: WorldGuard's job. GP only suppresses fire inside claims (below).
+  FireSpreads: true
+  FireDestroys: true
   AdminsGetWhispers: false
   AdminsGetSignNotifications: false
   VisualizationAntiCheatCompatMode: false
