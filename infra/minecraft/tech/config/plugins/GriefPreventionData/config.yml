@@ -14,10 +14,10 @@ GriefPrevention:
     PreventTheft: true
     HoppersRequireBuildTrust: false
     ProtectCreatures: true
-    PreventButtonsSwitches: false
-    LockWoodenDoors: false
-    LockTrapDoors: false
-    LockFenceGates: false
+    PreventButtonsSwitches: true
+    LockWoodenDoors: true
+    LockTrapDoors: true
+    LockFenceGates: true
     EnderPearlsRequireAccessTrust: false
     RefundDeniedEnderPearls: true
     RaidTriggersRequireBuildTrust: false
@@ -80,8 +80,10 @@ GriefPrevention:
       world_the_end: true
     ProtectFreshSpawns: false
     PunishLogout: false
-    CombatTimeoutSeconds: 15
-    AllowCombatItemDrop: false
+    # 0 = no combat tag → vanilla-like: can open containers / drop items while fighting.
+    # (GP has no separate toggle for PvPNoContainers; only AllowCombatItemDrop for drops.)
+    CombatTimeoutSeconds: 0
+    AllowCombatItemDrop: true
     BlockedSlashCommands: '[]'
     ProtectPlayersInLandClaims:
       PlayerOwnedClaims: true
