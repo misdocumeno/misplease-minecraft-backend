@@ -208,8 +208,7 @@ Messages:
   AutomaticClaimOtherClaimTooClose:
     Text: Cannot create a claim for your chest, there is another claim too close!
   UnprotectedChestWarning:
-    Text: This chest is NOT protected.  Consider using a golden shovel to expand an
-      existing claim or to create a new one.
+    Text: ''
   ThatPlayerPvPImmune:
     Text: You can't injure defenseless players.
   CantFightWhileImmune:
