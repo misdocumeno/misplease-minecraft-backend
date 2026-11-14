@@ -44,8 +44,8 @@ import java.util.concurrent.TimeUnit
  * - Reconcile: list authenticated, invalidate anyone not on the proxy
  *
  * Bedrock (Floodgate): strip username prefix, resolve auth UUID, rewrite GameProfile
- * to the same OfflinePlayer identity as Java. (Floodgate own-linking sqlite is unusable
- * on Velocity 4.3 / Guice 7; linkPlayer is best-effort if a PlayerLink ever loads.)
+ * to the same OfflinePlayer identity as Java, and linkPlayer into Floodgate own-linking
+ * (sqlite via Floodgate-misplease Guice 7 fix until upstream PR #645 ships).
  *
  * Backends are the ones that *read* Redis on join to decide /login.
  */

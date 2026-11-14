@@ -10,13 +10,12 @@ disconnect:
   invalid-key: Please connect through the official Geyser
   invalid-arguments-length: Expected {} arguments, got {}. Is Geyser up-to-date?
 
-# Own-linking sqlite is broken on Velocity 4.3 (Guice 7 skips javax.inject →
-# dataDirectory NPE; GeyserMC PR #645 still open). Bedrock→offline UUID is done
-# by velocity-auth-adapter GameProfile rewrite instead.
+# Own-linking sqlite jar: misdocumeno/Floodgate-misplease (Guice 7 inject fix).
+# Auth-adapter also rewrites GameProfile + calls linkPlayer on Bedrock join.
 player-link:
   enabled: true
   require-link: false
-  enable-own-linking: false
+  enable-own-linking: true
   allowed: true
   link-code-timeout: 300
   type: sqlite

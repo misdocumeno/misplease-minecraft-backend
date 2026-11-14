@@ -35,3 +35,9 @@ plugins:
     source: geysermc
     id: floodgate
     asset: velocity
+  # Temporary fork: Guice 7 / Velocity 4 own-linking (upstream PR #645 still open).
+  - name: FloodgateSqliteDatabase
+    source: github
+    repo: misdocumeno/Floodgate-misplease
+    version: v2.2.5-misplease.1
+    jar: /^floodgate-sqlite-database\.jar$/
