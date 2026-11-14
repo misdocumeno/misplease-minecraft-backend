@@ -32,7 +32,8 @@ GriefPrevention:
     Accrued Idle Threshold: 0
     AccruedIdlePercent: 0
     AbandonReturnRatio: 1.0
-    AutomaticNewPlayerClaimsRadius: 0
+    # -1 disables first-chest autoclaim (0 = 1-block claim on the chest — NOT off).
+    AutomaticNewPlayerClaimsRadius: -1
     AutomaticNewPlayerClaimsRadiusMinimum: 0
     ExtendIntoGroundDistance: 5
     MinimumWidth: 5
