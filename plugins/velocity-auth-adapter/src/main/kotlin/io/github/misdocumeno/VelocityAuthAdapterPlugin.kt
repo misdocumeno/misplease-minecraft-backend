@@ -43,8 +43,9 @@ import java.util.concurrent.TimeUnit
  * - Proxy boot/shutdown: clear-all
  * - Reconcile: list authenticated, invalidate anyone not on the proxy
  *
- * Bedrock (Floodgate): strip username prefix, resolve auth UUID, PlayerLink.linkPlayer
- * so Floodgate applies the same OfflinePlayer identity as Java.
+ * Bedrock (Floodgate): strip username prefix, resolve auth UUID, rewrite GameProfile
+ * to the same OfflinePlayer identity as Java. (Floodgate own-linking sqlite is unusable
+ * on Velocity 4.3 / Guice 7; linkPlayer is best-effort if a PlayerLink ever loads.)
  *
  * Backends are the ones that *read* Redis on join to decide /login.
  */
@@ -92,7 +93,7 @@ class VelocityAuthAdapterPlugin @Inject constructor(
             .schedule()
     }
 
-    @Subscribe(order = PostOrder.LATE)
+    @Subscribe(order = PostOrder.LAST)
     fun onPreLogin(event: PreLoginEvent) = runBlocking {
         val fg = findFloodgatePlayer(event.username)
         val lookup = authLookupName(event.username, fg)
@@ -124,10 +125,10 @@ class VelocityAuthAdapterPlugin @Inject constructor(
     }
 
     /**
-     * Floodgate sets the XUID-based profile first; after our linkPlayer (and as a
-     * belt-and-suspenders), force the Offline auth GameProfile.
+     * Floodgate sets the XUID-based profile first; we override LAST with the
+     * offline auth GameProfile so backends/plugins see the same identity as Java.
      */
-    @Subscribe(order = PostOrder.LATE)
+    @Subscribe(order = PostOrder.LAST)
     fun onGameProfileRequest(event: GameProfileRequestEvent) = runBlocking {
         val fg = findFloodgatePlayer(event.username) ?: return@runBlocking
         val lookup = authLookupName(event.username, fg)
@@ -135,11 +136,23 @@ class VelocityAuthAdapterPlugin @Inject constructor(
             is UsernameCaseCheckResult.ExactMatch -> {
                 linkFloodgateToAuth(fg, result.uuid, result.username)
                 event.gameProfile = GameProfile(UUID.fromString(result.uuid), result.username, emptyList())
+                logger.info(
+                    "bedrock profile {} -> {} ({})",
+                    event.username,
+                    result.username,
+                    result.uuid,
+                )
             }
             is UsernameCaseCheckResult.WrongCase -> {
                 linkFloodgateToAuth(fg, result.uuid, result.correctUsername)
                 event.gameProfile =
                     GameProfile(UUID.fromString(result.uuid), result.correctUsername, emptyList())
+                logger.info(
+                    "bedrock profile {} -> {} ({})",
+                    event.username,
+                    result.correctUsername,
+                    result.uuid,
+                )
             }
             UsernameCaseCheckResult.NotFound -> Unit
         }
