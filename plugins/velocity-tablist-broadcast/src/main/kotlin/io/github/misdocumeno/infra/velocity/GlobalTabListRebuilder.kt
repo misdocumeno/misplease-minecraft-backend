@@ -8,12 +8,17 @@ import io.lettuce.core.api.StatefulRedisConnection
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import net.luckperms.api.LuckPermsProvider
+import net.skinsrestorer.api.SkinsRestorerProvider
+import net.skinsrestorer.api.property.SkinProperty
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
 class GlobalTabListRebuilder(
     private val proxy: ProxyServer,
     private val connection: StatefulRedisConnection<String, String>,
 ) {
     private val legacy = LegacyComponentSerializer.legacyAmpersand()
+    private val textureCache = ConcurrentHashMap<UUID, GameProfile.Property>()
 
     fun rebuildGlobalTabList() {
         connection.async().smembers(AUTH_SET).whenComplete { names, error ->
@@ -26,12 +31,14 @@ class GlobalTabListRebuilder(
 
     private fun rebuildWith(authenticatedNames: Set<String>) {
         val authed = proxy.allPlayers.filter { it.username in authenticatedNames }
+        val onlineIds = authed.map { it.uniqueId }.toSet()
+        textureCache.keys.retainAll(onlineIds)
 
         authed.forEach { viewer ->
             // Skip until Velocity has bound a backend — caller retries shortly after.
             if (serverName(viewer) == null) return@forEach
 
-            val wanted = authed.map { it.uniqueId }.toSet()
+            val wanted = onlineIds
 
             viewer.tabList.entries.toList().forEach { entry ->
                 if (entry.profile.id !in wanted) {
@@ -61,9 +68,12 @@ class GlobalTabListRebuilder(
                 entry.setLatency(latency)
                 return
             }
-            // Bare profile was added before SkinsRestorer / backend PLAYER_INFO settled.
-            // TabListEntry cannot swap GameProfile in place — remove and re-add.
+            // Bare profile was added before textures settled. TabListEntry cannot swap
+            // GameProfile in place — remove and re-add.
             viewer.tabList.removeEntry(target.uniqueId)
+        } else if (!hasTextures(profile)) {
+            // Do not stamp Steve heads; a later rebuild / backend PLAYER_INFO may win.
+            return
         }
 
         viewer.tabList.addEntry(
@@ -90,11 +100,28 @@ class GlobalTabListRebuilder(
                 return entry.get().profile
             }
         }
-        return target.gameProfile
+        val fromSr = texturesFromSkinsRestorer(target) ?: return target.gameProfile
+        return target.gameProfile.addProperty(fromSr)
+    }
+
+    private fun texturesFromSkinsRestorer(target: Player): GameProfile.Property? {
+        textureCache[target.uniqueId]?.let { return it }
+        return runCatching {
+            val property = SkinsRestorerProvider.get()
+                .playerStorage
+                .getSkinForPlayer(target.uniqueId, target.username)
+                .orElse(null)
+                ?: return@runCatching null
+            GameProfile.Property(
+                SkinProperty.TEXTURES_NAME,
+                property.value,
+                property.signature,
+            )
+        }.getOrNull()?.also { textureCache[target.uniqueId] = it }
     }
 
     private fun hasTextures(profile: GameProfile): Boolean =
-        profile.properties.any { it.name == "textures" }
+        profile.properties.any { it.name == SkinProperty.TEXTURES_NAME || it.name == "textures" }
 
     private fun coloredName(player: Player): Component {
         val prefix = runCatching {
