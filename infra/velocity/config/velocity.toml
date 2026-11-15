@@ -8,7 +8,9 @@ player-info-forwarding-mode = "modern"
 # Backends are Paper 26.3. Multi-version = ViaVersion+ViaBackwards on main/tech (not on this proxy).
 # Flat MiniMessage (close every tag). Colors from sleep backup: blue dashes +
 # dark_purple bold x; MisPlease/| dark_purple bold; Survival/url/1.20+ blue.
-motd = "<blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue>          <dark_purple><bold>MisPlease</bold></dark_purple>          <blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue><newline><dark_purple><bold>|</bold></dark_purple>  <blue>Survival</blue>  <dark_purple><bold>|</bold></dark_purple>         <blue>misplease.com</blue>         <dark_purple><bold>|</bold></dark_purple>    <blue>1.20+</blue>   <dark_purple><bold>|</bold></dark_purple>"
+# First-line center is "(en mantenimiento)" for layout testing (same width pad as MisPlease).
+# Revert center to MisPlease when done; maintenance plugin also swaps MisPlease→this when Redis flag is on.
+motd = "<blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue>     <dark_purple><bold>(en mantenimiento)</bold></dark_purple>     <blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue><newline><dark_purple><bold>|</bold></dark_purple>  <blue>Survival</blue>  <dark_purple><bold>|</bold></dark_purple>         <blue>misplease.com</blue>         <dark_purple><bold>|</bold></dark_purple>    <blue>1.20+</blue>   <dark_purple><bold>|</bold></dark_purple>"
 show-max-players = 20
 
 [servers]

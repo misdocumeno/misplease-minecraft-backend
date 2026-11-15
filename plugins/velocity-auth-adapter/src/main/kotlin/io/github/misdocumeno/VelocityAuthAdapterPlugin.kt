@@ -16,10 +16,14 @@ import io.github.misdocumeno.application.UsernameCaseChecker
 import io.github.misdocumeno.domain.AuthApi
 import io.github.misdocumeno.domain.UsernameCaseCheckResult
 import io.github.misdocumeno.infra.http.KtorAuthApi
+import io.github.misdocumeno.infra.redis.RedisAuthSet
+import io.github.misdocumeno.infra.velocity.UnauthCommandGate
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
+import io.lettuce.core.RedisClient
+import io.lettuce.core.api.StatefulRedisConnection
 import kotlinx.coroutines.runBlocking
 import net.kyori.adventure.text.Component
 import org.geysermc.floodgate.api.FloodgateApi
@@ -64,6 +68,8 @@ class VelocityAuthAdapterPlugin @Inject constructor(
     private lateinit var caseChecker: UsernameCaseChecker
     private lateinit var invalidator: SessionInvalidator
     private lateinit var api: AuthApi
+    private var redis: RedisClient? = null
+    private var redisConnection: StatefulRedisConnection<String, String>? = null
 
     @Subscribe
     fun onProxyInitialize(event: ProxyInitializeEvent) {
@@ -76,6 +82,18 @@ class VelocityAuthAdapterPlugin @Inject constructor(
         api = KtorAuthApi(client)
         caseChecker = UsernameCaseChecker(api)
         invalidator = SessionInvalidator(api)
+
+        System.getenv("REDIS_URL")?.takeIf { it.isNotBlank() }?.let { url ->
+            try {
+                val redisClient = RedisClient.create(url)
+                redis = redisClient
+                val conn = redisClient.connect()
+                redisConnection = conn
+                proxy.eventManager.register(this, UnauthCommandGate(RedisAuthSet(conn)))
+            } catch (e: Exception) {
+                logger.warn("redis unavailable for unauth command gate: {}", e.message)
+            }
+        }
 
         runBlocking {
             try {
@@ -144,6 +162,8 @@ class VelocityAuthAdapterPlugin @Inject constructor(
                 logger.warn("clear-all on proxy shutdown failed: {}", e.message)
             }
         }
+        redisConnection?.close()
+        redis?.shutdown()
     }
 
     private fun denyIfAlreadyOnline(event: PreLoginEvent, username: String): Boolean {
