@@ -4,7 +4,6 @@ import com.google.inject.Inject
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
-import com.velocitypowered.api.plugin.Dependency
 import com.velocitypowered.api.plugin.Plugin
 import com.velocitypowered.api.proxy.ProxyServer
 import io.github.misdocumeno.domain.model.AuthEvent
@@ -27,7 +26,6 @@ import kotlinx.serialization.modules.subclass
     name = "TabListBroadcast",
     version = "0.1.0",
     description = "Broadcasts a global tablist with all players connected to any backend server",
-    dependencies = [Dependency(id = "skinsrestorer", optional = true)],
 )
 class VelocityTabListBroadcastPlugin @Inject constructor(
     private val proxy: ProxyServer

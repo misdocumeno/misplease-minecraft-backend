@@ -6,7 +6,6 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.lettuce.core)
     compileOnly(libs.luckperms.api)
-    compileOnly("net.skinsrestorer:skinsrestorer-api:15.12.6")
 }
 
 tasks.shadowJar {
