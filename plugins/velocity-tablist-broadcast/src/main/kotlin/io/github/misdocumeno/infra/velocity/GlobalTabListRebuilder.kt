@@ -10,6 +10,7 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import net.luckperms.api.LuckPermsProvider
 import net.skinsrestorer.api.SkinsRestorerProvider
 import net.skinsrestorer.api.property.SkinProperty
+import org.slf4j.LoggerFactory
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -19,6 +20,7 @@ class GlobalTabListRebuilder(
 ) {
     private val legacy = LegacyComponentSerializer.legacyAmpersand()
     private val textureCache = ConcurrentHashMap<UUID, GameProfile.Property>()
+    private val loggedSrMiss = ConcurrentHashMap.newKeySet<UUID>()
 
     fun rebuildGlobalTabList() {
         connection.async().smembers(AUTH_SET).whenComplete { names, error ->
@@ -33,6 +35,7 @@ class GlobalTabListRebuilder(
         val authed = proxy.allPlayers.filter { it.username in authenticatedNames }
         val onlineIds = authed.map { it.uniqueId }.toSet()
         textureCache.keys.retainAll(onlineIds)
+        loggedSrMiss.retainAll(onlineIds)
 
         authed.forEach { viewer ->
             // Skip until Velocity has bound a backend — caller retries shortly after.
@@ -91,32 +94,49 @@ class GlobalTabListRebuilder(
      * over a SkinsRestorer / backend-applied entry on a later rebuild.
      */
     private fun profileWithTextures(target: Player): GameProfile {
-        if (hasTextures(target.gameProfile)) {
-            return target.gameProfile
+        texturesProperty(target)?.let { prop ->
+            return GameProfile(target.uniqueId, target.username, listOf(prop))
         }
+        return target.gameProfile
+    }
+
+    private fun texturesProperty(target: Player): GameProfile.Property? {
+        target.gameProfile.properties.firstOrNull { it.name == SkinProperty.TEXTURES_NAME || it.name == "textures" }
+            ?.let { return it }
+
         for (viewer in proxy.allPlayers) {
             val entry = viewer.tabList.getEntry(target.uniqueId)
-            if (entry.isPresent && hasTextures(entry.get().profile)) {
-                return entry.get().profile
-            }
+            if (!entry.isPresent) continue
+            entry.get().profile.properties
+                .firstOrNull { it.name == SkinProperty.TEXTURES_NAME || it.name == "textures" }
+                ?.let { return it }
         }
-        val fromSr = texturesFromSkinsRestorer(target) ?: return target.gameProfile
-        return target.gameProfile.addProperty(fromSr)
+
+        return texturesFromSkinsRestorer(target)
     }
 
     private fun texturesFromSkinsRestorer(target: Player): GameProfile.Property? {
         textureCache[target.uniqueId]?.let { return it }
         return runCatching {
-            val property = SkinsRestorerProvider.get()
-                .playerStorage
-                .getSkinForPlayer(target.uniqueId, target.username)
+            val storage = SkinsRestorerProvider.get().playerStorage
+            val property = storage.getSkinForPlayer(target.uniqueId, target.username, false)
+                .or { storage.getSkinOfPlayer(target.uniqueId) }
                 .orElse(null)
-                ?: return@runCatching null
+            if (property == null) {
+                if (loggedSrMiss.add(target.uniqueId)) {
+                    log.warn("tablist: no SR skin for {} ({})", target.username, target.uniqueId)
+                }
+                return@runCatching null
+            }
             GameProfile.Property(
                 SkinProperty.TEXTURES_NAME,
                 property.value,
                 property.signature,
             )
+        }.onFailure { e ->
+            if (loggedSrMiss.add(target.uniqueId)) {
+                log.warn("tablist: SR skin lookup failed for {}: {}", target.username, e.message)
+            }
         }.getOrNull()?.also { textureCache[target.uniqueId] = it }
     }
 
@@ -138,5 +158,6 @@ class GlobalTabListRebuilder(
 
     companion object {
         private const val AUTH_SET = "game-sessions:authenticated"
+        private val log = LoggerFactory.getLogger(GlobalTabListRebuilder::class.java)
     }
 }
