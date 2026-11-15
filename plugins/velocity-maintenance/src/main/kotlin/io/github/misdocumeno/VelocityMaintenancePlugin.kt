@@ -118,7 +118,7 @@ class VelocityMaintenancePlugin @Inject constructor(
 
         // Same decorative width: 10+9+10 spaces/chars around MisPlease vs 5+19+5 around maintenance.
         private const val MOTD_LINE2 =
-            "<dark_purple><bold>|</bold></dark_purple>  <blue>Survival</blue>  <dark_purple><bold>|</bold></dark_purple>        <blue>misplease.com</blue>         <dark_purple><bold>|</bold></dark_purple>    <blue>1.20+</blue>   <dark_purple><bold>|</bold></dark_purple>"
+            "<dark_purple><bold>|</bold></dark_purple>  <blue>Survival</blue>  <dark_purple><bold>|</bold></dark_purple>       <blue>misplease.com</blue>         <dark_purple><bold>|</bold></dark_purple>    <blue>1.20+</blue>   <dark_purple><bold>|</bold></dark_purple>"
         private const val MOTD_PREFIX =
             "<blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue><dark_purple><bold>x</bold></dark_purple><blue>-</blue>"
         private const val MOTD_SUFFIX =
