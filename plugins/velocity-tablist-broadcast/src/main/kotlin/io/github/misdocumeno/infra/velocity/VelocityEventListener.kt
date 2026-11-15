@@ -13,22 +13,36 @@ class VelocityEventListener(
     private val rebuilder: GlobalTabListRebuilder,
 ) {
 
-    // IMPORTANT: ServerPostConnectEvent is required here.
-    // earlier events (PostLogin, ServerConnected) are too early, and
-    // the backend would send a PLAYER_INFO packet, overwriting our tablist
+    // ServerPostConnectEvent: earlier events race with backend PLAYER_INFO.
+    // Unauthenticated: hide others until /login, but keep self so we do not wipe
+    // SkinsRestorer textures with a bare clearAll + re-add.
     @Subscribe
     fun onServerPostConnect(event: ServerPostConnectEvent) {
         if (!authRepo.isAuthenticated(event.player.username)) {
-            // the player has just connected.
-            // hide players until they /login with valid credentials
-            event.player.tabList.clearAll()
+            val selfId = event.player.uniqueId
+            event.player.tabList.entries.toList().forEach { entry ->
+                if (entry.profile.id != selfId) {
+                    event.player.tabList.removeEntry(entry.profile.id)
+                }
+            }
             return
         }
-        // Delay so currentServer / local PLAYER_INFO are settled (empty tab on
-        // first tech join otherwise).
-        proxy.scheduler
-            .buildTask(plugin, java.lang.Runnable { rebuilder.rebuildGlobalTabList() })
-            .delay(250, TimeUnit.MILLISECONDS)
-            .schedule()
+        scheduleRebuilds()
+    }
+
+    /** Bounded retries — not a permanent poll. Covers late currentServer / auth / skins. */
+    fun scheduleRebuilds() {
+        for (delayMs in REBUILD_DELAYS_MS) {
+            proxy.scheduler
+                .buildTask(plugin, java.lang.Runnable { rebuilder.rebuildGlobalTabList() })
+                .delay(delayMs, TimeUnit.MILLISECONDS)
+                .schedule()
+        }
+    }
+
+    companion object {
+        // Include a late pass so SkinsRestorer can finish Mojang apply before we
+        // freeze a bare GameProfile into the tab list.
+        private val REBUILD_DELAYS_MS = longArrayOf(0L, 250L, 1000L, 2500L, 5000L)
     }
 }

@@ -3,6 +3,7 @@ package io.github.misdocumeno.infra.velocity
 import com.velocitypowered.api.proxy.Player
 import com.velocitypowered.api.proxy.ProxyServer
 import com.velocitypowered.api.proxy.player.TabListEntry
+import com.velocitypowered.api.util.GameProfile
 import io.lettuce.core.api.StatefulRedisConnection
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
@@ -27,16 +28,10 @@ class GlobalTabListRebuilder(
         val authed = proxy.allPlayers.filter { it.username in authenticatedNames }
 
         authed.forEach { viewer ->
-            val here = serverName(viewer)
-            // If currentServer is not ready yet, skip — a delayed rebuild will retry.
-            if (here == null) return@forEach
+            // Skip until Velocity has bound a backend — caller retries shortly after.
+            if (serverName(viewer) == null) return@forEach
 
-            val onThisServer = proxy.allPlayers
-                .filter { serverName(it) == here }
-                .map { it.uniqueId }
-                .toSet()
-            val remote = authed.filter { it.uniqueId !in onThisServer }
-            val wanted = onThisServer + remote.map { it.uniqueId }
+            val wanted = authed.map { it.uniqueId }.toSet()
 
             viewer.tabList.entries.toList().forEach { entry ->
                 if (entry.profile.id !in wanted) {
@@ -44,34 +39,62 @@ class GlobalTabListRebuilder(
                 }
             }
 
-            remote.forEach { target ->
-                upsertRemote(viewer, target)
+            // Upsert locals AND remotes. After we strip remotes pre-/login, the backend
+            // does not re-send PLAYER_INFO for players already online — tech has no
+            // TabList plugin to refill, so proxy must own the whole list.
+            authed.forEach { target ->
+                upsert(viewer, target)
             }
         }
     }
 
-    private fun upsertRemote(viewer: Player, target: Player) {
-        // Local players keep TabList plugin formatting on main; remotes get LP prefix color.
+    private fun upsert(viewer: Player, target: Player) {
         val displayName = coloredName(target)
         val latency = target.ping.toInt().coerceAtLeast(0)
+        val profile = profileWithTextures(target)
         val existing = viewer.tabList.getEntry(target.uniqueId)
         if (existing.isPresent) {
-            existing.get().apply {
-                setDisplayName(displayName)
-                setLatency(latency)
+            val entry = existing.get()
+            val needsTextureUpgrade = !hasTextures(entry.profile) && hasTextures(profile)
+            if (!needsTextureUpgrade) {
+                entry.setDisplayName(displayName)
+                entry.setLatency(latency)
+                return
             }
-            return
+            // Bare profile was added before SkinsRestorer / backend PLAYER_INFO settled.
+            // TabListEntry cannot swap GameProfile in place — remove and re-add.
+            viewer.tabList.removeEntry(target.uniqueId)
         }
 
         viewer.tabList.addEntry(
             TabListEntry.builder()
                 .tabList(viewer.tabList)
-                .profile(target.gameProfile)
+                .profile(profile)
                 .displayName(displayName)
                 .latency(latency)
                 .build(),
         )
     }
+
+    /**
+     * Prefer a profile that already carries skin textures so we do not stamp Steve
+     * over a SkinsRestorer / backend-applied entry on a later rebuild.
+     */
+    private fun profileWithTextures(target: Player): GameProfile {
+        if (hasTextures(target.gameProfile)) {
+            return target.gameProfile
+        }
+        for (viewer in proxy.allPlayers) {
+            val entry = viewer.tabList.getEntry(target.uniqueId)
+            if (entry.isPresent && hasTextures(entry.get().profile)) {
+                return entry.get().profile
+            }
+        }
+        return target.gameProfile
+    }
+
+    private fun hasTextures(profile: GameProfile): Boolean =
+        profile.properties.any { it.name == "textures" }
 
     private fun coloredName(player: Player): Component {
         val prefix = runCatching {
