@@ -85,6 +85,8 @@ class GlobalTabListRebuilder(
                 .profile(profile)
                 .displayName(displayName)
                 .latency(latency)
+                .listed(true)
+                .showHat(true)
                 .build(),
         )
     }
@@ -101,19 +103,21 @@ class GlobalTabListRebuilder(
     }
 
     private fun texturesProperty(target: Player): GameProfile.Property? {
-        target.gameProfile.properties.firstOrNull { it.name == SkinProperty.TEXTURES_NAME || it.name == "textures" }
-            ?.let { return it }
+        // SR applies via setGameProfileProperties — that list can diverge from gameProfile.properties.
+        target.gameProfileProperties.firstOrNull { isTextureProp(it) }?.let { return it }
+        target.gameProfile.properties.firstOrNull { isTextureProp(it) }?.let { return it }
 
         for (viewer in proxy.allPlayers) {
             val entry = viewer.tabList.getEntry(target.uniqueId)
             if (!entry.isPresent) continue
-            entry.get().profile.properties
-                .firstOrNull { it.name == SkinProperty.TEXTURES_NAME || it.name == "textures" }
-                ?.let { return it }
+            entry.get().profile.properties.firstOrNull { isTextureProp(it) }?.let { return it }
         }
 
         return texturesFromSkinsRestorer(target)
     }
+
+    private fun isTextureProp(prop: GameProfile.Property): Boolean =
+        prop.name == SkinProperty.TEXTURES_NAME || prop.name == "textures"
 
     private fun texturesFromSkinsRestorer(target: Player): GameProfile.Property? {
         textureCache[target.uniqueId]?.let { return it }
@@ -141,7 +145,7 @@ class GlobalTabListRebuilder(
     }
 
     private fun hasTextures(profile: GameProfile): Boolean =
-        profile.properties.any { it.name == SkinProperty.TEXTURES_NAME || it.name == "textures" }
+        profile.properties.any { isTextureProp(it) }
 
     private fun coloredName(player: Player): Component {
         val prefix = runCatching {
