@@ -27,7 +27,7 @@
 
 # A color code between 0-9 or a-f. Set to 'none' to disable.
 # In 1.16+, you can use hex color codes here as well (for example, #613e1d is brown).
-ops-name-color: '4'
+ops-name-color: 'none'
 
 # The character(s) to prefix all nicknames, so that you know they are not true usernames.
 # Players with 'essentials.nick.hideprefix' will not be prefixed with the character(s).
@@ -66,7 +66,9 @@ change-tab-complete-name: false
 # This setting is ignored if EssentialsChat.jar is used, and defaults to true.
 # The value of 'change-displayname' above must be true.
 # Do not edit this setting unless you know what you are doing!
-#add-prefix-suffix: false
+# Off: global chat adds the LuckPerms prefix/suffix itself
+# (backend-chat-adapter LuckPermsNameFormat) on top of the display name.
+add-prefix-suffix: false
 
 # When this option is enabled, the (tab) player list will be updated with the display name.
 # The value of 'change-displayname' above must be true.

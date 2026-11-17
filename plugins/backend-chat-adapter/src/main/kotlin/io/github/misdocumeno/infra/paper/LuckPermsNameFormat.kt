@@ -17,9 +17,10 @@ import org.bukkit.entity.Player
  * is just the plain username.
  *
  * Prefix/suffix stay outside the display name on purpose: Essentials runs with
- * `add-prefix-suffix: false`, so a display name never contains them and a nickname
- * cannot double the colours. Default group is `&3`; personal colours are per-user
- * LP prefixes (higher priority than `default`).
+ * `add-prefix-suffix: false` and `ops-name-color: 'none'`, so a display name never
+ * contains them and a nickname cannot double the colours. (Op colouring is off
+ * because it made every op's chat name dark red, over the LP prefix.) Default group
+ * is `&3`; personal colours are per-user LP prefixes (higher priority than `default`).
  */
 object LuckPermsNameFormat {
     private val mm = MiniMessage.miniMessage()

@@ -116,7 +116,7 @@ class VelocityMaintenancePlugin @Inject constructor(
         private const val DEFAULT_MESSAGE =
             "&cServidor en mantenimiento. Probá de nuevo en unos minutos."
 
-        // Same decorative width: 10+9+10 spaces/chars around MisPlease vs 5+19+5 around maintenance.
+        // Centering is per line: the name uses 10+9+10, the longer maintenance label 4+18+5.
         private const val MOTD_LINE2 =
             "<dark_purple><bold>|</bold></dark_purple>  <blue>Survival</blue>  <dark_purple><bold>|</bold></dark_purple>       <blue>misplease.com</blue>         <dark_purple><bold>|</bold></dark_purple>    <blue>1.20+</blue>   <dark_purple><bold>|</bold></dark_purple>"
         private const val MOTD_PREFIX =
@@ -126,7 +126,7 @@ class VelocityMaintenancePlugin @Inject constructor(
         private const val MOTD_WITH_NAME =
             "$MOTD_PREFIX          <dark_purple><bold>MisPlease</bold></dark_purple>          $MOTD_SUFFIX<newline>$MOTD_LINE2"
         private const val MOTD_WITH_MAINTENANCE =
-            "$MOTD_PREFIX     <dark_purple><bold>(en mantenimiento)</bold></dark_purple>     $MOTD_SUFFIX<newline>$MOTD_LINE2"
+            "$MOTD_PREFIX    <dark_purple><bold>(en mantenimiento)</bold></dark_purple>     $MOTD_SUFFIX<newline>$MOTD_LINE2"
 
         fun parseEnabled(raw: String?): Boolean {
             if (raw.isNullOrBlank()) return false
