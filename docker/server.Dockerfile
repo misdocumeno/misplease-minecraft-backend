@@ -29,7 +29,7 @@ RUN --mount=type=cache,target=/root/.gradle/caches,id=misplease-gradle-caches \
     --mount=type=cache,target=/root/.gradle/wrapper,id=misplease-gradle-wrapper \
     set -eux; \
     chmod +x gradlew; \
-    ./gradlew --no-daemon --parallel shadowJars -PpluginPrefix="${PLUGIN_PREFIX}"; \
+    ./gradlew --no-daemon --parallel shadowJars tests -PpluginPrefix="${PLUGIN_PREFIX}"; \
     mkdir -p /out; \
     find . -path '*/build/libs/*.jar' \
       ! -name '*-sources.jar' \

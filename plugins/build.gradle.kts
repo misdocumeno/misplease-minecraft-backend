@@ -21,3 +21,22 @@ tasks.register("shadowJars") {
         },
     )
 }
+
+/**
+ * Run the unit tests of modules whose name starts with -PpluginPrefix (same filter as
+ * shadowJars). The image build runs this before baking the jars, so a red test stops the
+ * deploy before smoke. Tests must stay pure: no Redis, no Bukkit server, no HTTP.
+ */
+tasks.register("tests") {
+    group = "verification"
+    description = "Run unit tests, optionally filtered by -PpluginPrefix"
+    val prefix = providers.gradleProperty("pluginPrefix").orElse("")
+    dependsOn(
+        provider {
+            val p = prefix.get()
+            subprojects
+                .filter { p.isEmpty() || it.name.startsWith(p) }
+                .map { it.tasks.named("test") }
+        },
+    )
+}
