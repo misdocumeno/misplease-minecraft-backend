@@ -397,7 +397,7 @@ plugins:
     sha256: 21570aff9ce17d6983928e8552777760e1ede5050026b04c686b0ae112e6fd7e
   - name: EntityWatch
     source: github
-    version: v0.1.0
-    filename: EntityWatch-0.1.0.jar
-    url: https://api.github.com/repos/misdocumeno/EntityWatch/releases/tags/v0.1.0
-    sha256: adb9cc4fab3c1157a6adf0ee459785097c81f6431a7702de8306cdeefaa9ffbb
+    version: v0.1.1
+    filename: EntityWatch-0.1.1.jar
+    url: https://api.github.com/repos/misdocumeno/EntityWatch/releases/tags/v0.1.1
+    sha256: b61c4c81761168349295f7867e5d2cde379b281fb8d3bc7db78efe34f01815f8
