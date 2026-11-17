@@ -1,0 +1,23 @@
+# Enabled on tech to find out why iron-farm villagers disappear.
+# Everything the plugin logs, and how to add a signal, is in the plugin README.
+enabled: true
+
+# Every villager on this server. Narrow with `uuids:` once we know the farm ones.
+entity-types:
+  - VILLAGER
+
+uuids: []
+
+worlds: []
+
+events:
+  damage: true
+  death: true
+  transform: true
+  remove: true
+  explode: true
+  chunk: true
+
+history-lines: 40
+context-radius: 12
+console-alert: true

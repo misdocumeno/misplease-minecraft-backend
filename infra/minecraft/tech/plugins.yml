@@ -57,3 +57,8 @@ plugins:
     source: geysermc
     id: floodgate
     asset: spigot
+  # Diagnostics: event log to find out why a tracked entity disappears. Off by default.
+  - name: EntityWatch
+    source: github
+    repo: misdocumeno/EntityWatch
+    version: v0.1.0
