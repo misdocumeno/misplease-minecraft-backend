@@ -44,6 +44,8 @@ class PaperAuthEventHandler(
             is AuthEvent.Invalidated -> sounds.leave
         }
         val component = Component.translatable(key, NamedTextColor.YELLOW, Component.text(event.username))
+            // Same tooltip the chat lines carry; the hover is built once and shared.
+            .hoverEvent(Timestamps.hover())
 
         for (player in server.onlinePlayers) {
             if (player.name !in authenticatedNames) continue

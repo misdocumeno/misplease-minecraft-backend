@@ -16,9 +16,10 @@ import java.time.format.DateTimeFormatter
  * into the MiniMessage string that each backend deserializes, on top of the existing
  * payload — no protocol change.
  *
- * Zone and pattern are per network, not per server: `CHAT_TIME_ZONE` (default
+ * Zone and pattern are per network, not per server: `MISPLEASE_TIME_ZONE` (default
  * America/Argentina/Buenos_Aires, because the containers run on UTC) and
- * `CHAT_TIME_FORMAT` (default `dd/MM HH:mm`).
+ * `MISPLEASE_TIME_FORMAT` (default `dd/MM HH:mm`). Same pair as `Timestamps` in
+ * backend-connection-announce (join/leave/death), which keeps all tooltips aligned.
  */
 class ChatFormatter(
     private val usernames: UsernameRepository,
@@ -44,11 +45,11 @@ class ChatFormatter(
 
     companion object {
         val DEFAULT_ZONE: ZoneId =
-            env("CHAT_TIME_ZONE")?.let { runCatching { ZoneId.of(it) }.getOrNull() }
+            env("MISPLEASE_TIME_ZONE")?.let { runCatching { ZoneId.of(it) }.getOrNull() }
                 ?: ZoneId.of("America/Argentina/Buenos_Aires")
 
         val DEFAULT_TIME_FORMAT: DateTimeFormatter =
-            DateTimeFormatter.ofPattern(env("CHAT_TIME_FORMAT") ?: "dd/MM HH:mm")
+            DateTimeFormatter.ofPattern(env("MISPLEASE_TIME_FORMAT") ?: "dd/MM HH:mm")
 
         private fun env(name: String): String? = System.getenv(name)?.takeIf { it.isNotBlank() }
     }

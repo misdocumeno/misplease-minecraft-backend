@@ -48,7 +48,8 @@ class ConnectionEventListener(
         announces.publish(
             NetworkAnnounce.Death(
                 username = event.player.name,
-                miniMessage = mm.serialize(message),
+                // Hover is attached before serializing so it travels with the line.
+                miniMessage = mm.serialize(message.hoverEvent(Timestamps.hover())),
             ),
         )
     }
