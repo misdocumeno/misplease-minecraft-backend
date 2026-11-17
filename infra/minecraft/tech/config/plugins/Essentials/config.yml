@@ -188,6 +188,17 @@ disabled-commands:
   - reply
   - list
   - mail
+  # Punishments are network-wide via LibertyBans on the proxy (or its plugin messaging).
+  # A backend-local /ban would only hide the player from one server and leave the other
+  # untouched, so never let Essentials handle them.
+  - ban
+  - banip
+  - tempban
+  - unban
+  - unbanip
+  - kick
+  - mute
+  - unmute
   - email
   #- nick
   #- clear

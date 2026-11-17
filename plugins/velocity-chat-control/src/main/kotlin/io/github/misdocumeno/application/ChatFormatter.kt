@@ -6,7 +6,6 @@ import io.github.misdocumeno.domain.model.RenderedChatMessage
 import net.kyori.adventure.text.minimessage.MiniMessage
 import java.time.Instant
 import java.time.ZoneId
-import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 /**
@@ -45,20 +44,6 @@ class ChatFormatter(
         val time = "${timeFormat.format(at)} (${zoneLabel(at.offset)})"
 
         return RenderedChatMessage("<hover:show_text:'$time'>$line</hover>")
-    }
-
-    private fun zoneLabel(offset: ZoneOffset): String {
-        val seconds = offset.totalSeconds
-        if (seconds == 0) return "UTC"
-        val abs = kotlin.math.abs(seconds)
-        val hours = abs / 3600
-        val minutes = (abs % 3600) / 60
-        val sign = if (seconds < 0) "-" else "+"
-        return if (minutes == 0) {
-            "UTC$sign$hours"
-        } else {
-            "UTC$sign$hours:${minutes.toString().padStart(2, '0')}"
-        }
     }
 
     companion object {

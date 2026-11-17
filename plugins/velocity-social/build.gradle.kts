@@ -10,6 +10,7 @@ dependencies {
     implementation(libs.exposed.jdbc)
     implementation(libs.postgresql)
     compileOnly(libs.luckperms.api)
+    compileOnly(libs.libertybans.api)
 }
 
 tasks.shadowJar {

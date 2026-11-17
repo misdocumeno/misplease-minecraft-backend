@@ -3,6 +3,8 @@ package io.github.misdocumeno.infra.velocity
 import com.velocitypowered.api.command.SimpleCommand
 import com.velocitypowered.api.proxy.Player
 import com.velocitypowered.api.proxy.ProxyServer
+import io.github.misdocumeno.infra.libertybans.MuteFeedback
+import io.github.misdocumeno.infra.libertybans.MuteLookup
 import io.github.misdocumeno.infra.redis.RedisAuthSet
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -11,6 +13,7 @@ class ReplyCommand(
     private val proxy: ProxyServer,
     private val auth: RedisAuthSet,
     private val replies: ReplyIndex,
+    private val mutes: MuteLookup,
 ) : SimpleCommand {
 
     override fun execute(invocation: SimpleCommand.Invocation) {
@@ -39,7 +42,13 @@ class ReplyCommand(
             return
         }
         val body = args.joinToString(" ")
-        MsgCommand.deliver(source, target, body)
-        replies.remember(source.uniqueId, target.uniqueId)
+        mutes.activeMute(source.uniqueId).whenComplete { mute, _ ->
+            if (mute != null) {
+                source.sendMessage(MuteFeedback.component(mute))
+                return@whenComplete
+            }
+            MsgCommand.deliver(source, target, body)
+            replies.remember(source.uniqueId, target.uniqueId)
+        }
     }
 }

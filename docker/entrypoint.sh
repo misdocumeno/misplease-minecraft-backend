@@ -64,6 +64,16 @@ do
   rm -f -- "$STATE/$rel"
 done
 
+# LibertyBans (proxy only): same placeholder trick for its PostgreSQL password.
+# Backends never run LibertyBans, so only the proxy carries this config.
+if [ "$KIND" = "proxy" ]; then
+  lb_sql="$LOWER/plugins/libertybans/sql.yml"
+  if [ -f "$lb_sql" ] && [ -n "${DB_PASSWORD:-}" ]; then
+    sed -i "s|__MISPLEASE_DB_PASSWORD__|${DB_PASSWORD}|g" "$lb_sql"
+    rm -f -- "$STATE/plugins/libertybans/sql.yml"
+  fi
+fi
+
 # Velocity modern forwarding secret (same value on proxy + every Paper backend).
 # Proxy: forwarding.secret. Paper: proxies.velocity.secret in config/paper-global.yml.
 fwd_secret="${VELOCITY_FORWARDING_SECRET:-}"

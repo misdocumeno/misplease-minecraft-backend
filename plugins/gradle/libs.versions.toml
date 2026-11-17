@@ -34,6 +34,9 @@ postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" 
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper-api" }
 velocity-api = { module = "com.velocitypowered:velocity-api", version.ref = "velocity-api" }
 luckperms-api = { module = "net.luckperms:api", version = "5.5" }
+# Mutes only. compileOnly: the proxy jar from LibertyBans provides these classes, and
+# bundling them would hide LibertyBans' own provider/registry (see .local/notes).
+libertybans-api = { module = "org.libertybans:bans-api", version = "1.2.0-M1" }
 
 # Plugin markers for buildSrc classpath (precompiled convention plugins).
 kotlin-jvm-gradle-plugin = { module = "org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }

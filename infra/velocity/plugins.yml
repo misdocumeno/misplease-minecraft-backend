@@ -35,6 +35,16 @@ plugins:
     source: geysermc
     id: floodgate
     asset: velocity
+  # Network-wide kick/ban/mute. Proxy only: backends reach it through plugin messaging.
+  # Mutes are enforced by our own chat plugin through the bans-api (compileOnly,
+  # never bundled) so the global chat pipeline stays ours. Storage: PostgreSQL.
+  - name: LibertyBans
+    source: modrinth
+    slug: libertybans
+    # 1.2.0-M1 is the first release for 26.3; Modrinth still marks it as a beta.
+    version: "1.2.0-M1"
+    channel: beta
+    loaders: [velocity]
   # Temporary fork: Guice 7 / Velocity 4 own-linking (upstream PR #645 still open).
   - name: FloodgateSqliteDatabase
     source: github

@@ -5,11 +5,14 @@ import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
 import com.velocitypowered.api.plugin.Plugin
+import com.velocitypowered.api.plugin.Dependency
 import com.velocitypowered.api.proxy.ProxyServer
 import io.github.misdocumeno.application.ChatAudienceResolver
 import io.github.misdocumeno.application.ChatFormatter
 import io.github.misdocumeno.application.ChatIntentHandler
+import io.github.misdocumeno.application.MuteNotice
 import io.github.misdocumeno.domain.model.ChatAudience
+import io.github.misdocumeno.infra.libertybans.LibertyBansMuteLookup
 import io.github.misdocumeno.infra.redis.RedisAuthenticatedRepository
 import io.github.misdocumeno.infra.redis.RedisChatBroadcaster
 import io.github.misdocumeno.infra.redis.RedisChatIntentAdapter
@@ -22,6 +25,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
+import org.slf4j.Logger
 
 @Plugin(
     id = "chat-control",
@@ -29,9 +33,12 @@ import kotlinx.serialization.modules.subclass
     version = "0.1.0",
     description = "Global chat controller",
     authors = ["Mis"],
+    // Optional: chat keeps working (mutes fail open) if LibertyBans is absent.
+    dependencies = [Dependency(id = "libertybans", optional = true)],
 )
 class VelocityCommunicationPlugin @Inject constructor(
-    private val proxy: ProxyServer
+    private val proxy: ProxyServer,
+    private val logger: Logger,
 ) {
 
     private lateinit var redis: RedisClient
@@ -62,7 +69,17 @@ class VelocityCommunicationPlugin @Inject constructor(
         val audienceResolver = ChatAudienceResolver()
         val formatter = ChatFormatter(usernames)
         val broadcaster = RedisChatBroadcaster(connection, json)
-        val intentHandler = ChatIntentHandler(authRepo, audienceResolver, formatter, broadcaster)
+        val mutes = LibertyBansMuteLookup(logger)
+        val intentHandler = ChatIntentHandler(
+            authRepo,
+            audienceResolver,
+            formatter,
+            broadcaster,
+            usernames,
+            mutes,
+            MuteNotice(),
+            log = { line -> logger.info(line) },
+        )
         val intentAdapter = RedisChatIntentAdapter(intentHandler, json)
         RedisChatIntentListener(connectionPubSub, intentAdapter).start()
     }

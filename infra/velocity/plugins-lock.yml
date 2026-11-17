@@ -261,3 +261,29 @@ plugins:
     filename: floodgate-sqlite-database.jar
     url: https://api.github.com/repos/misdocumeno/Floodgate-misplease/releases/tags/v2.2.5-misplease.1
     sha256: 2b2e1fa604bb16e644e7ba33bb383c563bddcfe3b3a280cf4983ee6c7abff952
+  - name: LibertyBans
+    source: modrinth
+    version: 1.2.0-M1
+    filename: LibertyBans_Release-1.2.0-M1.jar
+    url: https://cdn.modrinth.com/data/PgXAUxLZ/versions/TUuNKL02/LibertyBans_Release-1.2.0-M1.jar
+    sha512: caba7a0a108bd802bb92bd5f3865de69e4856c57fa8bb86150467b77b578fff689ac120e019fb4379d6c16e5b01d42306cbc1a3e8673de592542495b534037f3
+    minecraft:
+      - 1.10.2
+      - 1.11.2
+      - 1.12.2
+      - 1.13.2
+      - 1.14.4
+      - 1.15.2
+      - 1.16.5
+      - 1.17.1
+      - 1.18.2
+      - 1.19.4
+      - 1.20.6
+      - 1.21.10
+      - 1.21.11
+      - 1.8.8
+      - 1.8.9
+      - 1.9.4
+      - 26.1.2
+      - "26.2"
+      - "26.3"

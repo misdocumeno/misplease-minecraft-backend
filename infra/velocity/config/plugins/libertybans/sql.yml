@@ -1,0 +1,40 @@
+# LibertyBans storage. The proxy is the only LibertyBans instance (backends reach it
+# through plugin messaging), so there is nothing to synchronize: no ANSI_SQL polling.
+#
+# Mutes are cached for 20 s by LibertyBans itself. Our chat gate only reads through
+# the bans-api, so a /mute becomes effective everywhere within that window.
+#
+# The password is a placeholder on purpose: docker/entrypoint.sh substitutes
+# __MISPLEASE_DB_PASSWORD__ from DB_PASSWORD in the overlay copy at boot. Never
+# commit the real password. Database `libertybans` is created out of band (it is
+# runtime state, see .local/notes/libertybans.md); LibertyBans runs its own
+# Flyway migrations inside it.
+rdms-vendor: POSTGRES
+connection-pool-size: 6
+timeouts:
+  connection-timeout-seconds: 14
+  max-lifetime-minutes: 25
+auth-details:
+  host: db
+  port: 5432
+  database: libertybans
+  user: misplease
+  password: __MISPLEASE_DB_PASSWORD__
+mariadb:
+  connection-properties:
+    useUnicode: "true"
+    characterEncoding: UTF-8
+    useServerPrepStmts: "true"
+    cachePrepStmts: "true"
+    prepStmtCacheSize: "25"
+    prepStmtCacheSqlLimit: "1024"
+postgres:
+  connection-properties:
+    preparedStatementCacheQueries: "25"
+mute-caching:
+  expiration-time-seconds: 20
+  expiration-semantics: EXPIRE_AFTER_ACCESS
+synchronization:
+  mode: NONE
+  poll-rate-millis: 4000
+use-traditional-jdbc-url: false

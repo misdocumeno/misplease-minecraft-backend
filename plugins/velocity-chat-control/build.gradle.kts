@@ -5,6 +5,7 @@ plugins {
 dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.lettuce.core)
+    compileOnly(libs.libertybans.api)
 
     // Adventure/Velocity API is compileOnly for the plugin jar, but tests need it at
     // runtime to parse the MiniMessage the formatter produces.
