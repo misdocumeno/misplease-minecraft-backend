@@ -573,8 +573,25 @@ disabled-context-calculators: []
 # - These aliases are provided in addition to the real world name. Applied recursively.
 # - Remove the comment characters for the default aliases to apply.
 world-rewrite:
-#  world_nether: world
-#  world_the_end: world
+    world: survival_alias
+    newspawn: survival_alias
+    parcelas: survival_alias
+    survival: survival_alias
+    SuperiorWorld: survival_alias
+    spawn_recursos2: survival_alias
+    recursos2: survival_alias
+    recursos_custom: survival_alias
+    spawn_nether: survival_alias
+    nether_noreset: survival_alias
+    nether: survival_alias
+    spawn_the_end: survival_alias
+    world_the_end_noreset: survival_alias
+    end: survival_alias
+    world2: survival_alias
+    # creative
+    creativo: creativo_alias
+    bici: creativo_alias
+    world_mya: creativo_alias
 
 # Define special group weights for this server.
 #
