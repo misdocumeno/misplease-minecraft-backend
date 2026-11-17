@@ -6,7 +6,6 @@ import io.lettuce.core.api.StatefulRedisConnection
 import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit
 import org.bukkit.Server
-import org.bukkit.Sound
 import org.bukkit.entity.Player
 import org.bukkit.plugin.Plugin
 import kotlin.uuid.toKotlinUuid
@@ -26,6 +25,7 @@ class PaperChatRenderer(
     private val plugin: Plugin,
     private val server: Server,
     private val connection: StatefulRedisConnection<String, String>,
+    private val sounds: ChatSounds,
 ) {
 
     private val mm = MiniMessage.miniMessage()
@@ -53,7 +53,7 @@ class PaperChatRenderer(
 
             player.sendMessage(component)
             if (player.uniqueId.toKotlinUuid() != senderId) {
-                player.playSound(player.location, CHAT_SOUND, CHAT_VOLUME, CHAT_PITCH)
+                player.playSound(player.location, sounds.chat, sounds.volume, sounds.pitch)
             }
         }
     }
@@ -66,9 +66,5 @@ class PaperChatRenderer(
 
     companion object {
         private const val AUTH_SET = "game-sessions:authenticated"
-        /** Match PlayMoreSounds default Player Chat sound on main. */
-        private val CHAT_SOUND = Sound.ENTITY_ITEM_PICKUP
-        private const val CHAT_VOLUME = 1.0f
-        private const val CHAT_PITCH = 1.0f
     }
 }

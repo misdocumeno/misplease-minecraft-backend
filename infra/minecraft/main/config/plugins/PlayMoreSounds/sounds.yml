@@ -167,7 +167,7 @@ Entity Jump:
 # When a player joins the server for the first time.
 # This sound is not cancellable.
 First Join:
-  Enabled: true
+  Enabled: false
   Sounds:
     '1':
       Options:
@@ -220,7 +220,7 @@ Inventory Close:
 # When a player joins the server.
 # This sound is not cancellable.
 Join Server:
-  Enabled: true
+  Enabled: false
   Sounds:
     '1':
       Options:
@@ -230,7 +230,7 @@ Join Server:
 # When a player leaves the server.
 # This sound is not cancellable.
 Leave Server:
-  Enabled: true
+  Enabled: false
   Sounds:
     '1':
       Options:
@@ -251,7 +251,7 @@ Player Ban:
 # When a player sends a message on chat.
 # This sound is cancellable.
 Player Chat:
-  Enabled: true
+  Enabled: false
   Cancellable: true
   Sounds:
     '1':

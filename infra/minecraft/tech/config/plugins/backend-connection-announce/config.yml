@@ -1,0 +1,5 @@
+sounds:
+  join: BLOCK_NOTE_BLOCK_PLING
+  leave: BLOCK_NOTE_BLOCK_BASS
+  volume: 1.0
+  pitch: 1.0

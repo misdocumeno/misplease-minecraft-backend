@@ -2,6 +2,7 @@ package io.github.misdocumeno
 
 import io.github.misdocumeno.domain.model.AuthEvent
 import io.github.misdocumeno.domain.model.NetworkAnnounce
+import io.github.misdocumeno.infra.paper.AnnounceSounds
 import io.github.misdocumeno.infra.paper.ConnectionEventListener
 import io.github.misdocumeno.infra.paper.PaperAuthEventHandler
 import io.github.misdocumeno.infra.paper.PaperNetworkAnnounceHandler
@@ -26,6 +27,10 @@ class BackendConnectionAnnounce : JavaPlugin() {
     private lateinit var connectionPubSub: StatefulRedisPubSubConnection<String, String>
 
     override fun onEnable() {
+        saveDefaultConfig()
+        reloadConfig()
+        val sounds = AnnounceSounds.from(config)
+
         redis = RedisClient.create(System.getenv("REDIS_URL"))
         connection = redis.connect()
         connectionPubSub = redis.connectPubSub()
@@ -44,7 +49,7 @@ class BackendConnectionAnnounce : JavaPlugin() {
             }
         }
 
-        val authHandler = PaperAuthEventHandler(this, server, connection)
+        val authHandler = PaperAuthEventHandler(this, server, connection, sounds)
         RedisAuthListener(connectionPubSub, RedisAuthAdapter(authHandler, json)).start()
 
         val announcePublisher = RedisNetworkAnnouncePublisher(connection, json)

@@ -1,0 +1,4 @@
+sounds:
+  chat: ENTITY_ITEM_PICKUP
+  volume: 1.0
+  pitch: 1.0

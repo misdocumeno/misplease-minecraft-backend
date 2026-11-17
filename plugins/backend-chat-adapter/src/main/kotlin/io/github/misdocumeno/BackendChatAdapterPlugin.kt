@@ -1,6 +1,7 @@
 package io.github.misdocumeno
 
 import io.github.misdocumeno.domain.ChatAudience
+import io.github.misdocumeno.infra.paper.ChatSounds
 import io.github.misdocumeno.infra.paper.PaperChatBroadcastHandler
 import io.github.misdocumeno.infra.paper.PaperChatListener
 import io.github.misdocumeno.infra.paper.PaperChatRenderer
@@ -23,6 +24,10 @@ class BackendChatAdapterPlugin : JavaPlugin() {
     private lateinit var listener: RedisChatBroadcastListener
 
     override fun onEnable() {
+        saveDefaultConfig()
+        reloadConfig()
+        val chatSounds = ChatSounds.from(config)
+
         redis = RedisClient.create(System.getenv("REDIS_URL"))
         connection = redis.connect()
 
@@ -37,7 +42,7 @@ class BackendChatAdapterPlugin : JavaPlugin() {
             }
         }
 
-        val renderer = PaperChatRenderer(this, server, connection)
+        val renderer = PaperChatRenderer(this, server, connection, chatSounds)
         val broadcastHandler = PaperChatBroadcastHandler(renderer)
         val redisAdapter = RedisChatBroadcastAdapter(broadcastHandler, json)
 

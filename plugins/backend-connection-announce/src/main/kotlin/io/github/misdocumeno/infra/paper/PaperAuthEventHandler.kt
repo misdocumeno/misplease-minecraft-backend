@@ -7,7 +7,6 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Bukkit
 import org.bukkit.Server
-import org.bukkit.Sound
 import org.bukkit.plugin.Plugin
 
 /**
@@ -19,6 +18,7 @@ class PaperAuthEventHandler(
     private val plugin: Plugin,
     private val server: Server,
     private val connection: StatefulRedisConnection<String, String>,
+    private val sounds: AnnounceSounds,
 ) : AuthEventHandler {
 
     override fun handle(event: AuthEvent) {
@@ -40,8 +40,8 @@ class PaperAuthEventHandler(
             is AuthEvent.Invalidated -> "multiplayer.player.left"
         }
         val sound = when (event) {
-            is AuthEvent.Authenticated -> JOIN_SOUND
-            is AuthEvent.Invalidated -> LEAVE_SOUND
+            is AuthEvent.Authenticated -> sounds.join
+            is AuthEvent.Invalidated -> sounds.leave
         }
         val component = Component.translatable(key, NamedTextColor.YELLOW, Component.text(event.username))
 
@@ -50,13 +50,11 @@ class PaperAuthEventHandler(
             // Joiner already gets local feedback; leave target is usually gone.
             if (player.name.equals(event.username, ignoreCase = true)) continue
             player.sendMessage(component)
-            player.playSound(player.location, sound, 1.0f, 1.0f)
+            player.playSound(player.location, sound, sounds.volume, sounds.pitch)
         }
     }
 
     companion object {
         private const val AUTH_SET = "game-sessions:authenticated"
-        private val JOIN_SOUND = Sound.BLOCK_NOTE_BLOCK_PLING
-        private val LEAVE_SOUND = Sound.BLOCK_NOTE_BLOCK_BASS
     }
 }
