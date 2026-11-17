@@ -4,6 +4,7 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.HoverEvent
 import java.time.Instant
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 /**
@@ -16,7 +17,8 @@ import java.time.format.DateTimeFormatter
  * obtainable. One network zone, stated explicitly in the text, is the honest option.
  *
  * `MISPLEASE_TIME_ZONE` (default America/Argentina/Buenos_Aires; the containers run on
- * UTC) and `MISPLEASE_TIME_FORMAT` (default dd/MM HH:mm).
+ * UTC) and `MISPLEASE_TIME_FORMAT` (default `yyyy/MM/dd HH:mm:ss`, 24-hour clock). The
+ * zone's offset is appended automatically (` (UTC-3)`).
  */
 object Timestamps {
 
@@ -25,10 +27,29 @@ object Timestamps {
             ?: ZoneId.of("America/Argentina/Buenos_Aires")
 
     private val format: DateTimeFormatter =
-        DateTimeFormatter.ofPattern(env("MISPLEASE_TIME_FORMAT") ?: "dd/MM HH:mm")
+        DateTimeFormatter.ofPattern(env("MISPLEASE_TIME_FORMAT") ?: "yyyy/MM/dd HH:mm:ss")
 
     fun hover(at: Instant = Instant.now()): HoverEvent<Component> =
-        Component.text(format.format(at.atZone(zone))).asHoverEvent()
+        Component.text(stamp(at)).asHoverEvent()
+
+    private fun stamp(at: Instant): String {
+        val zoned = at.atZone(zone)
+        return "${format.format(zoned)} (${zoneLabel(zoned.offset)})"
+    }
+
+    private fun zoneLabel(offset: ZoneOffset): String {
+        val seconds = offset.totalSeconds
+        if (seconds == 0) return "UTC"
+        val abs = kotlin.math.abs(seconds)
+        val hours = abs / 3600
+        val minutes = (abs % 3600) / 60
+        val sign = if (seconds < 0) "-" else "+"
+        return if (minutes == 0) {
+            "UTC$sign$hours"
+        } else {
+            "UTC$sign$hours:${minutes.toString().padStart(2, '0')}"
+        }
+    }
 
     private fun env(name: String): String? = System.getenv(name)?.takeIf { it.isNotBlank() }
 }

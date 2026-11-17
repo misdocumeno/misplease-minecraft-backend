@@ -6,6 +6,7 @@ import io.github.misdocumeno.domain.model.RenderedChatMessage
 import net.kyori.adventure.text.minimessage.MiniMessage
 import java.time.Instant
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 /**
@@ -18,7 +19,9 @@ import java.time.format.DateTimeFormatter
  *
  * Zone and pattern are per network, not per server: `MISPLEASE_TIME_ZONE` (default
  * America/Argentina/Buenos_Aires, because the containers run on UTC) and
- * `MISPLEASE_TIME_FORMAT` (default `dd/MM HH:mm`). Same pair as `Timestamps` in
+ * `MISPLEASE_TIME_FORMAT` (default `yyyy/MM/dd HH:mm:ss`, 24-hour clock). The zone's
+ * offset is appended automatically (` (UTC-3)`), so the tooltip is unambiguous even
+ * for someone reading it from another zone. Same pair as `Timestamps` in
  * backend-connection-announce (join/leave/death), which keeps all tooltips aligned.
  */
 class ChatFormatter(
@@ -38,9 +41,24 @@ class ChatFormatter(
 
         // Plain text inside the quotes: no nested tags to escape, and the hover cannot
         // inherit or leak the line's colors. Adventure renders it in the default style.
-        val time = timeFormat.format(Instant.ofEpochMilli(intent.timestamp).atZone(zone))
+        val at = Instant.ofEpochMilli(intent.timestamp).atZone(zone)
+        val time = "${timeFormat.format(at)} (${zoneLabel(at.offset)})"
 
         return RenderedChatMessage("<hover:show_text:'$time'>$line</hover>")
+    }
+
+    private fun zoneLabel(offset: ZoneOffset): String {
+        val seconds = offset.totalSeconds
+        if (seconds == 0) return "UTC"
+        val abs = kotlin.math.abs(seconds)
+        val hours = abs / 3600
+        val minutes = (abs % 3600) / 60
+        val sign = if (seconds < 0) "-" else "+"
+        return if (minutes == 0) {
+            "UTC$sign$hours"
+        } else {
+            "UTC$sign$hours:${minutes.toString().padStart(2, '0')}"
+        }
     }
 
     companion object {
@@ -49,7 +67,7 @@ class ChatFormatter(
                 ?: ZoneId.of("America/Argentina/Buenos_Aires")
 
         val DEFAULT_TIME_FORMAT: DateTimeFormatter =
-            DateTimeFormatter.ofPattern(env("MISPLEASE_TIME_FORMAT") ?: "dd/MM HH:mm")
+            DateTimeFormatter.ofPattern(env("MISPLEASE_TIME_FORMAT") ?: "yyyy/MM/dd HH:mm:ss")
 
         private fun env(name: String): String? = System.getenv(name)?.takeIf { it.isNotBlank() }
     }

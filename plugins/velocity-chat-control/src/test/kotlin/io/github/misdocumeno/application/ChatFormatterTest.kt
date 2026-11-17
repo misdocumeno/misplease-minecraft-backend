@@ -17,10 +17,10 @@ class ChatFormatterTest {
         override fun getUsername(uuid: Uuid): String? = null
     }
 
-    private fun formatter() = ChatFormatter(
+    private fun formatter(zone: String = "America/Argentina/Buenos_Aires") = ChatFormatter(
         noNames,
-        ZoneId.of("America/Argentina/Buenos_Aires"),
-        DateTimeFormatter.ofPattern("dd/MM HH:mm"),
+        ZoneId.of(zone),
+        DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss"),
     )
 
     private fun intent(raw: String, at: String, name: String? = "<gold>Steve</gold>") = ChatIntent(
@@ -31,8 +31,8 @@ class ChatFormatterTest {
         senderNameMiniMessage = name,
     )
 
-    private fun line(raw: String, at: String): String =
-        formatter().format(intent(raw, at)).miniMessage
+    private fun line(raw: String, at: String, zone: String = "America/Argentina/Buenos_Aires"): String =
+        formatter(zone).format(intent(raw, at)).miniMessage
 
     @Test
     fun `hover shows the event time in the configured zone`() {
@@ -45,7 +45,17 @@ class ChatFormatterTest {
         // Round-trip: the time must live in the hover argument, not in the body text.
         val back = MiniMessage.miniMessage().serialize(rendered)
         assertTrue(back.startsWith("<hover:"), "hover must wrap the whole line: $back")
-        assertTrue(back.contains("17/11 20:34"), "hover must show the local event time: $back")
+        assertTrue(
+            back.contains("2026/11/17 20:34:00 (UTC-3)"),
+            "hover must show the local event time and its offset: $back",
+        )
+    }
+
+    @Test
+    fun `hover offset label follows the configured zone`() {
+        // Half-hour offsets and UTC must not be rendered as a bare number.
+        assertTrue(line("hola", "2026-11-17T23:34:00Z", "Asia/Kolkata").contains("(UTC+5:30)"))
+        assertTrue(line("hola", "2026-11-17T23:34:00Z", "UTC").contains("(UTC)"))
     }
 
     @Test
