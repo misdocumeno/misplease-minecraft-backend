@@ -36,7 +36,20 @@ class BackendAuthAdapterPlugin : JavaPlugin() {
         scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
         // After Done (: delay≥2 is not run in Paper's pre-Done delayed-init heartbeat.
         // Installing the Log4j filter during onEnable hangs boot (see LoginCommandLogFilter).
-        server.scheduler.runTaskLater(this, Runnable { LoginCommandLogFilter.install() }, 20L)
+        server.scheduler.runTaskLater(this, Runnable {
+            val where = LoginCommandLogFilter.install()
+            if (where == null) {
+                logger.warning(
+                    "login log filter NOT installed (Log4j context unreachable): " +
+                        "/login passwords will appear in logs/latest.log",
+                )
+            } else {
+                logger.info(
+                    "login log filter installed on ${where.loggerConfigs} logger configs " +
+                        "and ${where.appenders} appenders",
+                )
+            }
+        }, 20L)
 
         val ktor = HttpClient(CIO) {
             install(ContentNegotiation) { json() }
