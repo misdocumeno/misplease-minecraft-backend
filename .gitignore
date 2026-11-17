@@ -1,4 +1,7 @@
-# Local agent notes and the SSH key for the VM
+# Agent docs (local only): AGENTS.md, HANDOFF.md, .local/ (notes + SSH keys)
+/AGENTS.md
+/HANDOFF.md
+.local/
 .cursor/
 
 # Secrets
