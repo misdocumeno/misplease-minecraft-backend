@@ -125,7 +125,8 @@ services:
       - ./tools/obs/grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafana-data:/var/lib/grafana
     ports:
-      - 3000:3000
+      # 3000 is taken by the auth admin API on the host.
+      - 3001:3000
     mem_limit: 224m
     cpus: 1.0
     logging: *logging
