@@ -612,8 +612,6 @@ def _safe_rel(rel: str) -> str:
 # plugin, and guessing a secret is worse.
 _PLACEHOLDERS = {
     "__MISPLEASE_DB_PASSWORD__": "DB_PASSWORD",
-    "__MISPLEASE_REDIS_PASSWORD__": "REDIS_PASSWORD",
-    "__MISPLEASE_VELOCITY_SECRET__": "VELOCITY_FORWARDING_SECRET",
 }
 
 
@@ -648,11 +646,6 @@ def render_config_bytes(rel: str, raw: bytes) -> bytes:
         if token not in text:
             continue
         value = env_value(env_name)
-        if not value and env_name == "REDIS_PASSWORD":
-            # entrypoint.sh does the same: derive it from REDIS_URL when unset.
-            m = re.match(r"^redis://:?([^@]*)@", env_value("REDIS_URL"))
-            if m:
-                value = m.group(1)
         if not value:
             raise ConfigReloadError(
                 f"cannot hot-reload {rel}: {token} needs {env_name} "

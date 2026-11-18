@@ -28,14 +28,14 @@
 #   /config again, so a synced config never survives as a stale copy.
 #
 # SECRETS
-#   Files with __MISPLEASE_*__ placeholders (LuckPerms config.yml, libertybans
-#   sql.yml) ARE supported: the agent substitutes the same values entrypoint.sh
-#   uses at boot, taken from its own env (DB_PASSWORD, REDIS_PASSWORD), and
-#   refuses to write a file if any placeholder is left unresolved. Listing a
-#   file with an unknown placeholder is therefore safe: it aborts, it does not
-#   write literal tokens into a live config.
-#   Sync is per-file, so listing `libertybans/config.yml` cannot drag `sql.yml`
-#   along (and vice versa).
+#   Prefer the plugin's own env support. LuckPerms reads its credentials from
+#   LUCKPERMS_DATA_PASSWORD / LUCKPERMS_REDIS_PASSWORD (set in compose), so its
+#   config.yml holds no secret and is safe to sync.
+#   libertybans/sql.yml still carries __MISPLEASE_DB_PASSWORD__: the agent
+#   substitutes it with the same value entrypoint.sh uses at boot (DB_PASSWORD
+#   from its env or the stack .env) and refuses to write the file if any
+#   placeholder is left unresolved. Sync is per-file, so a config.yml change
+#   cannot drag sql.yml along (or vice versa).
 #
 # NO DATA
 #   Only files we track in git may be listed. Runtime files a plugin writes into
@@ -178,10 +178,10 @@ rules:
       - libertybans/sql.yml
     rcon: libertybans restart
 
-  # config.yml holds the storage/redis credentials (placeholders, substituted by
-  # the agent) plus the settings we actually touch: server, world-rewrite,
-  # prefixes-related flags, contexts. Those are re-read; storage/messaging
-  # changes are `notReloadable` upstream and still need a restart.
+  # config.yml: server, world-rewrite, contexts, flags — all reloadable.
+  # The DB/Redis passwords come from LUCKPERMS_DATA_PASSWORD /
+  # LUCKPERMS_REDIS_PASSWORD (compose env), not from this file, which is why it
+  # is safe to sync. Storage/messaging keys are `notReloadable` upstream.
   - id: luckperms
     paths:
       - LuckPerms/config.yml
@@ -213,12 +213,12 @@ rules:
       - PlotSquared/**
     rcon: plotsquared:plot reload
 
-  # Bare: ProtectionStones registers `ps` without a plugin namespace, so
-  # `protectionstones:ps` does not resolve. Nothing else registers `ps`.
+  # Bare: ProtectionStones registers its commands without a plugin namespace, so
+  # `protectionstones:...` does not resolve. Nothing else registers these labels.
   - id: protectionstones
     paths:
       - ProtectionStones/**
-    rcon: ps reload
+    rcon: protectionstones reload
 
   - id: quickshop
     paths:
@@ -270,33 +270,5 @@ rules:
       - WorldGuard/config.yml
     rcon: worldguard:wg reload
 
-# ---------------------------------------------------------------------------
-# Checked and deliberately NOT listed. Do not "fix" these by guessing a command.
-#
-#   AutoConsoleCommands   no command; config is read in onEnable only
-#   AutoPlayerTeleport    its reload command is literally `/reload`, which
-#                         collides with Paper's; over RCON you cannot be sure
-#   BiomePrinter          no command; re-reads lazily on the next print
-#   Chunky                only `chunky reload tasks`; nothing useful for config
-#   ChunkyBorder          no reload command in 1.2.x
-#   CMILib                `cmil reload` answers "Unknown CMILib command source
-#                         (Rcon)": it refuses RCON senders, so it cannot be
-#                         driven by the agent
-#   ColoredSigns          listener-only plugin, no commands
-#   dynmap                the reload subcommand is commented out upstream
-#   FastAsyncVoxelSniper  undocumented reload command, needs verification first
-#   floodgate             no reload command (`geyser reload` does not touch it)
-#   Geyser-Velocity       `geyser reload` kicks every Bedrock session
-#   GriefPrevention       not verified yet
-#   LightCleaner          no reload command
-#   PlayMoreSounds        the plugin itself prints "does not support reloads"
-#   Slimefun              no reload subcommand in the 26.3 fork
-#   SuperiorSkyblock2     `sadmin reload` exists but the jar warns it can leave
-#                         the plugin half-initialised: not worth the risk
-#   TrackPlayTime         no reload command
-#   Vault                 no reload command
-#   our own plugins       backend-*, PortalRoutes, WorldGamerules,
-#                         WorldGameMode, WorldPrinter: no reload command yet.
-#                         Add one to the plugin (Kotlin) when we start touching
-#                         their config often, then list it here.
-# ---------------------------------------------------------------------------
+# Plugins deliberately NOT listed (no reload command, RCON-refusing, or unsafe)
+# and the reason for each: .local/notes/config-hot-reload.md (internal, not tracked).
