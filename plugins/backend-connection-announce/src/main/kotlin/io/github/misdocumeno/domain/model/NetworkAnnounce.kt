@@ -11,4 +11,11 @@ sealed interface NetworkAnnounce {
         val username: String,
         val miniMessage: String,
     ) : NetworkAnnounce
+
+    @Serializable
+    @SerialName("Advancement")
+    data class Advancement(
+        val username: String,
+        val miniMessage: String,
+    ) : NetworkAnnounce
 }

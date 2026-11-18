@@ -9,7 +9,7 @@ import org.bukkit.Server
 import org.bukkit.plugin.Plugin
 
 /**
- * Fan-out death lines to authenticated players on this backend.
+ * Fan-out death and advancement lines to authenticated players on this backend.
  * Origin server already suppressed the vanilla broadcast.
  */
 class PaperNetworkAnnounceHandler(
@@ -22,6 +22,7 @@ class PaperNetworkAnnounceHandler(
     override fun handle(announce: NetworkAnnounce) {
         val mini = when (announce) {
             is NetworkAnnounce.Death -> announce.miniMessage
+            is NetworkAnnounce.Advancement -> announce.miniMessage
         }
         connection.async().smembers(AUTH_SET).whenComplete { authed, error ->
             if (error != null) {
