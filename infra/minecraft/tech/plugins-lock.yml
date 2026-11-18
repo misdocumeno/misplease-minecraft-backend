@@ -401,3 +401,77 @@ plugins:
     filename: EntityWatch-0.1.1.jar
     url: https://api.github.com/repos/misdocumeno/EntityWatch/releases/tags/v0.1.1
     sha256: b61c4c81761168349295f7867e5d2cde379b281fb8d3bc7db78efe34f01815f8
+  - name: Multiverse-Core
+    source: modrinth
+    version: 5.8.2
+    filename: multiverse-core-5.8.2.jar
+    url: https://cdn.modrinth.com/data/3wmN97b8/versions/de7TbcZG/multiverse-core-5.8.2.jar
+    sha512: 1165c96755229583477d120485b49ddf731f44a97e17b99f955892e8e90d1f6b24d2e06bd15b6fc4240197c32970592a2af2febe31044afed949dc2d722d17a8
+    minecraft:
+      - 1.18.2
+      - "1.19"
+      - 1.19.1
+      - 1.19.2
+      - 1.19.3
+      - 1.19.4
+      - "1.20"
+      - 1.20.1
+      - 1.20.2
+      - 1.20.3
+      - 1.20.4
+      - 1.20.5
+      - 1.20.6
+      - "1.21"
+      - 1.21.1
+      - 1.21.10
+      - 1.21.11
+      - 1.21.2
+      - 1.21.3
+      - 1.21.4
+      - 1.21.5
+      - 1.21.6
+      - 1.21.7
+      - 1.21.8
+      - 1.21.9
+      - "26.1"
+      - 26.1.1
+      - 26.1.2
+      - "26.2"
+      - "26.3"
+  - name: Multiverse-Inventories
+    source: modrinth
+    version: 5.3.6
+    filename: multiverse-inventories-5.3.6.jar
+    url: https://cdn.modrinth.com/data/qvdtDX3s/versions/86s1EwyC/multiverse-inventories-5.3.6.jar
+    sha512: e587c873e1a01a48d79dabadc629113d68fe11240b85c970f481b62ebfcf5f8c3adffa9c5a5c601db0437b5c873312a02492a191ac8504a66ce4fed48a0d7438
+    minecraft:
+      - 1.18.2
+      - "1.19"
+      - 1.19.1
+      - 1.19.2
+      - 1.19.3
+      - 1.19.4
+      - "1.20"
+      - 1.20.1
+      - 1.20.2
+      - 1.20.3
+      - 1.20.4
+      - 1.20.5
+      - 1.20.6
+      - "1.21"
+      - 1.21.1
+      - 1.21.10
+      - 1.21.11
+      - 1.21.2
+      - 1.21.3
+      - 1.21.4
+      - 1.21.5
+      - 1.21.6
+      - 1.21.7
+      - 1.21.8
+      - 1.21.9
+      - "26.1"
+      - 26.1.1
+      - 26.1.2
+      - "26.2"
+      - "26.3"

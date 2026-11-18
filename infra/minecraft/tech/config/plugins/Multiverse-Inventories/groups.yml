@@ -1,0 +1,12 @@
+# Multiverse-Inventories groups (tech).
+# One group with every tech world: inventory, ender chest, armor, off hand and stats
+# are shared across the overworld/nether/end exactly like vanilla. Splitting a world
+# out of this group would make dimension changes swap inventories - do not.
+groups:
+  survival:
+    worlds:
+    - world
+    - world_nether
+    - world_the_end
+    shares:
+    - all

@@ -1,0 +1,38 @@
+# Multiverse-Inventories Settings
+#
+# Tech is a single survival world: `world` (overworld) plus the Bukkit dimension
+# worlds world_nether / world_the_end. They are all in one group (groups.yml) so
+# dimension changes keep the same inventory, ender chest and stats, exactly like
+# vanilla. Do not split them.
+#
+# first_run MUST stay false: groups.yml is authored here. With true, MVI would
+# regenerate groups from MV worlds on first start and could clobber the group.
+settings:
+  # This is the locale you wish to use.
+  locale: en
+
+  # If this is true it will generate world groups for you based on MV worlds.
+  first_run: false
+
+  # If this is set to true, it will enable bypass permissions (Check the wiki for more info.)
+  use_bypass: false
+
+  # If set to true, any world not listed in a group will automatically use the settings for the default group!
+  default_ungrouped_worlds: false
+
+  # If this is set to true, MVI saves/loads player data on login/logout instead of
+  # letting Minecraft do it. Keeping it false means a crash cannot roll back a
+  # player's inventory.
+  save_load_on_log_in_out: false
+
+  # If this is set to true, players will have different inventories/stats for each game mode.
+  use_game_mode_profiles: false
+shares:
+  # When set to true, optional shares WILL be utilized in cases where a group does not cover their uses for a world.
+  optionals_for_ungrouped_worlds: true
+
+  # Must be listed here or they are ignored. Built-ins: economy, last_location,
+  # advancements, recipes, game_statistics. survival uses shares: all, so
+  # advancements follow the inventory across the three survival worlds.
+  use_optionals:
+    - advancements
