@@ -72,3 +72,4 @@ warps-gui-title-single-page: '§5§lWarps:'
 warps-gui-title: '§5§lWarps: §f§o(página {page})'
 next-page: '§4§oPágina siguiente §4>'
 previous-page: '§4< §4§oPágina anterior'
+# filter test: hot-reload only, must not rebuild images
