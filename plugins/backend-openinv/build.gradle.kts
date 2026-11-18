@@ -1,3 +1,5 @@
+import io.github.misdocumeno.gradle.relocateServiceFileContents
+
 plugins {
     id("misplease.paper")
 }
@@ -20,4 +22,7 @@ tasks.test {
 tasks.shadowJar {
     val libPackage = "${project.group}.shaded"
     relocate("org.postgresql.", "$libPackage.org.postgresql.")
+    doLast {
+        relocateServiceFileContents(archiveFile.get().asFile, libPackage)
+    }
 }

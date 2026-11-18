@@ -1,3 +1,5 @@
+import io.github.misdocumeno.gradle.relocateServiceFileContents
+
 plugins {
     id("misplease.velocity")
 }
@@ -16,4 +18,7 @@ tasks.shadowJar {
     relocate("io.lettuce.", "$libPackage.io.lettuce.")
     relocate("io.netty.", "$libPackage.io.netty.")
     relocate("io.ktor.", "$libPackage.io.ktor.")
+    doLast {
+        relocateServiceFileContents(archiveFile.get().asFile, libPackage)
+    }
 }

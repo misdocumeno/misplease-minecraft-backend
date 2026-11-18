@@ -1,3 +1,5 @@
+import io.github.misdocumeno.gradle.relocateServiceFileContents
+
 plugins {
     id("misplease.velocity")
 }
@@ -13,4 +15,7 @@ tasks.shadowJar {
     val libPackage = "${project.group}.shaded"
     relocate("org.jetbrains.exposed.", "$libPackage.org.jetbrains.exposed.")
     relocate("org.postgresql.", "$libPackage.org.postgresql.")
+    doLast {
+        relocateServiceFileContents(archiveFile.get().asFile, libPackage)
+    }
 }
