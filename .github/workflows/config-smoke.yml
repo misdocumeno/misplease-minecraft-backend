@@ -1,0 +1,124 @@
+# Boot-check for config-only pushes.
+#
+# A config-only commit builds no image (see images.yml), so nothing in CI ever
+# boots it: the deployer just writes the files and reloads. This workflow fills
+# that gap WITHOUT gating the deploy — it runs in parallel with the hot reload
+# and compares the new config against the current :dev image. Red here means
+# "this config would not survive the next restart", while prod already applied
+# it.
+#
+# Deliberately a separate workflow, not a job in images.yml: deploy/set-wanted
+# only accepts a *successful* images run, and this check must never block the
+# apply it is auditing.
+#
+# A diff that also touches build inputs rebuilds an image whose own smoke boots
+# the new config, so this workflow skips those.
+name: config-smoke
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infra/minecraft/main/config/**"
+      - "infra/minecraft/tech/config/**"
+      - "infra/velocity/config/**"
+      - ".github/workflows/config-smoke.yml"
+  # Manual: boot all three with the current config and the current :dev images.
+  workflow_dispatch:
+
+concurrency:
+  group: config-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    outputs:
+      servers_json: ${{ steps.plan.outputs.servers_json }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: plan
+        env:
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          cells=()
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            changed=$'infra/minecraft/main/config/\ninfra/minecraft/tech/config/\ninfra/velocity/config/'
+            all=true
+          elif [[ -z "$BEFORE" || "$BEFORE" =~ ^0+$ ]] || ! git fetch --depth=1 --quiet origin "$BEFORE"; then
+            echo "no usable base commit — checking every server"
+            changed=$'infra/minecraft/main/config/\ninfra/minecraft/tech/config/\ninfra/velocity/config/'
+            all=true
+          else
+            changed="$(git diff --name-only "$BEFORE" "$SHA")"
+            all=false
+          fi
+          printf '%s\n' "$changed"
+
+          if [[ "$all" != true ]]; then
+            # Only a config-only diff belongs here. Anything else (jar, lock,
+            # docker/, workflow) rebuilds an image, and that build's smoke
+            # already boots the new config.
+            other="$(printf '%s\n' "$changed" | grep -vE '^infra/(minecraft/(main|tech)|velocity)/config/' || true)"
+            if [[ -n "$other" ]]; then
+              echo "not a config-only diff — images.yml smoke covers it"
+              echo "servers_json=[]" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          if grep -q '^infra/minecraft/main/config/' <<<"$changed"; then
+            cells+=('{"name":"main","kind":"server","config":"infra/minecraft/main/config"}')
+          fi
+          if grep -q '^infra/minecraft/tech/config/' <<<"$changed"; then
+            cells+=('{"name":"tech","kind":"server","config":"infra/minecraft/tech/config"}')
+          fi
+          if grep -q '^infra/velocity/config/' <<<"$changed"; then
+            cells+=('{"name":"velocity","kind":"proxy","config":"infra/velocity/config"}')
+          fi
+
+          if ((${#cells[@]})); then
+            echo "servers_json=[$(IFS=,; echo "${cells[*]}")]" >> "$GITHUB_OUTPUT"
+          else
+            echo "servers_json=[]" >> "$GITHUB_OUTPUT"
+          fi
+
+  smoke:
+    needs: plan
+    if: needs.plan.outputs.servers_json != '[]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.plan.outputs.servers_json) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # :dev is the newest successfully built image for this server. A
+      # config-only diff means the jars are identical, so it is exactly what
+      # prod runs.
+      - name: Boot this config on the current image
+        run: |
+          set -euo pipefail
+          chmod +x docker/smoke-check.sh
+          image="ghcr.io/${{ github.repository }}/${{ matrix.name }}:dev"
+          if ! docker pull "$image"; then
+            echo "::warning::no ${image} yet — nothing to boot, skipping"
+            exit 0
+          fi
+          SMOKE_HEAP=1536M SMOKE_TIMEOUT_S=480 \
+            ./docker/smoke-check.sh "$image" "${{ matrix.kind }}" "${{ matrix.config }}"
