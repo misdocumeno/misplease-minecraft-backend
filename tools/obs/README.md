@@ -36,8 +36,9 @@ docker compose -f docker-compose.obs.yml --profile ui up -d
 # + VictoriaLogs (the log tier)
 docker compose -f docker-compose.obs.yml --profile logs up -d
 
-# drop them again (their data is kept)
-docker compose -f docker-compose.obs.yml --profile ui --profile logs down
+# drop them again (their data is kept). Use `stop`, not `down`: `down` takes the
+# whole project, core included, because profiles only affect `up`.
+docker compose -f docker-compose.obs.yml stop grafana victoria-logs
 ```
 
 Grafana: `http://192.168.100.200:3001` (admin / `GRAFANA_ADMIN_PASSWORD` from the
