@@ -20,7 +20,11 @@ export class RedisSessionStore implements SessionStore {
     }
 
     async invalidate(username: string) {
-        await this.redis.sRem(RedisSessionStore.AUTH_SET_KEY, username)
+        // Only announce a leave for someone who was actually authenticated. The proxy
+        // drops a stale session on every LoginEvent; publishing unconditionally made a
+        // first-time join emit "left the game" before the player had even /login'd.
+        const removed = await this.redis.sRem(RedisSessionStore.AUTH_SET_KEY, username)
+        if (removed === 0) return
         const event: AuthEvent = { type: 'Invalidated', username }
         await this.redis.publish(RedisSessionStore.EVENTS_CHANNEL, JSON.stringify(event))
     }

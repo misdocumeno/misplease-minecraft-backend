@@ -2,7 +2,6 @@ package io.github.misdocumeno.infra.paper
 
 import io.github.misdocumeno.domain.model.NetworkAnnounce
 import io.github.misdocumeno.infra.redis.RedisNetworkAnnouncePublisher
-import io.papermc.paper.advancement.AdvancementDisplay
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.event.EventHandler
@@ -62,13 +61,14 @@ class ConnectionEventListener(
         if (display.isHidden) return
         // Suppress the local line; the network gets our version below.
         event.message(null)
-        // Built from the display instead of event.message() on purpose: the message is
-        // absent when gamerule announceAdvancements is off, and the translatable key
-        // keeps the client's own language and the vanilla frame colours.
+        // Same shape as vanilla: the translatable carries the plain sentence and
+        // `displayName()` is the bracketed advancement name, coloured by the frame
+        // (green task/goal, dark purple challenge) with the description tooltip.
+        // `title()` alone dropped both the colour and the brackets.
         val line = Component.translatable(
-            advancementKey(display),
-            Component.text(event.player.name),
-            display.title(),
+            "chat.type.advancement.${display.frame().name.lowercase()}",
+            event.player.displayName(),
+            display.displayName(),
         )
         announces.publish(
             NetworkAnnounce.Advancement(
@@ -77,12 +77,5 @@ class ConnectionEventListener(
             ),
         )
     }
-
-    private fun advancementKey(display: AdvancementDisplay): String =
-        when (display.frame()) {
-            AdvancementDisplay.Frame.CHALLENGE -> "chat.type.advancement.challenge"
-            AdvancementDisplay.Frame.GOAL -> "chat.type.advancement.goal"
-            else -> "chat.type.advancement.task"
-        }
 
 }
