@@ -1,6 +1,7 @@
 package io.github.misdocumeno.infra.database
 
 import org.jetbrains.exposed.sql.Database
+import org.postgresql.ds.PGSimpleDataSource
 import java.net.URI
 
 object DatabaseFactory {
@@ -8,13 +9,15 @@ object DatabaseFactory {
         val raw = System.getenv("DATABASE_URL")
             ?: error("DATABASE_URL is required for velocity-social mail")
         val (jdbcUrl, user, password) = toJdbc(raw)
-        // Schema owned by packages/db (Drizzle); plugins only connect + query.
-        Database.connect(
-            url = jdbcUrl,
-            driver = "org.postgresql.Driver",
-            user = user,
-            password = password,
-        )
+        // Datasource instead of DriverManager: the driver is relocated into this jar,
+        // and DriverManager only scans the system classloader.
+        val dataSource =
+            PGSimpleDataSource().apply {
+                setURL(jdbcUrl)
+                setUser(user)
+                setPassword(password)
+            }
+        Database.connect(dataSource)
     }
 
     internal fun toJdbc(databaseUrl: String): Triple<String, String, String> {

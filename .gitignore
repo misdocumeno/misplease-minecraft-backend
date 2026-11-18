@@ -29,6 +29,7 @@ id_rsa.pub
 **/*.py[cod]
 **/build/
 **/.gradle/
+**/.kotlin/
 **/bin/
 **/node_modules/
 **/dist/

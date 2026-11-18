@@ -15,4 +15,5 @@ tasks.shadowJar {
     val libPackage = "${project.group}.shaded"
     relocate("io.lettuce.", "$libPackage.io.lettuce.")
     relocate("io.netty.", "$libPackage.io.netty.")
+    relocate("io.ktor.", "$libPackage.io.ktor.")
 }

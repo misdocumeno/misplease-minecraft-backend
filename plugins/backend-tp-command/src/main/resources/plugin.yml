@@ -1,4 +1,4 @@
-name: TeleportCommand
+name: backend-tp-command
 main: io.github.misdocumeno.BackendTeleportCommandPlugin
 version: '0.1.0'
 api-version: '1.20'

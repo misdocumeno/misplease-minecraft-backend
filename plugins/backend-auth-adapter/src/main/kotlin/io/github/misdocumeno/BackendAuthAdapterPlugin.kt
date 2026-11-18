@@ -20,17 +20,20 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
+import io.lettuce.core.RedisClient
+import io.lettuce.core.api.StatefulRedisConnection
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import org.bukkit.plugin.java.JavaPlugin
-import redis.clients.jedis.JedisPool
 
 class BackendAuthAdapterPlugin : JavaPlugin() {
 
     private lateinit var scope: CoroutineScope
+    private lateinit var redis: RedisClient
+    private lateinit var connection: StatefulRedisConnection<String, String>
 
     override fun onEnable() {
         scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -55,9 +58,10 @@ class BackendAuthAdapterPlugin : JavaPlugin() {
             install(ContentNegotiation) { json() }
         }
 
-        val redis = JedisPool(System.getenv("REDIS_URL"))
+        redis = RedisClient.create(System.getenv("REDIS_URL"))
+        connection = redis.connect()
 
-        val authQuery = RedisAuthQuery(redis)
+        val authQuery = RedisAuthQuery(connection)
         val authAction = KtorAuthAction(ktor)
 
         val checkSession = CheckSession(authQuery)
@@ -106,5 +110,7 @@ class BackendAuthAdapterPlugin : JavaPlugin() {
 
     override fun onDisable() {
         scope.cancel()
+        if (::connection.isInitialized) connection.close()
+        if (::redis.isInitialized) redis.shutdown()
     }
 }

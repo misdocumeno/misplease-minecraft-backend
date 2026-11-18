@@ -1,6 +1,7 @@
 package io.github.misdocumeno.infra.database
 
 import org.jetbrains.exposed.sql.Database
+import org.postgresql.ds.PGSimpleDataSource
 import java.net.URI
 
 object DatabaseFactory {
@@ -10,12 +11,15 @@ object DatabaseFactory {
             ?: error("DATABASE_URL is required for last-session (postgres)")
         val (jdbcUrl, user, password) = toJdbc(raw)
 
-        Database.connect(
-            url = jdbcUrl,
-            driver = "org.postgresql.Driver",
-            user = user,
-            password = password,
-        )
+        // Datasource instead of DriverManager: the driver is relocated into this jar,
+        // and DriverManager only scans the system classloader.
+        val dataSource =
+            PGSimpleDataSource().apply {
+                setURL(jdbcUrl)
+                setUser(user)
+                setPassword(password)
+            }
+        Database.connect(dataSource)
     }
 
     /** Accepts `postgres://` / `postgresql://` (compose) or already-jdbc URLs. */

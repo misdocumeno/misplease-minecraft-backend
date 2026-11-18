@@ -17,4 +17,6 @@ tasks.shadowJar {
     val libPackage = "${project.group}.shaded"
     relocate("io.lettuce.", "$libPackage.io.lettuce.")
     relocate("io.netty.", "$libPackage.io.netty.")
+    relocate("org.jetbrains.exposed.", "$libPackage.org.jetbrains.exposed.")
+    relocate("org.postgresql.", "$libPackage.org.postgresql.")
 }
