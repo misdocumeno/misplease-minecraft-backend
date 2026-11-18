@@ -103,10 +103,16 @@ class OpenInvPlugin : JavaPlugin() {
                 )
                 return
             }
+            // An explicit group means "edit that MVI profile", which needs MVI even
+            // for an online player. Only the plain live path can run degraded.
+            if (explicitGroup != null && !mvi.available) {
+                viewer.sendMessage(messages.component("mvi-missing"))
+                return
+            }
             val group = explicitGroup
                 ?: mvi.groupForWorld(online.world.name)
                 ?: mvi.defaultGroup()
-                ?: return groupUnknown(viewer, groups)
+                ?: "default"
 
             if ((mvi.groupForWorld(online.world.name) ?: group) == group) {
                 val source = LiveSource(online, kind, server, group)
