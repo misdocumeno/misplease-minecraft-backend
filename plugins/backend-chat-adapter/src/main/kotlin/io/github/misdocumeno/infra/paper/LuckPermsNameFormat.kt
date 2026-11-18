@@ -4,23 +4,25 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import net.luckperms.api.LuckPermsProvider
+import net.luckperms.api.cacheddata.CachedMetaData
 import org.bukkit.entity.Player
 
 /**
- * Builds a MiniMessage name out of the player's display name plus LuckPerms
- * prefix/suffix (the same three pieces Essentials renders for `{DISPLAYNAME}`).
+ * Builds a MiniMessage name out of the player's nickname plus LuckPerms
+ * prefix/suffix.
  *
- * The name is `player.displayName()`, not `player.name`: Essentials' `nickname`
- * (`/nickname`, `change-displayname: true`) and any other plugin that sets a chat
- * display name write it there, so `/nickname &bMasterAngel` reaches global chat
- * without this plugin knowing about Essentials. With no nickname the display name
- * is just the plain username.
+ * The nickname is the `nickname` LuckPerms meta node set by the proxy
+ * `velocity-social` `/nickname` command. Because it is LuckPerms meta, it is the
+ * same on every backend and survives a restart; no per-server Essentials userdata
+ * is involved. It is rendered with a leading `~` so nobody mistakes a nickname for
+ * the real username (same marker Essentials used). Without a nickname the plain
+ * display name is used, which is the username (`change-displayname` is off in
+ * Essentials so it cannot inject a per-server nickname).
  *
- * Prefix/suffix stay outside the display name on purpose: Essentials runs with
- * `add-prefix-suffix: false` and `ops-name-color: 'none'`, so a display name never
- * contains them and a nickname cannot double the colours. (Op colouring is off
- * because it made every op's chat name dark red, over the LP prefix.) Default group
- * is `&3`; personal colours are per-user LP prefixes (higher priority than `default`).
+ * Prefix/suffix stay outside the nickname on purpose: the backend runs with
+ * `add-prefix-suffix: false` and `ops-name-color: 'none'`, so a nickname cannot
+ * double the colours. Default group is `&3`; personal colours are per-user LP
+ * prefixes (higher priority than `default`).
  */
 object LuckPermsNameFormat {
     private val mm = MiniMessage.miniMessage()
@@ -30,24 +32,20 @@ object LuckPermsNameFormat {
         // The display name is a child of the prefix, not a sibling: a sibling would
         // drop the prefix colour on an uncoloured name (`&3` is a colour-only stub).
         // A coloured nickname carries its own style and overrides the inherited one.
-        val name = legacy.deserialize(prefixOf(player).orEmpty()).append(player.displayName())
-        val suffix = legacy.deserialize(suffixOf(player).orEmpty())
+        val meta = metadata(player)
+        val nickname = meta?.getMetaValue(NICKNAME_META)?.takeIf { it.isNotBlank() }
+        val display = if (nickname != null) legacy.deserialize("~$nickname") else player.displayName()
+        val name = legacy.deserialize(meta?.prefix.orEmpty()).append(display)
+        val suffix = legacy.deserialize(meta?.suffix.orEmpty())
         return mm.serialize(Component.text().append(name).append(suffix).build())
     }
 
-    private fun prefixOf(player: Player): String? =
+    private fun metadata(player: Player): CachedMetaData? =
         runCatching {
             LuckPermsProvider.get()
                 .getPlayerAdapter(Player::class.java)
                 .getMetaData(player)
-                .prefix
         }.getOrNull()
 
-    private fun suffixOf(player: Player): String? =
-        runCatching {
-            LuckPermsProvider.get()
-                .getPlayerAdapter(Player::class.java)
-                .getMetaData(player)
-                .suffix
-        }.getOrNull()
+    private const val NICKNAME_META = "nickname"
 }

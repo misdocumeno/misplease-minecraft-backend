@@ -13,6 +13,12 @@ dependencies {
     implementation(libs.postgresql)
     compileOnly(libs.luckperms.api)
     compileOnly(libs.libertybans.api)
+
+    testImplementation(kotlin("test"))
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 tasks.shadowJar {

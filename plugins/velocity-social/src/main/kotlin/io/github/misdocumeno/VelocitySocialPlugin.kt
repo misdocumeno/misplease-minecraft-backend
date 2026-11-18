@@ -17,6 +17,7 @@ import io.github.misdocumeno.infra.velocity.ListCommand
 import io.github.misdocumeno.infra.velocity.MailCommand
 import io.github.misdocumeno.infra.velocity.MailNotify
 import io.github.misdocumeno.infra.velocity.MsgCommand
+import io.github.misdocumeno.infra.velocity.NicknameCommand
 import io.github.misdocumeno.infra.velocity.ReplyCommand
 import io.github.misdocumeno.infra.velocity.ReplyIndex
 import io.lettuce.core.RedisClient
@@ -35,7 +36,11 @@ import org.slf4j.Logger
     description = "Network-wide /msg /reply /list /mail (replaces Essentials equivalents)",
     authors = ["Mis"],
     // Optional: /msg keeps working (mutes fail open) if LibertyBans is absent.
-    dependencies = [Dependency(id = "libertybans", optional = true)],
+    dependencies = [
+        Dependency(id = "libertybans", optional = true),
+        // Optional: /nickname reports a clear error instead of failing to load.
+        Dependency(id = "luckperms", optional = true),
+    ],
 )
 class VelocitySocialPlugin @Inject constructor(
     private val proxy: ProxyServer,
@@ -89,7 +94,11 @@ class VelocitySocialPlugin @Inject constructor(
             mgr.metaBuilder("mail").aliases("email").plugin(this).build(),
             MailCommand(proxy, auth, mailRepo),
         )
-        logger.info("network /msg /reply /list /mail registered")
+        mgr.register(
+            mgr.metaBuilder("nickname").aliases("nick").plugin(this).build(),
+            NicknameCommand(proxy, auth, logger),
+        )
+        logger.info("network /msg /reply /list /mail /nickname registered")
     }
 
     @Subscribe

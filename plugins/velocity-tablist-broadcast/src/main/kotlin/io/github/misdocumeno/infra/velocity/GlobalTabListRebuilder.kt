@@ -126,13 +126,14 @@ class GlobalTabListRebuilder(
         names[player.uniqueId.toString()]?.let { stored ->
             runCatching { mm.deserialize(stored) }.getOrNull()?.let { return it }
         }
-        val prefix = runCatching {
+        val meta = runCatching {
             LuckPermsProvider.get()
                 .getPlayerAdapter(Player::class.java)
                 .getMetaData(player)
-                .prefix
-        }.getOrNull().orEmpty()
-        return legacy.deserialize(prefix + player.username)
+        }.getOrNull()
+        val nickname = meta?.getMetaValue(NICKNAME_META)?.takeIf { it.isNotBlank() }
+        val name = if (nickname != null) "~$nickname" else player.username
+        return legacy.deserialize(meta?.prefix.orEmpty() + name + meta?.suffix.orEmpty())
     }
 
     private fun serverName(player: Player): String? =
@@ -141,6 +142,7 @@ class GlobalTabListRebuilder(
     companion object {
         private const val AUTH_SET = "game-sessions:authenticated"
         private const val NAME_KEY_PREFIX = "misplease:tablist:name:"
+        private const val NICKNAME_META = "nickname"
 
         private fun key(uuid: UUID): String = "$NAME_KEY_PREFIX$uuid"
     }

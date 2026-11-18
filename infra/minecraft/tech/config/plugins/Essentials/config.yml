@@ -56,7 +56,10 @@ ignore-colors-in-max-nick-length: false
 hide-displayname-in-vanish: true
 
 # Disable this if you have any other plugin that modifies the display name of a player.
-change-displayname: true
+# Nicknames are network-wide via LuckPerms meta (proxy /nickname), and chat/tab
+# read that meta directly; letting Essentials write a per-server nickname here
+# would bring back different names on main and tech.
+change-displayname: false
 
 # This option will cause Essentials to show players' display names instead of usernames when tab completing Essentials commands.
 # If your tab completions include prefixes and suffixes, set this option to false.
@@ -192,6 +195,10 @@ disabled-commands:
   # and offhand). /enderchest stays: players use it on themselves.
   - invsee
   - endersee
+  # Nicknames are network-wide (proxy /nickname, stored in LuckPerms meta), so
+  # the backend-local Essentials version must not create per-server nicknames.
+  - nickname
+  - nick
   # Punishments are network-wide via LibertyBans on the proxy (or its plugin messaging).
   # A backend-local /ban would only hide the player from one server and leave the other
   # untouched, so never let Essentials handle them.
