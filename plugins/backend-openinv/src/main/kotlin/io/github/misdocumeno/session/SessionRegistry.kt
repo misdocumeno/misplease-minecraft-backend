@@ -10,6 +10,8 @@ class SessionRegistry {
 
     fun find(viewer: UUID): OpenInvSession? = byViewer[viewer]
 
+    fun all(): List<OpenInvSession> = byViewer.values.toList()
+
     fun add(session: OpenInvSession) {
         byViewer.put(session.viewer, session)?.finish(closeView = false)
     }

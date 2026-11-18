@@ -1,13 +1,15 @@
 package io.github.misdocumeno.session
 
 import io.github.misdocumeno.OpenInvPlugin
-import io.github.misdocumeno.domain.InventoryKind
-import io.github.misdocumeno.domain.Snapshot
 import io.github.misdocumeno.domain.GuiMapping
+import io.github.misdocumeno.domain.InventoryKind
+import io.github.misdocumeno.domain.ItemCodec
+import io.github.misdocumeno.domain.Snapshot
 import io.github.misdocumeno.infra.paper.GuiPads
 import io.github.misdocumeno.source.InventorySource
 import io.github.misdocumeno.source.LiveSource
 import io.github.misdocumeno.source.ProfileSource
+import io.github.misdocumeno.source.RemoteSource
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.inventory.Inventory
@@ -15,6 +17,7 @@ import org.bukkit.inventory.InventoryHolder
 import org.bukkit.inventory.ItemStack
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
 class OpenInvHolder(val sessionId: UUID) : InventoryHolder {
@@ -33,6 +36,10 @@ class OpenInvHolder(val sessionId: UUID) : InventoryHolder {
  * The GUI is a mirror. Every click is reconciled slot by slot against [acked]
  * (last known source value); only differing slots are written, so a live
  * player's unrelated slots are never overwritten.
+ *
+ * A session is either local (this backend owns the target) or [remote]: then
+ * every read/write is a Redis RPC and the owner backend remains the single
+ * writer.
  */
 class OpenInvSession(
     private val plugin: OpenInvPlugin,
@@ -43,6 +50,7 @@ class OpenInvSession(
     val group: String,
     val server: String,
     private val initial: Snapshot,
+    private val remote: RemoteSource? = null,
 ) {
 
     val id: UUID = UUID.randomUUID()
@@ -57,15 +65,18 @@ class OpenInvSession(
 
     private val acked: MutableList<ItemStack?> = initial.items.map { it?.clone() }.toMutableList()
     private val dirty: MutableSet<Int> = ConcurrentHashMap.newKeySet()
-    private val pending: MutableMap<Int, ItemStack?> = ConcurrentHashMap()
+    private val writeQueue = ConcurrentLinkedQueue<Pair<InventorySource, Map<Int, ItemStack?>>>()
     private val writeBusy = AtomicBoolean(false)
     private val readBusy = AtomicBoolean(false)
 
     private var taskId = -1
     private var closed = false
-    private var lastTitle: String? = null
+    private var lastState: String? = null
     private var lastOnlineState = initiallyOnline
     private var settleUntilMillis = 0L
+
+    @Volatile
+    private var viewOnly: Boolean = initial.mcVersion.isNotBlank() && initial.mcVersion != ItemCodec.version()
 
     fun start() {
         for (index in 0 until kind.size) {
@@ -75,7 +86,7 @@ class OpenInvSession(
         GuiPads.stamp(gui, kind)
         val player = Bukkit.getPlayer(viewer) ?: return
         player.openInventory(gui)
-        lastTitle = stateMarker(initiallyOnline)
+        lastState = stateMarker(initiallyOnline)
         taskId = Bukkit.getScheduler()
             .runTaskTimer(plugin, Runnable { tick() }, plugin.messages.refreshTicks(), plugin.messages.refreshTicks())
             .taskId
@@ -83,6 +94,12 @@ class OpenInvSession(
 
     fun isOpenFor(player: Player): Boolean =
         player.isOnline && player.openInventory.topInventory === gui
+
+    /** True right after an online/offline switch: interactions are paused. */
+    fun isSettling(): Boolean = System.currentTimeMillis() < settleUntilMillis
+
+    /** True when the owner runs another game version; the GUI is not editable. */
+    fun isViewOnly(): Boolean = viewOnly
 
     private fun tick() {
         if (closed) return
@@ -99,9 +116,6 @@ class OpenInvSession(
         refresh(player)
     }
 
-    /** True right after an online/offline switch: interactions are paused. */
-    fun isSettling(): Boolean = System.currentTimeMillis() < settleUntilMillis
-
     /** Reconciles the mirror with its source. Never writes by itself. */
     private fun refresh(player: Player) {
         if (isSettling()) return
@@ -117,10 +131,28 @@ class OpenInvSession(
             readBusy.set(false)
             result.onSuccess { snapshot ->
                 Bukkit.getScheduler().runTask(plugin, Runnable {
-                    if (!closed && isOpenFor(player)) merge(snapshot)
+                    if (closed || !isOpenFor(player)) return@Runnable
+                    val wasViewOnly = viewOnly
+                    viewOnly = remote?.viewOnly ?: (snapshot.mcVersion.isNotBlank() && snapshot.mcVersion != ItemCodec.version())
+                    if (viewOnly != wasViewOnly) notifyState(player, force = true)
+                    merge(snapshot)
                 })
-            }.onFailure {
-                plugin.logger.fine("profile read failed for $targetName: ${it.message}")
+            }.onFailure { error ->
+                plugin.logger.fine("source read failed for $targetName: ${error.message}")
+                if (remote != null && remote.consecutiveFailures >= REMOTE_FAILURES_BEFORE_CLOSE) {
+                    Bukkit.getScheduler().runTask(plugin, Runnable {
+                        closeWith(plugin.messages.component("remote-lost", "server" to server))
+                    })
+                } else if (remote != null && remote.consecutiveFailures == 1) {
+                    Bukkit.getScheduler().runTask(plugin, Runnable {
+                        if (!closed) {
+                            val viewerPlayer = Bukkit.getPlayer(viewer) ?: return@Runnable
+                            viewerPlayer.sendActionBar(
+                                plugin.messages.component("remote-timeout", "server" to server),
+                            )
+                        }
+                    })
+                }
             }
         }
     }
@@ -129,7 +161,7 @@ class OpenInvSession(
     private fun merge(snapshot: Snapshot) {
         for (index in 0 until kind.size) {
             val slot = GuiMapping.toGui(kind, index) ?: continue
-            if (index in dirty || pending.containsKey(index)) continue
+            if (index in dirty) continue
             val current = gui.getItem(slot)?.takeIf { !it.type.isAir }
             if (!same(current, acked[index])) continue
             val incoming = snapshot.items[index]?.clone()?.takeIf { !it.type.isAir }
@@ -140,7 +172,7 @@ class OpenInvSession(
 
     /** Diffs the GUI against the last acked state and writes the difference. */
     fun syncNow() {
-        if (closed || isSettling()) return
+        if (closed || isSettling() || viewOnly) return
         val changed = LinkedHashMap<Int, ItemStack?>()
         for (index in 0 until kind.size) {
             val slot = GuiMapping.toGui(kind, index) ?: continue
@@ -160,36 +192,35 @@ class OpenInvSession(
                 changed.keys.forEach { dirty.remove(it) }
             } catch (error: Exception) {
                 plugin.logger.warning("live write failed for $targetName: ${error.message}")
+                changed.keys.forEach { dirty.remove(it) }
                 plugin.server.scheduler.runTask(plugin, Runnable { reportFailure(error) })
             }
         } else {
-            enqueueProfileWrite(changed)
+            enqueueWrite(source, changed)
         }
     }
 
-    private fun enqueueProfileWrite(changed: Map<Int, ItemStack?>) {
-        pending.putAll(changed)
-        dirty.addAll(changed.keys)
+    private fun enqueueWrite(source: InventorySource, changed: Map<Int, ItemStack?>) {
+        writeQueue.add(source to changed)
         if (writeBusy.compareAndSet(false, true)) plugin.profileExecutor.execute { flush() }
     }
 
     private fun flush() {
         try {
-            while (pending.isNotEmpty()) {
-                val batch = HashMap(pending)
-                pending.clear()
+            while (true) {
+                val (source, batch) = writeQueue.poll() ?: break
                 try {
-                    profileSource().apply(batch)
-                    for (index in batch.keys) if (!pending.containsKey(index)) dirty.remove(index)
+                    source.apply(batch)
                 } catch (error: Exception) {
                     plugin.logger.warning("profile write failed for $targetName: ${error.message}")
-                    for (index in batch.keys) dirty.remove(index)
                     Bukkit.getScheduler().runTask(plugin, Runnable { reportFailure(error) })
+                } finally {
+                    batch.keys.forEach { dirty.remove(it) }
                 }
             }
         } finally {
             writeBusy.set(false)
-            if (pending.isNotEmpty() && writeBusy.compareAndSet(false, true)) {
+            if (writeQueue.isNotEmpty() && writeBusy.compareAndSet(false, true)) {
                 plugin.profileExecutor.execute { flush() }
             }
         }
@@ -202,15 +233,13 @@ class OpenInvSession(
         )
     }
 
-    private fun profileSource(): InventorySource =
-        ProfileSource(plugin.mvi, targetUuid, targetName, kind, server, group)
-
     /**
      * Live while the target is online *and* in this group; otherwise the
      * MVI profile of the pinned group. Re-evaluated before every read/write so
      * a join/quit/world change never needs to close the GUI.
      */
     private fun resolveSource(): InventorySource {
+        remote?.let { return it }
         val player = Bukkit.getPlayer(targetUuid)
         if (player != null && player.isOnline) {
             val currentGroup = plugin.mvi.groupForWorld(player.world.name)
@@ -218,10 +247,11 @@ class OpenInvSession(
                 return LiveSource(player, kind, server, group)
             }
         }
-        return profileSource()
+        return ProfileSource(plugin.mvi, targetUuid, targetName, kind, server, group)
     }
 
     private fun onlineInGroup(): Boolean {
+        remote?.let { return it.online }
         val player = Bukkit.getPlayer(targetUuid) ?: return false
         if (!player.isOnline) return false
         val currentGroup = plugin.mvi.groupForWorld(player.world.name)
@@ -240,17 +270,29 @@ class OpenInvSession(
         )
     }
 
-    private fun stateMarker(online: Boolean): String = "$online|$group|$server"
+    private fun stateMarker(online: Boolean): String = "$online|$group|$server|$viewOnly"
 
     /**
      * The window title is created once (Component titles cannot be updated
      * through InventoryView), so a source switch is announced in the action bar.
      */
-    private fun notifyState(player: Player) {
+    private fun notifyState(player: Player, force: Boolean = false) {
         val online = onlineInGroup()
         val marker = stateMarker(online)
-        if (marker == lastTitle) return
-        lastTitle = marker
+        if (marker == lastState && !force) return
+        lastState = marker
+        if (viewOnly) {
+            player.sendActionBar(
+                plugin.messages.component(
+                    "view-only",
+                    "player" to targetName,
+                    "server" to server,
+                    "version" to (initial.mcVersion.ifBlank { "?" }),
+                    "local" to ItemCodec.version(),
+                ),
+            )
+            return
+        }
         player.sendActionBar(
             plugin.messages.component(
                 "state",
@@ -260,6 +302,13 @@ class OpenInvSession(
                 "offline" to if (online) "" else plugin.messages.offlineSuffix(),
             ),
         )
+    }
+
+    /** Closes the GUI with an explanation (target moved servers, owner lost). */
+    fun closeWith(message: net.kyori.adventure.text.Component) {
+        if (closed) return
+        Bukkit.getPlayer(viewer)?.sendMessage(message)
+        finish()
     }
 
     fun finish(closeView: Boolean = true) {
@@ -272,7 +321,7 @@ class OpenInvSession(
             val player = Bukkit.getPlayer(viewer)
             if (player != null && isOpenFor(player)) player.closeInventory()
         }
-        if (pending.isNotEmpty() && writeBusy.compareAndSet(false, true)) {
+        if (writeQueue.isNotEmpty() && writeBusy.compareAndSet(false, true)) {
             plugin.profileExecutor.execute { flush() }
         }
     }
@@ -286,5 +335,8 @@ class OpenInvSession(
     private companion object {
         /** MVI applies the group profile right after join; stay read-only briefly. */
         const val SETTLE_MILLIS = 2000L
+
+        /** Three missed reads roughly a minute apart: the owner is gone. */
+        const val REMOTE_FAILURES_BEFORE_CLOSE = 3
     }
 }

@@ -30,6 +30,11 @@ class OpenInvListener(private val plugin: OpenInvPlugin) : Listener {
         val player = event.whoClicked as? Player ?: return
         val session = plugin.sessions.find(player.uniqueId) ?: return
         if (event.view.topInventory !== session.gui) return
+        if (session.isViewOnly()) {
+            // Owner runs another game version: show the contents, accept nothing.
+            event.isCancelled = true
+            return
+        }
         if (session.isSettling()) {
             event.isCancelled = true
             return
@@ -63,7 +68,7 @@ class OpenInvListener(private val plugin: OpenInvPlugin) : Listener {
         val player = event.whoClicked as? Player ?: return
         val session = plugin.sessions.find(player.uniqueId) ?: return
         if (event.view.topInventory !== session.gui) return
-        if (session.isSettling()) {
+        if (session.isViewOnly() || session.isSettling()) {
             event.isCancelled = true
             return
         }

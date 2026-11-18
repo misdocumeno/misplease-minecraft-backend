@@ -7,6 +7,9 @@ plugins {
 dependencies {
     // Last-session lookup (which backend owns an offline player). Plain JDBC, no ORM.
     implementation(libs.postgresql)
+    // Cross-server state/apply RPC and the proxy presence feed.
+    implementation(libs.lettuce.core)
+    implementation(libs.kotlinx.serialization.json)
 
     // Runtime APIs, provided by the servers (softdepend in plugin.yml).
     compileOnly("maven.modrinth:multiverse-core:5.8.2")
@@ -22,6 +25,8 @@ tasks.test {
 tasks.shadowJar {
     val libPackage = "${project.group}.shaded"
     relocate("org.postgresql.", "$libPackage.org.postgresql.")
+    relocate("io.lettuce.", "$libPackage.io.lettuce.")
+    relocate("io.netty.", "$libPackage.io.netty.")
     doLast {
         relocateServiceFileContents(archiveFile.get().asFile, libPackage)
     }

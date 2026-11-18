@@ -46,7 +46,7 @@ class OpenInvCommand(
             sender.sendMessage(plugin.messages.component(usageKey))
             return true
         }
-        val (explicitGroup, server) = parseGroupAndServer(args.getOrNull(1))
+        val (explicitGroup, server, explicitServer) = parseGroupAndServer(args.getOrNull(1))
 
         val local = Bukkit.getPlayerExact(token)
         if (local != null) {
@@ -68,26 +68,15 @@ class OpenInvCommand(
             val lastSession = resolved?.let { plugin.lastSessions.lookup(it.first) }
             plugin.server.scheduler.runTask(plugin, Runnable {
                 if (!sender.isOnline) return@Runnable
-                when {
-                    resolved == null ->
-                        sender.sendMessage(plugin.messages.component("unknown-player", "player" to token))
-
-                    server != plugin.serverId ->
-                        sender.sendMessage(
-                            plugin.messages.component("other-server", "player" to resolved.second, "server" to server),
-                        )
-
-                    lastSession != null && lastSession.server != plugin.serverId ->
-                        sender.sendMessage(
-                            plugin.messages.component(
-                                "other-server",
-                                "player" to resolved.second,
-                                "server" to lastSession.server,
-                            ),
-                        )
-
-                    else -> plugin.openSession(sender, resolved.first, resolved.second, kind, explicitGroup, server)
+                if (resolved == null) {
+                    sender.sendMessage(plugin.messages.component("unknown-player", "player" to token))
+                    return@Runnable
                 }
+                // Explicit @server wins; otherwise the durable last-session row decides
+                // which backend owns the inventory. Never invent an owner.
+                val targetServer =
+                    if (explicitServer) server else lastSession?.server?.takeIf { it.isNotBlank() } ?: plugin.serverId
+                plugin.openSession(sender, resolved.first, resolved.second, kind, explicitGroup, targetServer)
             })
         })
         return true
@@ -100,13 +89,13 @@ class OpenInvCommand(
         return offline.uniqueId to (offline.name ?: name)
     }
 
-    private fun parseGroupAndServer(raw: String?): Pair<String?, String> {
-        if (raw.isNullOrBlank()) return null to plugin.serverId
+    private fun parseGroupAndServer(raw: String?): Triple<String?, String, Boolean> {
+        if (raw.isNullOrBlank()) return Triple(null, plugin.serverId, false)
         val at = raw.indexOf('@')
-        if (at < 0) return raw to plugin.serverId
+        if (at < 0) return Triple(raw, plugin.serverId, false)
         val group = raw.substring(0, at).takeIf { it.isNotBlank() }
         val server = raw.substring(at + 1).ifBlank { plugin.serverId }
-        return group to server
+        return Triple(group, server, true)
     }
 
     override fun onTabComplete(
@@ -132,12 +121,14 @@ class OpenInvCommand(
 
             2 -> {
                 val partial = args[1]
-                val groups = plugin.mvi.groups()
                 if (partial.contains('@')) {
                     val group = partial.substringBefore('@')
-                    listOf("$group@${plugin.serverId}")
+                    val typed = partial.substringAfter('@')
+                    plugin.knownServers()
+                        .filter { it.startsWith(typed, ignoreCase = true) }
+                        .map { "$group@$it" }
                 } else {
-                    groups.filter { it.startsWith(partial, ignoreCase = true) }
+                    plugin.mvi.groups().filter { it.startsWith(partial, ignoreCase = true) }
                 }
             }
 

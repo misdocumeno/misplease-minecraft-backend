@@ -37,8 +37,6 @@ class Messages(private val plugin: Plugin) {
 
     fun refreshTicks(): Long = plugin.config.getLong("settings.refresh-ticks", 10L).coerceIn(5L, 200L)
 
-    fun warningTicks(): Long = plugin.config.getLong("settings.warning-ticks", 100L).coerceIn(20L, 1200L)
-
     fun offlineSuffix(): String = plugin.config.getString("messages.offline-suffix") ?: ", offline"
 
     fun groupList(groups: Collection<String>): String = groups.joinToString(", ").lowercase(Locale.ROOT)
