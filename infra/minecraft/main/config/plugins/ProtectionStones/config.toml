@@ -1,4 +1,5 @@
 config_version = 16
+# probe: config-only push, smoke boots in parallel
 uuidupdated = true
 # Please do not change the config version unless you know what you are doing!
 # ---------------------------------------------------------------------------------------
