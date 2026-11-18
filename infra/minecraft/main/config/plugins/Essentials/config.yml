@@ -169,6 +169,11 @@ disabled-commands:
     - kick
     - mute
     - unmute
+    # /me (and its aliases) broadcast raw text outside the chat pipeline, so a muted
+    # player could still talk network-wide. Off until actions go through global chat.
+    - me
+    - action
+    - describe
     - list
     - mail
     - email
