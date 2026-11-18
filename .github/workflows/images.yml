@@ -57,14 +57,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: filter
         if: github.event_name != 'workflow_dispatch'
         with:
           # `some` (default) ORs the rules and silently ignores `!` negations, so
           # the config-hot-reload exclusions below only work with
-          # `some-with-excludes`. All other filters have no negation, so this is
-          # equivalent to `some` for them.
+          # `some-with-excludes` (v4+). All other filters have no negation, so
+          # this is equivalent to `some` for them.
           predicate-quantifier: 'some-with-excludes'
           filters: |
             auth:
