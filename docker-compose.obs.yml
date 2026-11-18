@@ -87,10 +87,17 @@ services:
       - /:/host/root:ro,rslave
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
-      - /var/lib/docker/:/host/docker:ro
+      # cAdvisor reads the host cgroup tree and docker state, not the container's.
+      - /sys:/sys:ro
+      - /var/run:/var/run:rw
+      - /var/lib/docker/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
-    mem_limit: 192m
+      - /run/udev:/run/udev:ro
+    mem_limit: 256m
     cpus: 1.0
+    ports:
+      # Alloy UI/API for debugging (component health). Loopback only.
+      - 127.0.0.1:12345:12345
     networks:
       - default
       - misplease

@@ -61,8 +61,9 @@ prometheus.exporter.cadvisor "containers" {
   // Keep only the compose labels; the rest is series bloat.
   store_container_labels        = false
   allowlisted_container_labels  = ["com.docker.compose.service", "com.docker.compose.project"]
-  housekeeping_interval         = "15s"
-  storage_duration              = "1m"
+  housekeeping_interval    = "30s"
+  max_housekeeping_interval = "60s"
+  storage_duration         = "30s"
 }
 
 discovery.relabel "containers" {
