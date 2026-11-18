@@ -10,8 +10,8 @@ settings:
   refresh-ticks: 10
 
 titles:
-  inventory: "Inventory: <violet><player></violet> <gray>- <server>/<group><offline>"
-  ender: "Ender chest: <violet><player></violet> <gray>- <server>/<group><offline>"
+  inventory: "Inventory: <#a855f7><player> <gray>- <server>/<group><offline>"
+  ender: "Ender chest: <#a855f7><player> <gray>- <server>/<group><offline>"
 
 messages:
   player-only: "<red>Only players can open inventories."
@@ -29,8 +29,8 @@ messages:
   session-moved: "<yellow><player> is now on <white><server></white>; session closed. <gray>Open it again there."
   view-only: "<red>Read-only: <server> runs Minecraft <white><version></white> (this server <white><local></white>). <gray>Use <white>/server <server></white> to edit."
   redis-down: "<yellow>Redis unavailable: only players online on this server can be opened."
-  opened: "<gray>Opened <violet><player></violet> <gray>(<server>/<group><offline>)"
-  state: "<gray>Editing <violet><player></violet> <gray>(<server>/<group><offline>)"
+  opened: "<gray>Opened <#a855f7><player> <gray>(<server>/<group><offline>)"
+  state: "<gray>Editing <#a855f7><player> <gray>(<server>/<group><offline>)"
   offline-suffix: ", offline"
   reloaded: "<green>OpenInv reloaded."
   write-failed: "<red>Could not save: <reason>"
