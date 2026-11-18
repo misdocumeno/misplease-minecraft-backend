@@ -30,7 +30,7 @@ plugins:
   - name: WorldGamerules
     source: github
     repo: misdocumeno/WorldGamerules
-    version: v0.1.4
+    version: v0.1.5
   - name: GriefPrevention
     source: modrinth
     slug: griefprevention

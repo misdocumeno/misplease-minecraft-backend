@@ -385,10 +385,10 @@ plugins:
       - "26.3"
   - name: WorldGamerules
     source: github
-    version: v0.1.4
-    filename: WorldGamerules-0.1.4.jar
-    url: https://api.github.com/repos/misdocumeno/WorldGamerules/releases/tags/v0.1.4
-    sha256: 9bf9974fc6de893e7d2d7667f2244dcaffb7e6e1f6a3898b5a224c1c0b4affb0
+    version: v0.1.5
+    filename: WorldGamerules-0.1.5.jar
+    url: https://api.github.com/repos/misdocumeno/WorldGamerules/releases/tags/v0.1.5
+    sha256: 2a53bbf669a59462ee0fabd61ef378948457cb6cae7728d243c4c70a3923cf08
   - name: Floodgate
     source: geysermc
     version: 2.2.5-b141

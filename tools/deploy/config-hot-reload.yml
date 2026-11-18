@@ -213,6 +213,12 @@ rules:
       - PlotSquared/**
     rcon: plotsquared:plot reload
 
+  # Main only (tech/proxy never load it).
+  - id: portalroutes
+    paths:
+      - PortalRoutes/**
+    rcon: portalroutes:portalroutes reload
+
   # Bare: ProtectionStones registers its commands without a plugin namespace, so
   # `protectionstones:...` does not resolve. Nothing else registers these labels.
   - id: protectionstones
@@ -263,6 +269,18 @@ rules:
     paths:
       - VillagerTradeLimiter/**
     rcon: villagertradelimiter:vtl reload
+
+  # Worlds, aliases/defaults: re-applied to every loaded world, no restart.
+  - id: worldgamerules
+    paths:
+      - WorldGamerules/**
+    rcon: worldgamerules:worldgamerules reload
+
+  # Registered as /reload, which collides with Paper's own: always namespaced.
+  - id: worldgamemode
+    paths:
+      - WorldGameMode/**
+    rcon: worldgamemode:reload
 
   # WorldGuard/worlds/ is region data (gitignored, never in a diff).
   - id: worldguard
