@@ -476,7 +476,7 @@ def state_root_for(server: str, kind: str) -> str:
 
 
 # Repo paths that only affect the host agent / CD pin — git reset, no game compose.
-# The deployer container itself is force-recreated so the new Python process loads.
+# The agent re-execs itself so the new Python process loads.
 _AGENT_ONLY_GLOBS = [
     "tools/deploy/**",
     ".github/workflows/deploy.yml",
@@ -484,9 +484,6 @@ _AGENT_ONLY_GLOBS = [
     # Docs never change what runs: don't bounce the servers for a README.
     "*.md",
 ]
-
-
-_OPS_SERVICES = ["deployer"]
 
 
 def classify_config_hot_reload(
@@ -516,7 +513,7 @@ def classify_config_hot_reload(
     if not non_agent:
         log(
             f"agent-only diff ({len(changes)} paths) — "
-            "git pin + recreate deployer (no game bounce)"
+            "git pin + re-exec agent (no game bounce)"
         )
         return []
 
@@ -569,24 +566,22 @@ def classify_config_hot_reload(
     return list(actions.values())
 
 
-def recreate_ops_deployer() -> None:
-    """Reload agent code / compose env for the ops deployer sidecar."""
-    run(
-        [
-            "docker",
-            "compose",
-            "-f",
-            COMPOSE_FILE,
-            "--profile",
-            "ops",
-            "up",
-            "-d",
-            "--force-recreate",
-            "--no-deps",
-            *_OPS_SERVICES,
-        ],
-        check=False,
-    )
+def reload_agent_process() -> None:
+    """Re-exec the agent so the code on the /app bind mount is loaded.
+
+    The deployer runs *inside* the container it would have to recreate, so
+    calling `docker compose up --force-recreate deployer` from here kills the
+    caller halfway: the compose client dies with the container and the
+    replacement is left created but never started (that is exactly what happened
+    on 2026-11-18). Re-exec replaces the process in place instead.
+
+    If a future commit changes tools/deploy/requirements.txt and the import
+    fails, the container exits and `restart: unless-stopped` re-runs the
+    entrypoint, which reinstalls the requirements.
+    """
+    script = str(Path(__file__).resolve())
+    log(f"re-exec agent to load {script}")
+    os.execv(sys.executable, [sys.executable, "-u", script, "run"])
 
 
 def _owner_of(reference: Path) -> tuple[int, int] | None:
@@ -712,16 +707,16 @@ def apply_config_hot_reload(sha: str, actions: list[dict[str, Any]]) -> bool:
     save_state(st)
     try:
         if not actions:
-            # Empty diff or agent-only: pin checkout; recreate deployer so a new
-            # Python process loads agent.py / requirements / compose env changes.
+            # Empty diff or agent-only: pin checkout; re-exec so the new code
+            # from the /app bind mount replaces this process.
             git_pin(sha)
             st = load_state()
             st["applied"] = sha
             st.pop("configHotReload", None)
             st["applying"] = False
             save_state(st)
-            log(f"agent-only/git-pin OK {sha} — recreating deployer")
-            recreate_ops_deployer()
+            log(f"agent-only/git-pin OK {sha} — re-exec agent")
+            reload_agent_process()
             return True
 
         if not RCON_PASSWORD:
