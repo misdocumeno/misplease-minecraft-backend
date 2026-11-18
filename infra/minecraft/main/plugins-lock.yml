@@ -1183,12 +1183,6 @@ plugins:
     filename: NoSlimesInMisPark-1.0-SNAPSHOT.jar
     url: https://api.github.com/repos/misdocumeno/NoSlimesInMisPark/releases/tags/v0.1.0
     sha256: 2362ee4a664fae0c44fe4288396f322df6bef0b43a16bfc904d42cb610a64e21
-  - name: OpenInv
-    source: github
-    version: v0.1.0
-    filename: OpenInv-0.1.0.jar
-    url: https://api.github.com/repos/misdocumeno/OpenInv/releases/tags/v0.1.0
-    sha256: 76d342cdc71416959008bde236248c7935985f81ac9656f2ce268b4d0b553b83
   - name: PermissionShops
     source: github
     version: v0.1.0

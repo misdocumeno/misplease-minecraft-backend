@@ -234,10 +234,6 @@ plugins:
   - name: NoSlimesInMisPark
     source: github
     repo: misdocumeno/NoSlimesInMisPark
-  - name: OpenInv
-    source: github
-    repo: misdocumeno/OpenInv
-    version: v0.1.0
   - name: PermissionShops
     source: github
     repo: misdocumeno/PermissionShops

@@ -17,6 +17,8 @@ dependencyResolutionManagement {
         maven("https://repo.opencollab.dev/main/")
         maven("https://repo.opencollab.dev/maven-snapshots/")
         maven("https://repo.codemc.org/repository/maven-public/")
+        // Multiverse-Core / Multiverse-Inventories (compileOnly APIs, Modrinth maven).
+        maven("https://api.modrinth.com/maven")
     }
 }
 
@@ -36,6 +38,7 @@ include(
     "velocity-global-teleporter",
     "velocity-last-session",
     "backend-last-session",
+    "backend-openinv",
     "velocity-maintenance",
     "velocity-presence",
     "velocity-social",

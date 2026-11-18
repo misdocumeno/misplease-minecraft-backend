@@ -1,0 +1,28 @@
+name: OpenInv
+main: io.github.misdocumeno.OpenInvPlugin
+version: 0.1.0-SNAPSHOT
+api-version: '1.20'
+description: Cross-server inventory and ender chest editor (ops only)
+authors: [Mis]
+softdepend: [Multiverse-Core, Multiverse-Inventories]
+commands:
+  openinv:
+    description: Open a player's inventory (contents, armor, offhand)
+    usage: /openinv <player> [group[@server]] | /openinv reload
+    permission: misplease.openinv
+    aliases: [invsee, oi]
+  openender:
+    description: Open a player's ender chest
+    usage: /openender <player> [group[@server]]
+    permission: misplease.openender
+    aliases: [endersee, oe]
+permissions:
+  misplease.openinv:
+    description: Open player inventories
+    default: op
+  misplease.openender:
+    description: Open player ender chests
+    default: op
+  misplease.openinv.admin:
+    description: Reload OpenInv config/messages
+    default: op

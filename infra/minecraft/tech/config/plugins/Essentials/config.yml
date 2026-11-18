@@ -188,6 +188,10 @@ disabled-commands:
   - reply
   - list
   - mail
+  # Our OpenInv provides /invsee and /endersee (offline, cross-server, armor
+  # and offhand). /enderchest stays: players use it on themselves.
+  - invsee
+  - endersee
   # Punishments are network-wide via LibertyBans on the proxy (or its plugin messaging).
   # A backend-local /ban would only hide the player from one server and leave the other
   # untouched, so never let Essentials handle them.

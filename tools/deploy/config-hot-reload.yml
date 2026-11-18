@@ -201,12 +201,17 @@ rules:
       - Multiverse-Inventories/**
     rcon: multiverse-core:mvinv reload
 
+  # Own plugin. Reloads config.yml/messages/titles only; sessions already open
+  # keep their source (the next refresh uses the new settings).
+  - id: openinv
+    paths:
+      - OpenInv/**
+    rcon: openinv:openinv reload
+
   - id: placeholderapi
     paths:
       - PlaceholderAPI/**
-    rcon: placeholderapi:papi reload
-
-  # settings/worlds/components/translations. storage.yml changes (backend
+    rcon: placeholderapi:papi reload  # settings/worlds/components/translations. storage.yml changes (backend
   # switched while running) still need a restart.
   - id: plotsquared
     paths:

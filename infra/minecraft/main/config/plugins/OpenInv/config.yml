@@ -1,0 +1,36 @@
+# OpenInv - cross-server player inventory / ender chest editor (ops only).
+#
+# The server id is SERVER_ID from compose (main / tech); group names come from
+# Multiverse-Inventories. All player-facing strings are MiniMessage and can be
+# reloaded with /openinv reload (also through tools/deploy/config-hot-reload.yml).
+
+settings:
+  # How often an open GUI is reconciled with its source, in ticks (20 = 1s).
+  refresh-ticks: 10
+  # Show the "Redis unavailable" action bar this often while degraded, in ticks.
+  warning-ticks: 100
+
+titles:
+  inventory: "Inventory: <violet><player></violet> <gray>- <server>/<group><offline>"
+  ender: "Ender chest: <violet><player></violet> <gray>- <server>/<group><offline>"
+
+messages:
+  player-only: "<red>Only players can open inventories."
+  self-target: "<red>Use your own inventory."
+  usage-inventory: "<yellow>Usage: <white>/openinv <player> [group[@server]]"
+  usage-ender: "<yellow>Usage: <white>/openender <player> [group[@server]]"
+  unknown-player: "<red>Unknown player <white><player></white>. <gray>Never seen on this network."
+  other-server: "<yellow><player> is on <white><server></white>. <gray>Run <white>/server <server></white> to edit there."
+  group-unknown: "<red>Unknown group <white><group></white>. <gray>Groups: <groups>"
+  mvi-missing: "<red>Multiverse-Inventories is not available, so offline inventories cannot be opened."
+  redis-down: "<yellow>Redis unavailable: only players online on this server can be opened."
+  opened: "<gray>Opened <violet><player></violet> <gray>(<server>/<group><offline>)"
+  state: "<gray>Editing <violet><player></violet> <gray>(<server>/<group><offline>)"
+  offline-suffix: ", offline"
+  reloaded: "<green>OpenInv reloaded."
+  write-failed: "<red>Could not save: <reason>"
+  session-closed: "<yellow>The inventory session for <white><player></white> was closed: <reason>"
+  no-inventory: "<red><player> has no inventory in <white><group></white> yet."
+  empty-profile: "<yellow><player> has no stored inventory in <white><group></white> yet; placing items will create one."
+  no-permission: "<red>You lack permission."
+  locked-slot: "<red>That slot comes from a different game version and is read-only here."
