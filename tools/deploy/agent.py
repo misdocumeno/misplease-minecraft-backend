@@ -547,7 +547,7 @@ def classify_config_hot_reload(
             if old_parsed:
                 old_rel = old_parsed[2]
                 if plugin_folder(old_rel) == plugin:
-                    removed.append(old_rel.split("/", 1)[1])
+                    removed.append(old_rel)
         for r in hit:
             key = (str(r.get("id")), server, plugin)
             action = actions.get(key)
@@ -603,11 +603,14 @@ def _owner_of(reference: Path) -> tuple[int, int] | None:
 
 def _chown_like(path: Path, reference: Path) -> None:
     """Match the owner of the overlay upper layer (java runs as uid 1000)."""
+    chown = getattr(os, "chown", None)
+    if chown is None:  # non-POSIX (local dry runs)
+        return
     owner = _owner_of(reference)
     if owner is None:
         return
     try:
-        os.chown(path, owner[0], owner[1])
+        chown(path, owner[0], owner[1])
     except OSError:
         pass
 
