@@ -73,7 +73,11 @@ class RemoteSource(
         consecutiveFailures = 0
         if (!state.ok) {
             lastError = state.error
-            error(state.error ?: "$server refused the request")
+            throw RemoteOpenException(
+                state.errorCode,
+                state.group,
+                state.error ?: "$server refused the request",
+            )
         }
         lastError = null
         if (state.group != null) group = state.group
@@ -103,3 +107,10 @@ class RemoteSource(
         )
     }
 }
+
+/** The owner backend refused the open; [code] is a machine-readable reason. */
+class RemoteOpenException(
+    val code: String?,
+    val group: String?,
+    message: String,
+) : Exception(message)

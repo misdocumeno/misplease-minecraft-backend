@@ -42,7 +42,9 @@ class RemoteOwnerHandler(private val plugin: OpenInvPlugin) {
 
             plugin.profileExecutor.execute {
                 val result = runCatching {
-                    if (!plugin.mvi.available) error("Multiverse-Inventories is not available on ${plugin.serverId}")
+                    if (!plugin.mvi.available) {
+                        throw OwnerFailure("mvi-missing", "Multiverse-Inventories is not available on ${plugin.serverId}")
+                    }
                     val lastWorld = plugin.mvi.lastWorld(uuid, request.targetName)
                     val group = request.group
                         ?: lastWorld?.let { plugin.mvi.groupForWorld(it) }
@@ -62,14 +64,21 @@ class RemoteOwnerHandler(private val plugin: OpenInvPlugin) {
                                 // carries deltas, so it must not land on an empty profile.
                                 plugin.mvi.apply(uuid, request.targetName, group, kind, emptyMap(), it)
                             }
-                        else -> error("${request.targetName} has no stored inventory in $group yet; they must log in once")
+                        else -> throw OwnerFailure(
+                            "no-profile",
+                            "${request.targetName} has no stored inventory in $group yet; they must log in once",
+                            group = group,
+                        )
                     }
                     group to snapshot
                 }
                 plugin.onMain {
                     result.onSuccess { (group, snapshot) ->
                         reply(request, group, online = false, snapshot.mcVersion, snapshot.items.map { ItemCodec.encode(it) })
-                    }.onFailure { fail(request, it.message ?: "read failed") }
+                    }.onFailure { error ->
+                        val failure = error as? OwnerFailure
+                        fail(request, error.message ?: "read failed", failure?.code, failure?.group)
+                    }
                 }
             }
         })
@@ -135,13 +144,20 @@ class RemoteOwnerHandler(private val plugin: OpenInvPlugin) {
         )
     }
 
-    private fun fail(request: RequestStateMessage, reason: String) {
+    private fun fail(
+        request: RequestStateMessage,
+        reason: String,
+        code: String? = null,
+        group: String? = null,
+    ) {
         plugin.transport.replyState(
             StateMessage(
                 server = plugin.serverId,
                 sessionId = request.sessionId,
                 ok = false,
                 error = reason,
+                errorCode = code,
+                group = group,
             ),
         )
     }
@@ -151,3 +167,10 @@ class RemoteOwnerHandler(private val plugin: OpenInvPlugin) {
         plugin.transport.replyApplied(AppliedMessage(plugin.serverId, message.sessionId, false, reason))
     }
 }
+
+/** The owner could not produce a state; [code] travels to the viewer as [StateMessage.errorCode]. */
+class OwnerFailure(
+    val code: String,
+    message: String,
+    val group: String? = null,
+) : Exception(message)

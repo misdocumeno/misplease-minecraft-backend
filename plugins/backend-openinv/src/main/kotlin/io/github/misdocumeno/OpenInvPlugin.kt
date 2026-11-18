@@ -14,6 +14,7 @@ import io.github.misdocumeno.owner.RemoteOwnerHandler
 import io.github.misdocumeno.session.OpenInvSession
 import io.github.misdocumeno.session.SessionRegistry
 import io.github.misdocumeno.source.LiveSource
+import io.github.misdocumeno.source.RemoteOpenException
 import io.github.misdocumeno.source.RemoteSource
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
@@ -384,13 +385,26 @@ class OpenInvPlugin : JavaPlugin() {
                         )
                     }
                 }.onFailure { error ->
-                    viewer.sendMessage(
-                        messages.component(
-                            "remote-unavailable",
-                            "server" to server,
-                            "reason" to (error.message ?: "no response"),
-                        ),
-                    )
+                    when {
+                        error is RemoteOpenException && error.code == "no-profile" ->
+                            viewer.sendMessage(
+                                messages.component(
+                                    "no-profile",
+                                    "player" to targetName,
+                                    "group" to (error.group ?: explicitGroup ?: "?"),
+                                ),
+                            )
+                        error is RemoteOpenException && error.code == "mvi-missing" ->
+                            viewer.sendMessage(messages.component("mvi-missing"))
+                        else ->
+                            viewer.sendMessage(
+                                messages.component(
+                                    "remote-unavailable",
+                                    "server" to server,
+                                    "reason" to (error.message ?: "no response"),
+                                ),
+                            )
+                    }
                 }
             }
         }

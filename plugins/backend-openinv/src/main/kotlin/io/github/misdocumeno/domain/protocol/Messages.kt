@@ -40,6 +40,8 @@ data class StateMessage(
     val sessionId: String,
     val ok: Boolean,
     val error: String? = null,
+    /** Machine-readable reason (`no-profile`, `mvi-missing`); [error] is the human text. */
+    val errorCode: String? = null,
     val group: String? = null,
     val online: Boolean = false,
     val mcVersion: String = "",
