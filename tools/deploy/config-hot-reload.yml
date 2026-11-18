@@ -1,10 +1,10 @@
 # Config-only hot reload for the ops deployer agent.
 #
 # WHAT THIS DOES (and does not do)
-#   It re-reads *configuration files* on a running server: the agent copies the
-#   tracked files from infra/<server>/config/plugins/<Plugin>/ into the overlay
-#   upper layer (infra/<server>/data/state/plugins/<Plugin>/) and then runs the
-#   plugin's own reload command over RCON.
+#   It re-reads *configuration files* on a running server: the agent writes the
+#   tracked files from infra/<server>/config/plugins/<Plugin>/ into the running
+#   container's /srv tree and then runs the plugin's own reload command over
+#   RCON.
 #   It never swaps jars, never unloads/reloads a plugin, and never restarts a
 #   server. A jar / plugins.yml / compose change always takes the normal deploy
 #   path (wait for empty → compose up → health).
@@ -17,16 +17,20 @@
 #   tech, both get their own copy + reload. Never list servers in a rule.
 #
 # MERGE, NEVER REPLACE
-#   data/state is runtime data (homes, warps, holograms, player files...). The
-#   agent copies only the exact files that changed in git and deletes only paths
-#   git deleted or renamed. Everything else in that folder is left alone.
+#   Plugin folders under /srv also hold runtime data (homes, warps, holograms,
+#   player files...) that lives in the overlay upper layer (data/state). The
+#   agent writes only the exact files that changed in git, through the running
+#   container, and deletes only paths git deleted or renamed. Everything else in
+#   that folder is left alone — replacing the folder would destroy live data.
+#   (Writing data/state directly from the host does not work: overlayfs keeps
+#   resolving the lower image inode, so the server reloads the old file.)
 #   At boot entrypoint.sh deletes from data/state every path that exists in
 #   /config again, so a synced config never survives as a stale copy.
 #
 # NO SECRETS
 #   Files with __MISPLEASE_*__ placeholders are substituted by entrypoint.sh at
 #   boot inside the container (LuckPerms config.yml, libertybans sql.yml,
-#   paper-global.yml, floodgate key.pem). The agent copies raw git content, so
+#   paper-global.yml, floodgate key.pem). The agent writes raw git content, so
 #   those files must never be listed: the live file would receive the literal
 #   placeholder. Sync is per-file, so listing `libertybans/config.yml` cannot
 #   drag `sql.yml` along.

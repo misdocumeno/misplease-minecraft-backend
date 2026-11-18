@@ -8,8 +8,8 @@ State file (host): $MISPLEASE_ROOT/.deploy-state.json
 
 If every path in applied→wanted is a tracked *config* file listed in
 tools/deploy/config-hot-reload.yml:
-  git pin → merge config into the overlay upper layer (data/state) → RCON
-  reload command (live). Jars never change here: this only reloads config.
+  git pin → write the changed files into the running container's /srv tree →
+  RCON reload command (live). Jars never change here: this only reloads config.
 Else:
   wait empty → maintenance → git pin → compose pull/up → health.
 
@@ -27,7 +27,6 @@ import fnmatch
 import json
 import os
 import re
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -468,11 +467,16 @@ def plugin_folder(rel: str) -> str | None:
     return rel.split("/", 1)[0]
 
 
-def state_root_for(server: str, kind: str) -> str:
-    """Host path of the overlay upper layer (`/data/state` inside the container)."""
-    if kind == "proxy":
-        return "infra/velocity/data/state"
-    return f"infra/minecraft/{server}/data/state"
+# Compose container names (docker-compose.prod.yml). The agent has docker.sock.
+CONTAINERS = {
+    "main": os.environ.get("MAIN_CONTAINER", "misplease-main"),
+    "tech": os.environ.get("TECH_CONTAINER", "misplease-tech"),
+    "velocity": os.environ.get("PROXY_CONTAINER", "misplease-proxy"),
+}
+
+
+def container_for(server: str) -> str:
+    return CONTAINERS.get(server, f"misplease-{server}")
 
 
 # Repo paths that only affect the host agent / CD pin — git reset, no game compose.
@@ -584,30 +588,12 @@ def reload_agent_process() -> None:
     os.execv(sys.executable, [sys.executable, "-u", script, "run"])
 
 
-def _owner_of(reference: Path) -> tuple[int, int] | None:
-    probe = reference
-    while True:
-        try:
-            st = probe.stat()
-            return st.st_uid, st.st_gid
-        except OSError:
-            if probe.parent == probe:
-                return None
-            probe = probe.parent
-
-
-def _chown_like(path: Path, reference: Path) -> None:
-    """Match the owner of the overlay upper layer (java runs as uid 1000)."""
-    chown = getattr(os, "chown", None)
-    if chown is None:  # non-POSIX (local dry runs)
-        return
-    owner = _owner_of(reference)
-    if owner is None:
-        return
-    try:
-        chown(path, owner[0], owner[1])
-    except OSError:
-        pass
+def _safe_rel(rel: str) -> str:
+    """Reject absolute / parent-escaping paths before they reach the container."""
+    p = Path(rel)
+    if p.is_absolute() or ".." in p.parts or not p.parts:
+        raise ConfigReloadError(f"refusing unsafe config path: {rel!r}")
+    return p.as_posix()
 
 
 def sync_config_files(
@@ -615,56 +601,69 @@ def sync_config_files(
     kind: str,
     files: list[str],
     deleted_rel: list[str] | None = None,
-    owner_ref_rel: str | None = None,
 ) -> int:
-    """Merge tracked config files into the overlay upper layer.
+    """Merge tracked config files into the *running* server's `/srv` tree.
 
-    `files` / `deleted_rel` are relative to that server's `config/plugins/`.
-    Only the exact files git changed are copied — never the whole plugin folder,
+    The write has to happen inside the container: `/srv` is an overlay whose upper
+    layer is the host `data/state`. Writing that upper directory from the host is
+    not supported by overlayfs — the live mount keeps resolving the lower (image)
+    inode, so the server would reload the OLD file (observed on 2026-11-18), and
+    the orphan upper file then makes the next in-container create fail with
+    EEXIST. Writing through the mount lets overlayfs copy up normally.
+
+    Only the exact files git changed are written — never the whole plugin folder,
     so a sibling file with a `__MISPLEASE_*__` placeholder (LibertyBans' sql.yml,
-    LuckPerms' config.yml) can never be pushed by accident.
-
-    The destination is `data/state/...`, which is where the server writes its
-    runtime data (homes, warps, holograms, player files...). So this overwrites
-    only the files given and removes nothing else: replacing the folder would
-    destroy live data.
+    LuckPerms' config.yml) can never be pushed by accident. Nothing else in the
+    plugin folder is touched: that is where the plugins keep their runtime data
+    (homes, warps, holograms, player files...).
     """
-    if kind == "proxy":
-        base = "infra/velocity"
-    else:
-        base = f"infra/minecraft/{server}"
-    src_root = ROOT / base / "config" / "plugins"
-    dest_root = ROOT / base / "data" / "state" / "plugins"
-    owner_ref = (ROOT / owner_ref_rel) if owner_ref_rel else ROOT
+    src_root = (
+        ROOT / "infra" / "velocity" / "config" / "plugins"
+        if kind == "proxy"
+        else ROOT / "infra" / "minecraft" / server / "config" / "plugins"
+    )
+    container = container_for(server)
+
+    # rm before cat: it also recovers a path an older agent poisoned by writing
+    # straight into the upper dir (create would otherwise fail with EEXIST).
+    write_script = (
+        'rm -f -- "$1" && cat > "$1" && { chown 1000:1000 -- "$1" 2>/dev/null || true; }'
+    )
 
     copied = 0
     for rel in files:
+        rel = _safe_rel(rel)
         src = src_root / rel
         if not src.is_file():
-            raise FileNotFoundError(f"config hot-reload missing source file: {src}")
-        dest = dest_root / rel
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(src, dest)
-        _chown_like(dest, owner_ref)
-        parent = dest.parent
-        while dest_root != parent and dest_root in parent.parents:
-            _chown_like(parent, owner_ref)
-            parent = parent.parent
+            raise ConfigReloadError(f"missing config source file: {src}")
+        r = subprocess.run(
+            ["docker", "exec", "-i", container, "sh", "-c", write_script, "sh",
+             f"/srv/plugins/{rel}"],
+            input=src.read_bytes(),
+            capture_output=True,
+        )
+        if r.returncode != 0:
+            raise ConfigReloadError(
+                f"write /srv/plugins/{rel} in {container} failed: "
+                f"{r.stderr.decode('utf-8', 'replace').strip()[:300]}"
+            )
         copied += 1
 
-    # Only files git removed/renamed away are deleted, and only inside dest_root.
-    resolved_root = dest_root.resolve()
     for rel in deleted_rel or []:
-        target = (dest_root / rel).resolve()
-        if resolved_root not in target.parents:
-            log(f"skip delete outside plugins dir: {rel}")
-            continue
-        if target.is_file():
-            target.unlink()
-            log(f"deleted from state (removed in git): {rel}")
+        rel = _safe_rel(rel)
+        r = subprocess.run(
+            ["docker", "exec", container, "rm", "-f", "--", f"/srv/plugins/{rel}"],
+            capture_output=True,
+        )
+        if r.returncode != 0:
+            raise ConfigReloadError(
+                f"delete /srv/plugins/{rel} in {container} failed: "
+                f"{r.stderr.decode('utf-8', 'replace').strip()[:300]}"
+            )
+        log(f"deleted (removed in git): {rel}")
 
     log(
-        f"config sync {server}: {copied} file(s) copied, "
+        f"config sync {server} ({container}): {copied} file(s) written, "
         f"{len(deleted_rel or [])} deleted, runtime data kept"
     )
     return copied
@@ -753,7 +752,6 @@ def apply_config_hot_reload(sha: str, actions: list[dict[str, Any]]) -> bool:
                 kind,
                 files=list(action.get("files") or []),
                 deleted_rel=list(action.get("deleted") or []),
-                owner_ref_rel=state_root_for(server, kind),
             )
             host = SERVER_HOST.get(server, server)
             log(f"rcon {server} ({host}:{RCON_PORT}): {cmd}")
@@ -987,7 +985,7 @@ def tick() -> None:
         else:
             log(
                 f"classify config hot-reload wanted={wanted_s} "
-                f"rules={[r.get('id') for r in matched]}"
+                f"rules={[r.get('rule_id') for r in matched]}"
             )
             apply_config_hot_reload(wanted_s, matched)
             return
