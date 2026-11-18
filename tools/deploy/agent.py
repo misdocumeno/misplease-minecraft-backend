@@ -3,13 +3,19 @@
 
 State file (host): $MISPLEASE_ROOT/.deploy-state.json
   wanted   — pin to apply (Actions writes via: agent.py set-wanted)
-  applied  — last SHA successfully applied (compose or hot-reload)
+  applied  — last SHA successfully applied (compose or config hot-reload)
   lastGood — last healthy *image* snapshot (sha + digests); compose path only
 
-If every path in applied→wanted matches tools/deploy/hot-reload.yml:
-  git pin → sync config into overlay upper (data/state) → RCON reload (live).
+If every path in applied→wanted is a tracked *config* file listed in
+tools/deploy/config-hot-reload.yml:
+  git pin → merge config into the overlay upper layer (data/state) → RCON
+  reload command (live). Jars never change here: this only reloads config.
 Else:
   wait empty → maintenance → git pin → compose pull/up → health.
+
+A config hot-reload that fails is retried up to MAX_CONFIG_RELOAD_ATTEMPTS,
+then falls back to the compose path so the change still lands at the cost of a
+bounce.
 
 Redis is NOT used for wanted. Only presence empty-gate + maintenance (compose).
 """
@@ -36,12 +42,16 @@ ROOT = Path(os.environ.get("MISPLEASE_ROOT", "/home/mis/misplease"))
 COMPOSE_FILE = os.environ.get("COMPOSE_FILE", "docker-compose.prod.yml")
 STATE_FILE = Path(os.environ.get("DEPLOY_STATE_FILE", str(ROOT / ".deploy-state.json")))
 LEGACY_LAST_GOOD = ROOT / ".deploy-last-good.json"
-HOT_RELOAD_FILE = Path(
+CONFIG_HOT_RELOAD_FILE = Path(
     os.environ.get(
-        "HOT_RELOAD_FILE",
-        str(Path(__file__).resolve().parent / "hot-reload.yml"),
+        "CONFIG_HOT_RELOAD_FILE",
+        str(Path(__file__).resolve().parent / "config-hot-reload.yml"),
     )
 )
+# Where the rules file lives in the repo, so classify can read the *wanted*
+# revision of it instead of the checkout's (see load_config_hot_reload_rules).
+CONFIG_HOT_RELOAD_REPO_PATH = f"tools/deploy/{CONFIG_HOT_RELOAD_FILE.name}"
+MAX_CONFIG_RELOAD_ATTEMPTS = int(os.environ.get("MAX_CONFIG_RELOAD_ATTEMPTS", "3"))
 POLL_SECONDS = int(os.environ.get("POLL_SECONDS", "15"))
 EMPTY_SECONDS = int(os.environ.get("EMPTY_SECONDS", "60"))
 HEALTH_TIMEOUT_S = int(os.environ.get("HEALTH_TIMEOUT_S", "180"))
@@ -288,6 +298,15 @@ def git_fetch(sha: str) -> None:
         ["git", "config", "--global", "--add", "safe.directory", str(ROOT)],
         check=False,
     )
+    have = subprocess.run(
+        ["git", "cat-file", "-e", f"{sha}^{{commit}}"],
+        cwd=str(ROOT),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if have.returncode == 0:
+        return
     try:
         run(["git", "fetch", "--depth=1", "origin", sha])
     finally:
@@ -309,25 +328,52 @@ def git_pin(sha: str) -> None:
         fix_git_ownership()
 
 
-def git_diff_names(old_sha: str, new_sha: str) -> list[str]:
-    """List paths changed from old_sha to new_sha (both must be fetchable)."""
+def git_diff_status(old_sha: str, new_sha: str) -> list[tuple[str, str, str]]:
+    """[(status, path, old_path)] from old_sha to new_sha (both fetchable).
+
+    status is git's letter code (A/M/D/R...); for renames old_path is the source.
+    """
     git_fetch(old_sha)
     git_fetch(new_sha)
     r = subprocess.run(
-        ["git", "diff", "--name-only", old_sha, new_sha],
+        ["git", "diff", "--name-status", "-M", old_sha, new_sha],
         cwd=str(ROOT),
         capture_output=True,
         text=True,
         check=True,
     )
-    return [ln.strip() for ln in r.stdout.splitlines() if ln.strip()]
+    changes: list[tuple[str, str, str]] = []
+    for line in r.stdout.splitlines():
+        parts = [p for p in line.split("\t") if p]
+        if len(parts) == 2:
+            changes.append((parts[0], parts[1], parts[1]))
+        elif len(parts) >= 3:
+            changes.append((parts[0], parts[2], parts[1]))
+    return changes
 
 
-def load_hot_reload_rules() -> list[dict[str, Any]]:
-    if not HOT_RELOAD_FILE.is_file():
-        return []
+def load_config_hot_reload_rules(sha: str | None = None) -> list[dict[str, Any]]:
+    """Rules from `config-hot-reload.yml`.
+
+    With `sha`, read the file as it exists at that revision (the agent may still
+    be checked out on the previous commit when classifying). Falls back to disk.
+    """
+    text: str | None = None
+    if sha:
+        r = subprocess.run(
+            ["git", "show", f"{sha}:{CONFIG_HOT_RELOAD_REPO_PATH}"],
+            cwd=str(ROOT),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if r.returncode == 0 and r.stdout.strip():
+            text = r.stdout
+    if text is None:
+        if not CONFIG_HOT_RELOAD_FILE.is_file():
+            return []
+        text = CONFIG_HOT_RELOAD_FILE.read_text(encoding="utf-8")
     # Tiny YAML subset: use PyYAML if present, else a minimal loader for our file shape.
-    text = HOT_RELOAD_FILE.read_text(encoding="utf-8")
     try:
         import yaml  # type: ignore
 
@@ -335,11 +381,11 @@ def load_hot_reload_rules() -> list[dict[str, Any]]:
         return list(doc.get("rules") or [])
     except ImportError:
         pass
-    return _parse_hot_reload_minimal(text)
+    return _parse_config_hot_reload_minimal(text)
 
 
-def _parse_hot_reload_minimal(text: str) -> list[dict[str, Any]]:
-    """Parse the checked-in hot-reload.yml without PyYAML (id/paths/rcon)."""
+def _parse_config_hot_reload_minimal(text: str) -> list[dict[str, Any]]:
+    """Parse config-hot-reload.yml without PyYAML (id/paths/rcon)."""
     rules: list[dict[str, Any]] = []
     rule: dict[str, Any] | None = None
     section: str | None = None
@@ -422,15 +468,11 @@ def plugin_folder(rel: str) -> str | None:
     return rel.split("/", 1)[0]
 
 
-def sync_paths_for(server: str, kind: str, plugin: str) -> tuple[str, str]:
+def state_root_for(server: str, kind: str) -> str:
+    """Host path of the overlay upper layer (`/data/state` inside the container)."""
     if kind == "proxy":
-        base = "infra/velocity"
-    else:
-        base = f"infra/minecraft/{server}"
-    return (
-        f"{base}/config/plugins/{plugin}",
-        f"{base}/data/state/plugins/{plugin}",
-    )
+        return "infra/velocity/data/state"
+    return f"infra/minecraft/{server}/data/state"
 
 
 # Repo paths that only affect the host agent / CD pin — git reset, no game compose.
@@ -439,70 +481,92 @@ _AGENT_ONLY_GLOBS = [
     "tools/deploy/**",
     ".github/workflows/deploy.yml",
     ".env.example",
+    # Docs never change what runs: don't bounce the servers for a README.
+    "*.md",
 ]
+
 
 _OPS_SERVICES = ["deployer"]
 
 
-def classify_hot_reload(applied: str | None, wanted: str) -> list[dict[str, Any]] | None:
-    """Return hot-reload actions, [] for agent-only/empty, or None for full compose.
+def classify_config_hot_reload(
+    applied: str | None, wanted: str
+) -> list[dict[str, Any]] | None:
+    """Return config hot-reload actions, [] for agent-only/empty, or None for compose.
 
-    Each action: {rule_id, server, kind, plugin, rcon}.
-    Rule `paths` are relative to config/plugins/ on every server/proxy.
+    Each action: {rule_id, server, kind, plugin, rcon, deleted}.
+    Rule `paths` are relative to config/plugins/ on every server/proxy, so the
+    server is inferred from the git path: a main-only edit only touches main.
     """
     if not applied:
         return None
     try:
-        changed = git_diff_names(applied, wanted)
+        changes = git_diff_status(applied, wanted)
     except subprocess.CalledProcessError as e:
         log(f"diff failed ({e}) — full deploy")
         return None
-    if not changed:
+    if not changes:
         return []
 
-    non_agent = [p for p in changed if not path_matches(_AGENT_ONLY_GLOBS, p)]
+    non_agent = [
+        (status, path, old)
+        for status, path, old in changes
+        if not path_matches(_AGENT_ONLY_GLOBS, path)
+    ]
     if not non_agent:
         log(
-            f"agent-only diff ({len(changed)} paths) — "
+            f"agent-only diff ({len(changes)} paths) — "
             "git pin + recreate deployer (no game bounce)"
         )
         return []
 
-    rules = load_hot_reload_rules()
+    rules = load_config_hot_reload_rules(wanted)
     if not rules:
         return None
 
-    actions: list[dict[str, Any]] = []
-    seen: set[tuple[str, str, str]] = set()
-    for path in non_agent:
+    actions: dict[tuple[str, str, str], dict[str, Any]] = {}
+    for status, path, old in non_agent:
         parsed = parse_plugins_config_path(path)
         if not parsed:
-            log(f"path not hot-reloadable: {path}")
+            log(f"path not config-hot-reloadable: {path}")
             return None
         server, kind, rel = parsed
         hit = [r for r in rules if path_matches(list(r.get("paths") or []), rel)]
         if not hit:
-            log(f"path not hot-reloadable: {path} (rel={rel})")
+            log(f"path not config-hot-reloadable: {path} (rel={rel})")
             return None
         plugin = plugin_folder(rel)
         if not plugin:
-            log(f"path not hot-reloadable (empty plugin): {path}")
+            log(f"path not config-hot-reloadable (empty plugin): {path}")
             return None
+        # Deletes and renames: the old path must go away in the overlay too.
+        files: list[str] = [] if status.startswith("D") else [rel]
+        removed: list[str] = [rel] if status.startswith("D") else []
+        if status.startswith("R") and old != path:
+            old_parsed = parse_plugins_config_path(old)
+            if old_parsed:
+                old_rel = old_parsed[2]
+                if plugin_folder(old_rel) == plugin:
+                    removed.append(old_rel.split("/", 1)[1])
         for r in hit:
             key = (str(r.get("id")), server, plugin)
-            if key in seen:
-                continue
-            seen.add(key)
-            actions.append(
-                {
+            action = actions.get(key)
+            if action is None:
+                action = {
                     "rule_id": r.get("id"),
                     "server": server,
                     "kind": kind,
                     "plugin": plugin,
                     "rcon": r.get("rcon"),
+                    "files": [],
+                    "deleted": [],
                 }
+                actions[key] = action
+            action["files"].extend(f for f in files if f not in action["files"])
+            action["deleted"].extend(
+                d for d in removed if d not in action["deleted"]
             )
-    return actions
+    return list(actions.values())
 
 
 def recreate_ops_deployer() -> None:
@@ -525,31 +589,118 @@ def recreate_ops_deployer() -> None:
     )
 
 
-def sync_tree(src_rel: str, dest_rel: str) -> None:
-    src = ROOT / src_rel
-    dest = ROOT / dest_rel
-    if not src.is_dir():
-        raise FileNotFoundError(f"hot-reload sync missing source: {src}")
-    dest.mkdir(parents=True, exist_ok=True)
-    # Replace dest contents with src (tracked config only).
-    for child in dest.iterdir():
-        if child.is_dir():
-            shutil.rmtree(child)
-        else:
-            child.unlink()
-    for child in src.iterdir():
-        target = dest / child.name
-        if child.is_dir():
-            shutil.copytree(child, target)
-        else:
-            shutil.copy2(child, target)
-    log(f"synced {src_rel} → {dest_rel}")
+def _owner_of(reference: Path) -> tuple[int, int] | None:
+    probe = reference
+    while True:
+        try:
+            st = probe.stat()
+            return st.st_uid, st.st_gid
+        except OSError:
+            if probe.parent == probe:
+                return None
+            probe = probe.parent
 
 
-def apply_hot_reload(sha: str, actions: list[dict[str, Any]]) -> bool:
-    """Apply classify_hot_reload actions: sync plugin config trees + RCON reload.
+def _chown_like(path: Path, reference: Path) -> None:
+    """Match the owner of the overlay upper layer (java runs as uid 1000)."""
+    owner = _owner_of(reference)
+    if owner is None:
+        return
+    try:
+        os.chown(path, owner[0], owner[1])
+    except OSError:
+        pass
 
-    actions entries: {rule_id, server, kind, plugin, rcon}.
+
+def sync_config_files(
+    server: str,
+    kind: str,
+    files: list[str],
+    deleted_rel: list[str] | None = None,
+    owner_ref_rel: str | None = None,
+) -> int:
+    """Merge tracked config files into the overlay upper layer.
+
+    `files` / `deleted_rel` are relative to that server's `config/plugins/`.
+    Only the exact files git changed are copied — never the whole plugin folder,
+    so a sibling file with a `__MISPLEASE_*__` placeholder (LibertyBans' sql.yml,
+    LuckPerms' config.yml) can never be pushed by accident.
+
+    The destination is `data/state/...`, which is where the server writes its
+    runtime data (homes, warps, holograms, player files...). So this overwrites
+    only the files given and removes nothing else: replacing the folder would
+    destroy live data.
+    """
+    if kind == "proxy":
+        base = "infra/velocity"
+    else:
+        base = f"infra/minecraft/{server}"
+    src_root = ROOT / base / "config" / "plugins"
+    dest_root = ROOT / base / "data" / "state" / "plugins"
+    owner_ref = (ROOT / owner_ref_rel) if owner_ref_rel else ROOT
+
+    copied = 0
+    for rel in files:
+        src = src_root / rel
+        if not src.is_file():
+            raise FileNotFoundError(f"config hot-reload missing source file: {src}")
+        dest = dest_root / rel
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dest)
+        _chown_like(dest, owner_ref)
+        parent = dest.parent
+        while dest_root != parent and dest_root in parent.parents:
+            _chown_like(parent, owner_ref)
+            parent = parent.parent
+        copied += 1
+
+    # Only files git removed/renamed away are deleted, and only inside dest_root.
+    resolved_root = dest_root.resolve()
+    for rel in deleted_rel or []:
+        target = (dest_root / rel).resolve()
+        if resolved_root not in target.parents:
+            log(f"skip delete outside plugins dir: {rel}")
+            continue
+        if target.is_file():
+            target.unlink()
+            log(f"deleted from state (removed in git): {rel}")
+
+    log(
+        f"config sync {server}: {copied} file(s) copied, "
+        f"{len(deleted_rel or [])} deleted, runtime data kept"
+    )
+    return copied
+
+
+def _config_reload_attempts(st: dict[str, Any], sha: str) -> int:
+    hr = st.get("configHotReload") or {}
+    if not isinstance(hr, dict) or hr.get("sha") != sha:
+        return 0
+    try:
+        return int(hr.get("attempts") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def record_config_reload_failure(sha: str, reason: str) -> None:
+    st = load_state()
+    st["configHotReload"] = {
+        "sha": sha,
+        "attempts": _config_reload_attempts(st, sha) + 1,
+        "reason": reason[:300],
+    }
+    st["applying"] = False
+    save_state(st)
+
+
+class ConfigReloadError(RuntimeError):
+    """Hot-reload failed; the caller decides between retry and a compose bounce."""
+
+
+def apply_config_hot_reload(sha: str, actions: list[dict[str, Any]]) -> bool:
+    """Sync plugin config trees + run each plugin's reload command over RCON.
+
+    actions entries: {rule_id, server, kind, plugin, rcon, deleted}.
     """
     global _applying
     _applying = True
@@ -563,6 +714,7 @@ def apply_hot_reload(sha: str, actions: list[dict[str, Any]]) -> bool:
             git_pin(sha)
             st = load_state()
             st["applied"] = sha
+            st.pop("configHotReload", None)
             st["applying"] = False
             save_state(st)
             log(f"agent-only/git-pin OK {sha} — recreating deployer")
@@ -570,18 +722,20 @@ def apply_hot_reload(sha: str, actions: list[dict[str, Any]]) -> bool:
             return True
 
         if not RCON_PASSWORD:
-            alert("hot-reload needs RCON_PASSWORD in deployer env — abort")
-            return False
+            raise ConfigReloadError(
+                "config hot-reload needs RCON_PASSWORD in the deployer env"
+            )
 
         log(
-            "hot-reload applying "
+            "config hot-reload applying "
             f"{sha} actions={[a.get('rule_id') for a in actions]}"
         )
-        # Pin first so hot-reload.yml on disk matches wanted (classify may have
-        # read the previous checkout's rcon strings).
+        # Pin first so the checkout (and the rules file on disk) matches wanted.
         git_pin(sha)
         rules_by_id = {
-            str(r.get("id")): r for r in load_hot_reload_rules() if r.get("id")
+            str(r.get("id")): r
+            for r in load_config_hot_reload_rules(sha)
+            if r.get("id")
         }
 
         for action in actions:
@@ -591,39 +745,43 @@ def apply_hot_reload(sha: str, actions: list[dict[str, Any]]) -> bool:
             rule = rules_by_id.get(str(action.get("rule_id") or ""))
             cmd = (rule or {}).get("rcon") or action.get("rcon")
             if not server or not kind or not plugin:
-                alert(f"hot-reload action incomplete: {action}")
-                return False
+                raise ConfigReloadError(f"action incomplete: {action}")
             if not cmd:
-                alert(f"hot-reload rule {action.get('rule_id')} missing rcon")
-                return False
-            src, dest = sync_paths_for(server, kind, plugin)
-            try:
-                sync_tree(src, dest)
-            except FileNotFoundError as e:
-                alert(f"hot-reload sync failed: {e}")
-                return False
+                raise ConfigReloadError(
+                    f"rule {action.get('rule_id')} has no rcon command"
+                )
+            sync_config_files(
+                server,
+                kind,
+                files=list(action.get("files") or []),
+                deleted_rel=list(action.get("deleted") or []),
+                owner_ref_rel=state_root_for(server, kind),
+            )
             host = SERVER_HOST.get(server, server)
             log(f"rcon {server} ({host}:{RCON_PORT}): {cmd}")
             try:
                 resp = send_rcon(host, str(cmd))
-                text = (resp or "").strip()
-                if text:
-                    log(f"rcon response: {text[:500]}")
-                if "Unknown or incomplete command" in text:
-                    alert(f"hot-reload RCON rejected on {server}: {text[:200]}")
-                    return False
-            except (OSError, TimeoutError, Exception) as e:
-                alert(f"hot-reload RCON failed on {server}: {e}")
-                return False
+            except Exception as e:
+                raise ConfigReloadError(f"RCON failed on {server}: {e}") from e
+            text = (resp or "").strip()
+            if text:
+                log(f"rcon response: {text[:500]}")
+            if "Unknown or incomplete command" in text:
+                raise ConfigReloadError(
+                    f"RCON rejected `{cmd}` on {server}: {text[:200]}"
+                )
 
         st = load_state()
         st["applied"] = sha
+        st.pop("configHotReload", None)
         st["applying"] = False
         save_state(st)
-        log(f"hot-reload OK {sha}")
+        log(f"config hot-reload OK {sha}")
         return True
-    except Exception:
-        raise
+    except Exception as e:  # ConfigReloadError or an unexpected failure
+        alert(f"config hot-reload FAILED {sha}: {e}")
+        record_config_reload_failure(sha, str(e))
+        return False
     finally:
         _applying = False
         st = load_state()
@@ -752,6 +910,7 @@ def apply_compose(sha: str) -> bool:
         if ok:
             pin_dotenv_image_tag(used_tag)
             st["applied"] = sha
+            st.pop("configHotReload", None)
             st = write_last_good(st, sha)
             st["applying"] = False
             save_state(st)
@@ -819,11 +978,21 @@ def tick() -> None:
     wanted_s = str(wanted)
     applied_s = str(applied) if applied else None
 
-    matched = classify_hot_reload(applied_s, wanted_s)
+    matched = classify_config_hot_reload(applied_s, wanted_s)
     if matched is not None:
-        log(f"classify hot-reload wanted={wanted_s} rules={[r.get('id') for r in matched]}")
-        apply_hot_reload(wanted_s, matched)
-        return
+        attempts = _config_reload_attempts(st, wanted_s)
+        if matched and attempts >= MAX_CONFIG_RELOAD_ATTEMPTS:
+            log(
+                f"config hot-reload failed {attempts}x for {wanted_s} — "
+                "falling back to a compose deploy"
+            )
+        else:
+            log(
+                f"classify config hot-reload wanted={wanted_s} "
+                f"rules={[r.get('id') for r in matched]}"
+            )
+            apply_config_hot_reload(wanted_s, matched)
+            return
 
     age = empty_age_seconds()
     if age is None:
@@ -842,7 +1011,8 @@ def tick() -> None:
 def loop() -> None:
     log(
         f"deploy agent start root={ROOT} state={STATE_FILE} "
-        f"poll={POLL_SECONDS}s empty>={EMPTY_SECONDS}s hot-reload={HOT_RELOAD_FILE}"
+        f"poll={POLL_SECONDS}s empty>={EMPTY_SECONDS}s "
+        f"config-hot-reload={CONFIG_HOT_RELOAD_FILE}"
     )
     if not ROOT.is_dir():
         raise SystemExit(f"MISPLEASE_ROOT missing: {ROOT}")
@@ -886,11 +1056,25 @@ def main() -> None:
     sub.add_parser("status", help="Print state file")
     sub.add_parser("run", help="Reconcile loop (default)")
 
+    p_class = sub.add_parser(
+        "classify",
+        help="Print what applied→wanted would do (read-only, no side effects)",
+    )
+    p_class.add_argument("applied")
+    p_class.add_argument("wanted")
+
     args = parser.parse_args()
     cmd = args.cmd or "run"
 
     if cmd == "set-wanted":
         cmd_set_wanted(args.sha)
+    elif cmd == "classify":
+        actions = classify_config_hot_reload(args.applied, args.wanted)
+        if actions is None:
+            sys.stdout.write("compose deploy (not config-hot-reloadable)\n")
+        else:
+            json.dump(actions, sys.stdout, indent=2)
+            sys.stdout.write("\n")
     elif cmd == "status":
         json.dump(load_state(), sys.stdout, indent=2)
         sys.stdout.write("\n")

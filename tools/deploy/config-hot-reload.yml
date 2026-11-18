@@ -1,0 +1,74 @@
+# Config-only hot reload for the ops deployer agent.
+#
+# WHAT THIS DOES (and does not do)
+#   It re-reads *configuration files* on a running server: the agent merges the
+#   tracked files from infra/<server>/config/plugins/<Plugin>/ into the overlay
+#   upper layer (infra/<server>/data/state/plugins/<Plugin>/) and then runs the
+#   plugin's own reload command over RCON.
+#   It never swaps jars, never unloads/reloads a plugin, and never restarts a
+#   server. A jar/plugins.yml/compose change always takes the normal deploy path
+#   (wait for empty → compose up → health).
+#
+# SERVERS ARE INFERRED FROM THE GIT PATH
+#   `paths` are relative to each tree's config/plugins/:
+#     infra/minecraft/<server>/config/plugins/...   → only that backend
+#     infra/velocity/config/plugins/...             → only the proxy
+#   A main-only edit reloads main only. If the same file changed on main and
+#   tech, both get their own sync + reload. Never list a server in the rule.
+#
+# MERGE, NEVER REPLACE
+#   data/state is runtime data (homes, warps, holograms, player files...). The
+#   agent only overwrites the files git tracks and keeps everything else. Files
+#   git *deleted* are removed from the plugin dir; nothing else is touched.
+#   At boot entrypoint.sh deletes from data/state every path that exists in
+#   /config again, so a synced config never survives as a stale copy.
+#
+# NO SECRETS
+#   Files with __MISPLEASE_*__ placeholders are substituted by entrypoint.sh at
+#   boot inside the container (LuckPerms config.yml, libertybans sql.yml,
+#   paper-global.yml, floodgate key.pem). Syncing them would write the literal
+#   placeholder into the live file, so they must never appear here.
+#
+# NO DATA
+#   Only files we track in git may be listed. Runtime files a plugin writes into
+#   its own folder are untracked (data/ is gitignored) and are left alone.
+#
+# RELOAD COMMANDS
+#   The command is what a console sender can run over RCON. For plugins whose
+#   command is a subcommand (e.g. BetterWarps' warpsreload) use the plugin
+#   namespace when the bare name is ambiguous: Paper lowercases it, so
+#   `betterwarps:warpsreload`, not `BetterWarps:warpsreload`.
+#   If a plugin has no reload command it does not belong here: the change waits
+#   for a normal deploy. If it is one of our own plugins, add a reload command
+#   to the plugin instead of listing it here with a fake command.
+#
+# FAILURE HANDLING
+#   A failure (sync error, RCON unreachable, command rejected) is retried up to
+#   MAX_CONFIG_RELOAD_ATTEMPTS (default 3); after that the agent falls back to
+#   the compose path, so the change still lands with a bounce.
+#
+# ADDING A RULE
+#   Only after checking the plugin's docs/source for its reload command, and
+#   only if the reload really re-reads the config file we track. Rules are read
+#   from the *wanted* revision, so a rule + config change can ship in one push.
+
+rules:
+  # BetterWarps (own plugin, Maven): reloads warps/homes config + storage.
+  - id: betterwarps
+    paths:
+      - BetterWarps/**
+    rcon: betterwarps:warpsreload
+
+  # LibertyBans (proxy): re-reads config.yml, lang files, addons.
+  # sql.yml is deliberately NOT listed: it holds __MISPLEASE_DB_PASSWORD__ and a
+  # connection/vendor change needs /libertybans restart anyway.
+  - id: libertybans
+    paths:
+      - libertybans/config.yml
+    rcon: libertybans reload
+
+  # SkinsRestorer (proxy): re-reads config.yml + locales and re-inits storage.
+  - id: skinsrestorer
+    paths:
+      - skinsrestorer/config.yml
+    rcon: sr reload
