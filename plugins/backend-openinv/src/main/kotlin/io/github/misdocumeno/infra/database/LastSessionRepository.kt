@@ -50,6 +50,10 @@ class LastSessionRepository private constructor(
                     setURL(jdbcUrl)
                     setUser(user)
                     setPassword(password)
+                    // A dead DB must not pin an async scheduler thread for a minute.
+                    setConnectTimeout(3)
+                    setLoginTimeout(3)
+                    setSocketTimeout(5000)
                 }
             return LastSessionRepository(source, logger)
         }

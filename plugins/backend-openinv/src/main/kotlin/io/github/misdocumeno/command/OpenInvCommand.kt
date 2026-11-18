@@ -58,7 +58,7 @@ class OpenInvCommand(
                 sender.sendMessage(plugin.messages.component("other-server", "player" to local.name, "server" to server))
                 return true
             }
-            plugin.openSession(sender, local.uniqueId, local.name, kind, explicitGroup, server)
+            plugin.openSession(sender, local.uniqueId, local.name, kind, explicitGroup, server, explicitServer)
             return true
         }
 
@@ -76,7 +76,15 @@ class OpenInvCommand(
                 // which backend owns the inventory. Never invent an owner.
                 val targetServer =
                     if (explicitServer) server else lastSession?.server?.takeIf { it.isNotBlank() } ?: plugin.serverId
-                plugin.openSession(sender, resolved.first, resolved.second, kind, explicitGroup, targetServer)
+                plugin.openSession(
+                    sender,
+                    resolved.first,
+                    resolved.second,
+                    kind,
+                    explicitGroup,
+                    targetServer,
+                    explicitServer,
+                )
             })
         })
         return true

@@ -144,11 +144,23 @@ class OpenInvPlugin : JavaPlugin() {
         kind: InventoryKind,
         explicitGroup: String?,
         server: String,
+        explicitServer: Boolean = false,
     ) {
         if (!throttled(viewer)) return
 
-        if (server != serverId) {
-            openRemote(viewer, targetUuid, targetName, kind, explicitGroup, server)
+        // Owner is the backend the player is live on. Presence is fresher than
+        // player_last_session (the row is written on join/quit, and a server
+        // switch can leave the two backends' writes out of order). An explicit
+        // group@server is a deliberate profile edit and wins.
+        val presenceServer = transport.presence[targetUuid.toString()]
+        val owner =
+            when {
+                explicitServer -> server
+                presenceServer != null -> presenceServer
+                else -> server
+            }
+        if (owner != serverId) {
+            openRemote(viewer, targetUuid, targetName, kind, explicitGroup, owner)
             return
         }
 
