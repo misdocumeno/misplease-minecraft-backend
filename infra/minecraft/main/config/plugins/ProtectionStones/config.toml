@@ -1,5 +1,4 @@
 config_version = 16
-# probe: config-only push, no image should be built
 uuidupdated = true
 # Please do not change the config version unless you know what you are doing!
 # ---------------------------------------------------------------------------------------
