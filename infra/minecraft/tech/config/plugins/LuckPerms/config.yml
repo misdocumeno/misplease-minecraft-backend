@@ -588,6 +588,10 @@ world-rewrite:
     world_the_end_noreset: survival_alias
     end: survival_alias
     world2: survival_alias
+    # vanilla dimensions of this server: without these the nether and the end
+    # lose every survival_alias grant (essentials, jobs, plots, ...)
+    world_nether: survival_alias
+    world_the_end: survival_alias
     # creative
     creativo: creativo_alias
     bici: creativo_alias
