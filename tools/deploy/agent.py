@@ -417,6 +417,13 @@ def _parse_config_hot_reload_minimal(text: str) -> list[dict[str, Any]]:
             rule["rcon"] = m.group(1).strip()
             section = None
             continue
+        m = re.match(r'^    rcon_proxy:\s*["\']?([^"\']+)["\']?\s*$', line)
+        if m:
+            # Proxy-only override. Not a server name: Velocity and Paper register
+            # different command labels for the same plugin (e.g. lpv vs lp).
+            rule["rcon_proxy"] = m.group(1).strip()
+            section = None
+            continue
         if section == "paths":
             m = re.match(r"^      -\s+(\S+)\s*$", line)
             if m:
@@ -596,6 +603,68 @@ def _safe_rel(rel: str) -> str:
     return p.as_posix()
 
 
+# Same substitutions entrypoint.sh does at boot, so a hot-reloaded file contains
+# the real secret instead of a literal placeholder. The values come from the
+# deployer's env (docker-compose.prod.yml). Anything not listed here aborts the
+# reload: writing an unresolved placeholder into a live config would break the
+# plugin, and guessing a secret is worse.
+_PLACEHOLDERS = {
+    "__MISPLEASE_DB_PASSWORD__": "DB_PASSWORD",
+    "__MISPLEASE_REDIS_PASSWORD__": "REDIS_PASSWORD",
+    "__MISPLEASE_VELOCITY_SECRET__": "VELOCITY_FORWARDING_SECRET",
+}
+
+
+def env_value(name: str) -> str:
+    """Deployer env, falling back to the stack `.env` (same file compose reads).
+
+    The deployer only exports a few variables; the stack `.env` is already on the
+    host and mounted with the repo. Reading it avoids adding secrets to the
+    deployer service just for this.
+    """
+    value = os.environ.get(name, "")
+    if value:
+        return value
+    env_file = ROOT / ".env"
+    try:
+        text = env_file.read_text(encoding="utf-8")
+    except OSError:
+        return ""
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, val = line.partition("=")
+        if key.strip() == name:
+            return val.strip().strip('"').strip("'")
+    return ""
+
+
+def render_config_bytes(rel: str, raw: bytes) -> bytes:
+    text = raw.decode("utf-8")
+    for token, env_name in _PLACEHOLDERS.items():
+        if token not in text:
+            continue
+        value = env_value(env_name)
+        if not value and env_name == "REDIS_PASSWORD":
+            # entrypoint.sh does the same: derive it from REDIS_URL when unset.
+            m = re.match(r"^redis://:?([^@]*)@", env_value("REDIS_URL"))
+            if m:
+                value = m.group(1)
+        if not value:
+            raise ConfigReloadError(
+                f"cannot hot-reload {rel}: {token} needs {env_name} "
+                "in the deployer env or the stack .env"
+            )
+        text = text.replace(token, value)
+    left = sorted(set(re.findall(r"__MISPLEASE_[A-Z0-9_]+__", text)))
+    if left:
+        raise ConfigReloadError(
+            f"cannot hot-reload {rel}: unresolved placeholder(s) {left}"
+        )
+    return text.encode("utf-8")
+
+
 def sync_config_files(
     server: str,
     kind: str,
@@ -639,7 +708,7 @@ def sync_config_files(
         r = subprocess.run(
             ["docker", "exec", "-i", container, "sh", "-c", write_script, "sh",
              f"/srv/plugins/{rel}"],
-            input=src.read_bytes(),
+            input=render_config_bytes(rel, src.read_bytes()),
             capture_output=True,
         )
         if r.returncode != 0:
@@ -741,12 +810,19 @@ def apply_config_hot_reload(sha: str, actions: list[dict[str, Any]]) -> bool:
             plugin = str(action.get("plugin") or "")
             rule = rules_by_id.get(str(action.get("rule_id") or ""))
             cmd = (rule or {}).get("rcon") or action.get("rcon")
+            if kind == "proxy" and (rule or {}).get("rcon_proxy"):
+                cmd = rule["rcon_proxy"]
             if not server or not kind or not plugin:
                 raise ConfigReloadError(f"action incomplete: {action}")
             if not cmd:
                 raise ConfigReloadError(
                     f"rule {action.get('rule_id')} has no rcon command"
                 )
+            if kind == "proxy" and ":" in str(cmd):
+                # Velocity has no plugin:command namespacing (it answers "No such
+                # command"), so proxy rules must stay bare. Catch the mistake here
+                # instead of failing at runtime.
+                log(f"note: proxy command is not namespaced (Velocity): {cmd}")
             sync_config_files(
                 server,
                 kind,
@@ -762,7 +838,8 @@ def apply_config_hot_reload(sha: str, actions: list[dict[str, Any]]) -> bool:
             text = (resp or "").strip()
             if text:
                 log(f"rcon response: {text[:500]}")
-            if "Unknown or incomplete command" in text:
+            # Paper: "Unknown or incomplete command"; Velocity: "No such command".
+            if "Unknown or incomplete command" in text or "No such command" in text:
                 raise ConfigReloadError(
                     f"RCON rejected `{cmd}` on {server}: {text[:200]}"
                 )

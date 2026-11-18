@@ -27,13 +27,15 @@
 #   At boot entrypoint.sh deletes from data/state every path that exists in
 #   /config again, so a synced config never survives as a stale copy.
 #
-# NO SECRETS
-#   Files with __MISPLEASE_*__ placeholders are substituted by entrypoint.sh at
-#   boot inside the container (LuckPerms config.yml, libertybans sql.yml,
-#   paper-global.yml, floodgate key.pem). The agent writes raw git content, so
-#   those files must never be listed: the live file would receive the literal
-#   placeholder. Sync is per-file, so listing `libertybans/config.yml` cannot
-#   drag `sql.yml` along.
+# SECRETS
+#   Files with __MISPLEASE_*__ placeholders (LuckPerms config.yml, libertybans
+#   sql.yml) ARE supported: the agent substitutes the same values entrypoint.sh
+#   uses at boot, taken from its own env (DB_PASSWORD, REDIS_PASSWORD), and
+#   refuses to write a file if any placeholder is left unresolved. Listing a
+#   file with an unknown placeholder is therefore safe: it aborts, it does not
+#   write literal tokens into a live config.
+#   Sync is per-file, so listing `libertybans/config.yml` cannot drag `sql.yml`
+#   along (and vice versa).
 #
 # NO DATA
 #   Only files we track in git may be listed. Runtime files a plugin writes into
@@ -41,11 +43,24 @@
 #   `Multiverse-Core/worlds.yml` is tracked but also runtime-written (world
 #   creation), so only config.yml is listed there.
 #
-# RELOAD COMMANDS
-#   What a console sender can run over RCON. Use the plugin namespace when the
-#   bare name is ambiguous (Paper lowercases it): `betterwarps:warpsreload`.
-#   If a plugin has no reload command it does not belong here. If it is one of
-#   our own plugins, add a reload command to the plugin itself instead.
+# RELOAD COMMANDS — ALWAYS NAMESPACED ON BACKENDS
+#   Paper resolves `plugin:label`, so every backend rule uses the plugin
+#   namespace (`essentials:ess reload`, `jobs:jobs reload`). That way a short
+#   alias like `ps`/`dc`/`rs` can't hit another plugin's command if a future
+#   plugin registers the same label. The namespace is the plugin *name*
+#   lowercased (checked with `plugins`), and the label is the command that
+#   plugin registered — not always the same word:
+#     - `mvinv` is registered by Multiverse-Core, not Multiverse-Inventories.
+#     - ProtectionStones registers `ps` without a plugin namespace, so Paper
+#       cannot resolve `protectionstones:ps`; it stays bare (checked: nothing
+#       else on the backend registers `ps`).
+#   Velocity has NO plugin:command syntax (it answers "No such command"), so
+#   proxy rules are bare by necessity. Keep them unambiguous (`libertybans
+#   reload`, `sr reload`, `lpv reloadconfig` are all unique on the proxy).
+#   Use `rcon_proxy` when the proxy label differs from the backend one
+#   (LuckPerms: `lp` on Paper, `lpv` on Velocity).
+#   Every command below was executed once on prod main / the proxy and the
+#   answer was checked (no "Unknown or incomplete command" / "No such command").
 #
 # FAILURE HANDLING
 #   A failure (sync error, RCON unreachable, command rejected) is retried up to
@@ -64,22 +79,22 @@ rules:
   - id: actionhealth
     paths:
       - ActionHealth/**
-    rcon: actionhealth reload
+    rcon: actionhealth:actionhealth reload
 
   - id: advancedregionmarket
     paths:
       - AdvancedRegionMarket/**
-    rcon: arm reload
+    rcon: advancedregionmarket:arm reload
 
   - id: autosellchests
     paths:
       - AutoSellChests/**
-    rcon: asc reload
+    rcon: autosellchests:asc reload
 
   - id: betterback
     paths:
       - BetterBack/**
-    rcon: backreload
+    rcon: betterback:backreload
 
   # Own plugin, Maven build. Reloads warps/homes config + storage.
   - id: betterwarps
@@ -90,95 +105,116 @@ rules:
   - id: deathcoordinates
     paths:
       - DeathCoordinates/**
-    rcon: dc reload
+    rcon: deathcoordinates:dc reload
 
   # Also reloads every hologram. Holograms are runtime data in data/state.
   - id: decentholograms
     paths:
       - DecentHolograms/**
-    rcon: dh reload
+    rcon: decentholograms:dh reload
 
   # `sreload` re-reads shops/sections/languages. A few config.yml keys still
   # need a restart (documented upstream); those changes are rare.
   - id: economyshopgui
     paths:
       - EconomyShopGUI/**
-    rcon: sreload
+    rcon: economyshopgui:sreload
 
   # Most of config.yml/messages/kits. New commands, permissions and economy
   # hooks still need a restart.
   - id: essentials
     paths:
       - Essentials/**
-    rcon: ess reload
+    rcon: essentials:ess reload
 
   - id: eternaleffects
     paths:
       - EternalEffects/**
-    rcon: eternaleffectsreload
+    rcon: eternaleffects:eternaleffectsreload
 
   - id: extracontexts
     paths:
       - ExtraContexts/**
-    rcon: extracontexts-reload
+    rcon: extracontexts:extracontexts-reload
 
   - id: fastasyncworldedit
     paths:
       - FastAsyncWorldEdit/**
-    rcon: we reload
+    rcon: fastasyncworldedit:we reload
 
   - id: gravitytubes
     paths:
       - GravityTubes/**
-    rcon: gta reload
+    rcon: gravitytubes:gta reload
 
   - id: gsit
     paths:
       - GSit/**
-    rcon: gsitreload
+    rcon: gsit:gsitreload
 
   - id: hiddenholograms
     paths:
       - HiddenHolograms/**
-    rcon: reloadinvisibleholograms
+    rcon: hiddenholograms:reloadinvisibleholograms
 
   # config.yml + locale. Adding/removing whole jobs usually needs a restart.
   - id: jobs
     paths:
       - Jobs/**
-    rcon: jobs reload
+    rcon: jobs:jobs reload
 
-  # Proxy only. Re-reads config.yml, lang files and addons.
-  # sql.yml is deliberately NOT listed: it holds __MISPLEASE_DB_PASSWORD__, and
-  # a storage/vendor change needs `/libertybans restart` anyway.
+  # Proxy only (bare: Velocity has no namespacing). Re-reads config.yml, lang
+  # files and addons.
   - id: libertybans
     paths:
       - libertybans/config.yml
     rcon: libertybans reload
 
+  # sql.yml is the documented restart case: LibertyBans rebuilds the pool only
+  # on `/libertybans restart` (plugin restart, not the proxy). The password
+  # placeholder is substituted by the agent.
+  - id: libertybans-sql
+    paths:
+      - libertybans/sql.yml
+    rcon: libertybans restart
+
+  # config.yml holds the storage/redis credentials (placeholders, substituted by
+  # the agent) plus the settings we actually touch: server, world-rewrite,
+  # prefixes-related flags, contexts. Those are re-read; storage/messaging
+  # changes are `notReloadable` upstream and still need a restart.
+  - id: luckperms
+    paths:
+      - LuckPerms/config.yml
+    rcon: luckperms:lp reloadconfig
+    rcon_proxy: lpv reloadconfig
+
   # worlds.yml is runtime-written (world creation), so it stays out.
   - id: multiverse-core
     paths:
       - Multiverse-Core/config.yml
-    rcon: mv reload
+    rcon: multiverse-core:mv reload
 
+  # `mvinv` is registered by Multiverse-Core (Multiverse-Inventories has no
+  # commands of its own), hence the multiverse-core namespace.
   - id: multiverse-inventories
     paths:
       - Multiverse-Inventories/**
-    rcon: mvinv reload
+    rcon: multiverse-core:mvinv reload
 
   - id: placeholderapi
     paths:
       - PlaceholderAPI/**
-    rcon: papi reload
+    rcon: placeholderapi:papi reload
 
   # settings/worlds/components/translations. storage.yml changes (backend
   # switched while running) still need a restart.
   - id: plotsquared
     paths:
       - PlotSquared/**
-    rcon: plot reload
+    rcon: plotsquared:plot reload
 
+  # Bare: ProtectionStones registers `ps` without a plugin namespace, so
+  # `protectionstones:ps` does not resolve. Nothing else registers `ps`.
   - id: protectionstones
     paths:
       - ProtectionStones/**
@@ -187,21 +223,21 @@ rules:
   - id: quickshop
     paths:
       - QuickShop/**
-    rcon: qs reload
+    rcon: quickshop:qs reload
 
   - id: rosestacker
     paths:
       - RoseStacker/**
-    rcon: rs reload
+    rcon: rosestacker:rs reload
 
   # `/ss` is not an alias of SimpleScore (that is `/sb`).
   - id: simplescore
     paths:
       - SimpleScore/**
-    rcon: simplescore reload
+    rcon: simplescore:simplescore reload
 
-  # Config/messages behaviour keys. Storage, proxy detection or command
-  # registration changes need a restart.
+  # Proxy only (bare). Config/messages behaviour keys. Storage, proxy detection
+  # or command-registration changes need a restart.
   - id: skinsrestorer
     paths:
       - SkinsRestorer/config.yml
@@ -211,28 +247,28 @@ rules:
   - id: tab
     paths:
       - TAB/**
-    rcon: tab reload
+    rcon: tab:tab reload
 
   - id: thebestrtp
     paths:
       - TheBestRTP/**
-    rcon: rtpreload
+    rcon: thebestrtp:rtpreload
 
   - id: viaversion
     paths:
       - ViaVersion/**
-    rcon: viaversion reload
+    rcon: viaversion:viaversion reload
 
   - id: villagertradelimiter
     paths:
       - VillagerTradeLimiter/**
-    rcon: vtl reload
+    rcon: villagertradelimiter:vtl reload
 
   # WorldGuard/worlds/ is region data (gitignored, never in a diff).
   - id: worldguard
     paths:
       - WorldGuard/config.yml
-    rcon: wg reload
+    rcon: worldguard:wg reload
 
 # ---------------------------------------------------------------------------
 # Checked and deliberately NOT listed. Do not "fix" these by guessing a command.
@@ -253,9 +289,6 @@ rules:
 #   Geyser-Velocity       `geyser reload` kicks every Bedrock session
 #   GriefPrevention       not verified yet
 #   LightCleaner          no reload command
-#   LuckPerms             config.yml holds the DB/Redis placeholders; also
-#                         `/lpv reloadconfig` only re-reads part of the file
-#                         (storage/messaging need a restart)
 #   PlayMoreSounds        the plugin itself prints "does not support reloads"
 #   Slimefun              no reload subcommand in the 26.3 fork
 #   SuperiorSkyblock2     `sadmin reload` exists but the jar warns it can leave
