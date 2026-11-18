@@ -46,8 +46,8 @@ class ChatFormatterTest {
         val back = MiniMessage.miniMessage().serialize(rendered)
         assertTrue(back.startsWith("<hover:"), "hover must wrap the whole line: $back")
         assertTrue(
-            back.contains("2026/11/17 20:34:00 (UTC-3)"),
-            "hover must show the local event time and its offset: $back",
+            back.contains("<yellow>2026/11/17 20:34:00 (UTC-3)"),
+            "hover must show the local event time in yellow: $back",
         )
     }
 

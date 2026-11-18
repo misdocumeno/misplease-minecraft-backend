@@ -39,11 +39,12 @@ class ChatFormatter(
             "<gray>\\<</gray>$name<gray>></gray> <white>${mm.escapeTags(intent.rawMessage)}</white>"
 
         // Plain text inside the quotes: no nested tags to escape, and the hover cannot
-        // inherit or leak the line's colors. Adventure renders it in the default style.
+        // inherit or leak the line's colors. Yellow so the timestamp reads as metadata,
+        // not as part of the message.
         val at = Instant.ofEpochMilli(intent.timestamp).atZone(zone)
         val time = "${timeFormat.format(at)} (${zoneLabel(at.offset)})"
 
-        return RenderedChatMessage("<hover:show_text:'$time'>$line</hover>")
+        return RenderedChatMessage("<hover:show_text:'<yellow>$time</yellow>'>$line</hover>")
     }
 
     companion object {

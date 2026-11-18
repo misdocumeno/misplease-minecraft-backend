@@ -2,6 +2,7 @@ package io.github.misdocumeno.infra.paper
 
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.event.HoverEvent
+import net.kyori.adventure.text.format.NamedTextColor
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -30,7 +31,7 @@ object Timestamps {
         DateTimeFormatter.ofPattern(env("MISPLEASE_TIME_FORMAT") ?: "yyyy/MM/dd HH:mm:ss")
 
     fun hover(at: Instant = Instant.now()): HoverEvent<Component> =
-        Component.text(stamp(at)).asHoverEvent()
+        Component.text(stamp(at)).color(NamedTextColor.YELLOW).asHoverEvent()
 
     private fun stamp(at: Instant): String {
         val zoned = at.atZone(zone)
