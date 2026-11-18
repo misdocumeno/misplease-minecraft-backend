@@ -5,13 +5,13 @@
 # treat anything else in that project as an orphan. Nothing here is ever touched
 # by CD, and nothing here restarts the game.
 #
-#   core  (always on, ~250-300 MB): victoriametrics + victoria-traces + alloy
-#   deep  (on demand,  +~200 MB):   grafana (UI) + victoria-logs (backfilled logs)
+#   core  (always on, ~300 MB): victoriametrics + victoria-traces + alloy + grafana
+#   logs  (on demand, +~200 MB): victoria-logs, backfilled from docker's files
 #
 # Usage, from the stack root:
-#   docker compose -f docker-compose.obs.yml up -d                    # core
-#   docker compose -f docker-compose.obs.yml --profile deep up -d     # + UI and logs
-#   docker compose -f docker-compose.obs.yml --profile deep down      # back to core
+#   docker compose -f docker-compose.obs.yml up -d                 # core
+#   docker compose -f docker-compose.obs.yml --profile logs up -d  # + logs
+#   docker compose -f docker-compose.obs.yml --profile logs down   # back to core
 #   docker compose -f docker-compose.obs.yml logs -f alloy
 #
 # Docs: tools/obs/README.md. Reasoning and RAM budget: .local/notes/observability.md
@@ -103,10 +103,9 @@ services:
       - misplease
     logging: *logging
 
-  # --- deep profile: only while investigating -------------------------------
+  # --- UI (always on) and logs (on demand) ----------------------------------
 
   grafana:
-    profiles: ["deep"]
     image: grafana/grafana:13.2.6
     container_name: misplease-obs-grafana
     restart: unless-stopped
@@ -134,7 +133,7 @@ services:
   # Log store. Starting it late is fine: `tools/obs/import-logs.py` backfills
   # the container logs still on disk, so nothing that mattered is lost.
   victoria-logs:
-    profiles: ["deep"]
+    profiles: ["logs"]
     image: victoriametrics/victoria-logs:v1.54.0
     container_name: misplease-obs-logs
     restart: unless-stopped

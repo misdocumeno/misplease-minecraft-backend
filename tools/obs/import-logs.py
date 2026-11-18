@@ -11,8 +11,9 @@ included, into VictoriaLogs.
     python3 tools/obs/import-logs.py --all              # every container on the host
 
 Requires: python3 (stdlib only), the docker CLI, and VictoriaLogs running on
-127.0.0.1:9428 (`--profile deep`). Safe to re-run: duplicates show up as repeats,
-which is honest (docker cannot tell us a log line's identity).
+127.0.0.1:9428 (`docker compose -f docker-compose.obs.yml --profile logs up -d`).
+Safe to re-run: duplicates show up as repeats, which is honest (docker cannot
+tell us a log line's identity).
 """
 
 from __future__ import annotations

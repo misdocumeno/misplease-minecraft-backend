@@ -9,10 +9,10 @@ into swap.
 | `victoriametrics` | metrics, 48 h | yes |
 | `victoria-traces` | OTLP traces, 14 d | yes (idle until instrumented) |
 | `alloy` | host + container metrics, OTLP receiver | yes |
-| `grafana` | dashboards, LAN `:3000` | on demand |
+| `grafana` | dashboards, LAN `:3000` | yes |
 | `victoria-logs` | logs, 7 d | on demand |
 
-Budget: ~250–300 MB core, +~400 MB while the deep profile is up. Hard `mem_limit`
+Budget: ~300 MB core, +~200 MB while the log tier is up. Hard `mem_limit`
 per container, so a runaway scraper cannot take the game down with it.
 
 ## Use
@@ -23,14 +23,14 @@ never touches it and it never restarts the game.
 ```bash
 cd /home/mis/misplease
 
-# core (metrics + traces), survives reboots
+# core (metrics + traces + Grafana), survives reboots
 docker compose -f docker-compose.obs.yml up -d
 
-# + Grafana and VictoriaLogs
-docker compose -f docker-compose.obs.yml --profile deep up -d
+# + VictoriaLogs (the log tier)
+docker compose -f docker-compose.obs.yml --profile logs up -d
 
-# back to the lean set (data is kept)
-docker compose -f docker-compose.obs.yml --profile deep down
+# drop the log tier again (its data is kept)
+docker compose -f docker-compose.obs.yml --profile logs down
 ```
 
 Grafana: `http://192.168.100.200:3000` (admin / `GRAFANA_ADMIN_PASSWORD` from the
@@ -40,7 +40,7 @@ they listen on `127.0.0.1` (`8428` metrics, `10428` traces, `9428` logs).
 ## Logs are on demand, and that is intentional
 
 Docker keeps every container's log on disk, so a stopped VictoriaLogs costs no
-data. Start the deep profile, then backfill:
+data. Start the log tier, then backfill:
 
 ```bash
 python3 tools/obs/import-logs.py --since 48h

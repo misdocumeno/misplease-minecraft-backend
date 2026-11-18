@@ -87,7 +87,7 @@
         {
           "refId": "A",
           "legendFormat": "{{name}}",
-          "expr": "sum by (name) (container_memory_working_set_bytes{job=\"cadvisor\", name=~\".*misplease.*\"})"
+          "expr": "sum by (container_label_com_docker_compose_service) (container_memory_working_set_bytes{job=\"cadvisor\"})"
         }
       ]
     },
@@ -112,7 +112,7 @@
         {
           "refId": "A",
           "legendFormat": "{{name}}",
-          "expr": "sum by (name) (rate(container_cpu_usage_seconds_total{job=\"cadvisor\", name=~\".*misplease.*\"}[5m]))"
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_cpu_usage_seconds_total{job=\"cadvisor\"}[5m]))"
         }
       ]
     },
@@ -211,7 +211,7 @@
         {
           "refId": "A",
           "legendFormat": "{{name}}",
-          "expr": "sum by (name) (increase(container_oom_events_total{job=\"cadvisor\", name=~\".*misplease.*\"}[1h])) > 0"
+          "expr": "sum by (container_label_com_docker_compose_service) (increase(container_oom_events_total{job=\"cadvisor\"}[1h])) > 0"
         }
       ]
     }
