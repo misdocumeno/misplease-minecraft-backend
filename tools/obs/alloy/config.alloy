@@ -118,8 +118,8 @@ otelcol.processor.batch "default" {
 otelcol.exporter.otlphttp "traces" {
   client {
     // otlphttp appends /v1/traces, so this lands on
-    // http://victoria-traces:10428/opentelemetry/v1/traces
-    endpoint = "http://victoria-traces:10428/opentelemetry"
+    // http://victoria-traces:10428/insert/opentelemetry/v1/traces
+    endpoint = "http://victoria-traces:10428/insert/opentelemetry"
     timeout  = "10s"
   }
 

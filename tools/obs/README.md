@@ -58,7 +58,7 @@ LogsQL over HTTP:
 
 ```bash
 curl -s 'http://127.0.0.1:9428/select/logsql/query' \
-  --data-urlencode 'query=container:misplease-main logged in' \
+  --data-urlencode 'query=container:=misplease-main "logged in"' \
   --data-urlencode 'limit=50'
 ```
 
