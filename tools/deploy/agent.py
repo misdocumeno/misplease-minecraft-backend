@@ -491,8 +491,7 @@ def container_for(server: str) -> str:
 _AGENT_ONLY_GLOBS = [
     "tools/deploy/**",
     # CI wiring: changes what the pipeline does, never what the running servers do.
-    ".github/workflows/deploy.yml",
-    ".github/workflows/images.yml",
+    ".github/**",
     ".env.example",
     # Docs never change what runs: don't bounce the servers for a README.
     "*.md",
