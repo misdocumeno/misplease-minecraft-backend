@@ -1,0 +1,157 @@
+# Lightweight observability for the misplease stack (VictoriaMetrics, not LGTM).
+#
+# Separate Compose project on purpose: the deployer owns the game stack and runs
+# `docker compose -f docker-compose.prod.yml up -d --remove-orphans`, which would
+# treat anything else in that project as an orphan. Nothing here is ever touched
+# by CD, and nothing here restarts the game.
+#
+#   core  (always on, ~250-300 MB): victoriametrics + victoria-traces + alloy
+#   deep  (on demand,  +~200 MB):   grafana (UI) + victoria-logs (backfilled logs)
+#
+# Usage, from the stack root:
+#   docker compose -f docker-compose.obs.yml up -d                    # core
+#   docker compose -f docker-compose.obs.yml --profile deep up -d     # + UI and logs
+#   docker compose -f docker-compose.obs.yml --profile deep down      # back to core
+#   docker compose -f docker-compose.obs.yml logs -f alloy
+#
+# Docs: tools/obs/README.md. Reasoning and RAM budget: .local/notes/observability.md
+
+name: misplease-obs
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "2"
+
+services:
+  # Metrics store. Retention is short on purpose: metrics answer "what is eating
+  # RAM/CPU right now", not "what happened last week".
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:v1.156.0
+    container_name: misplease-obs-metrics
+    restart: unless-stopped
+    command:
+      - -storageDataPath=/victoria-metrics-data
+      - -retentionPeriod=48h
+      - -httpListenAddr=:8428
+      # Keep the process inside the container cap, not the host total.
+      - -memory.allowedPercent=50
+      - -selfScrapeInterval=30s
+    volumes:
+      - metrics-data:/victoria-metrics-data
+    ports:
+      # Loopback only: ad-hoc queries from the VM itself. Grafana is the LAN door.
+      - 127.0.0.1:8428:8428
+    mem_limit: 128m
+    cpus: 1.0
+    logging: *logging
+
+  # Trace store, OTLP-native. Idle until a service sends spans; the login trace
+  # work (login_id propagation) is what fills it.
+  victoria-traces:
+    image: victoriametrics/victoria-traces:v0.13.0
+    container_name: misplease-obs-traces
+    restart: unless-stopped
+    command:
+      - -storageDataPath=/victoria-traces-data
+      - -retentionPeriod=14d
+      - -httpListenAddr=:10428
+    volumes:
+      - traces-data:/victoria-traces-data
+    ports:
+      - 127.0.0.1:10428:10428
+    mem_limit: 96m
+    cpus: 0.5
+    logging: *logging
+
+  # One agent: host metrics, per-container metrics, and the OTLP receiver the
+  # JVMs will send login spans to. cAdvisor runs in-process (no extra container).
+  alloy:
+    image: grafana/alloy:v1.22.0
+    container_name: misplease-obs-alloy
+    restart: unless-stopped
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+    environment:
+      HOSTNAME: misplease-prod-vm
+    # cAdvisor needs the docker socket, host cgroups and host disks.
+    privileged: true
+    volumes:
+      - ./tools/obs/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - alloy-data:/var/lib/alloy/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /:/host/root:ro,rslave
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /var/lib/docker/:/host/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    mem_limit: 192m
+    cpus: 1.0
+    networks:
+      - default
+      - misplease
+    logging: *logging
+
+  # --- deep profile: only while investigating -------------------------------
+
+  grafana:
+    profiles: ["deep"]
+    image: grafana/grafana:13.2.6
+    container_name: misplease-obs-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD in .env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_NEWS_NEWS_FEED_ENABLED: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      # Data source for the on-demand log tier.
+      GF_INSTALL_PLUGINS: victoriametrics-logs-datasource
+      GF_PLUGINS_PREINSTALL: victoriametrics-logs-datasource
+    volumes:
+      - ./tools/obs/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./tools/obs/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - 3000:3000
+    mem_limit: 224m
+    cpus: 1.0
+    logging: *logging
+
+  # Log store. Starting it late is fine: `tools/obs/import-logs.py` backfills
+  # the container logs still on disk, so nothing that mattered is lost.
+  victoria-logs:
+    profiles: ["deep"]
+    image: victoriametrics/victoria-logs:v1.54.0
+    container_name: misplease-obs-logs
+    restart: unless-stopped
+    command:
+      - -storageDataPath=/victoria-logs-data
+      - -retentionPeriod=7d
+      - -httpListenAddr=:9428
+    volumes:
+      - logs-data:/victoria-logs-data
+    ports:
+      - 127.0.0.1:9428:9428
+    mem_limit: 192m
+    cpus: 1.0
+    logging: *logging
+
+networks:
+  # Shared with the game stack so future OTLP senders reach `alloy:4317/4318`.
+  misplease:
+    external: true
+    name: misplease_default
+
+volumes:
+  metrics-data:
+  traces-data:
+  logs-data:
+  grafana-data:
+  alloy-data:

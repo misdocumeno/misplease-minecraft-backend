@@ -1,0 +1,129 @@
+// Alloy config for the misplease prod VM.
+//
+// Three jobs, nothing else:
+//   1. host metrics        (node_exporter collectors, in-process)
+//   2. container metrics   (cAdvisor, in-process; no separate container)
+//   3. OTLP receiver       (traces -> VictoriaTraces; the login trace work)
+//
+// Logs are NOT shipped from here. They live in docker's json-file/Paper logs and
+// are backfilled on demand with tools/obs/import-logs.py, so a stopped
+// VictoriaLogs never costs us data or memory.
+//
+// Editing this file on the VM is not the source of truth: it is mounted from the
+// repo checkout at ./tools/obs/alloy/config.alloy.
+
+logging {
+  level  = "warn"
+  format = "logfmt"
+}
+
+// --- host metrics ------------------------------------------------------------
+
+prometheus.exporter.unix "host" {
+  rootfs_path = "/host/root"
+  procfs_path = "/host/proc"
+  sysfs_path  = "/host/sys"
+}
+
+discovery.relabel "host" {
+  targets = prometheus.exporter.unix.host.targets
+
+  rule {
+    target_label = "instance"
+    replacement  = "misplease-prod-vm"
+  }
+
+  rule {
+    target_label = "job"
+    replacement  = "node"
+  }
+}
+
+prometheus.scrape "host" {
+  targets         = discovery.relabel.host.output
+  forward_to      = [prometheus.remote_write.metrics.receiver]
+  scrape_interval = "30s"
+  scrape_timeout  = "10s"
+}
+
+// --- container metrics -------------------------------------------------------
+
+prometheus.exporter.cadvisor "containers" {
+  docker_host               = "unix:///var/run/docker.sock"
+  docker_only               = true
+  disable_root_cgroup_stats = true
+  // Trim series we never query here: the question is RAM/CPU per container.
+  disabled_metrics = [
+    "advtcp", "app", "cpu_topology", "cpuset", "disk", "diskIO", "hugetlb",
+    "memory_numa", "network", "perf_event", "process", "referenced_memory",
+    "resctrl", "sched", "tcp", "udp",
+  ]
+  // Keep only the compose labels; the rest is series bloat.
+  store_container_labels        = false
+  allowlisted_container_labels  = ["com.docker.compose.service", "com.docker.compose.project"]
+  housekeeping_interval         = "15s"
+  storage_duration              = "1m"
+}
+
+discovery.relabel "containers" {
+  targets = prometheus.exporter.cadvisor.containers.targets
+
+  rule {
+    target_label = "job"
+    replacement  = "cadvisor"
+  }
+}
+
+prometheus.scrape "containers" {
+  targets         = discovery.relabel.containers.output
+  forward_to      = [prometheus.remote_write.metrics.receiver]
+  scrape_interval = "30s"
+  scrape_timeout  = "10s"
+}
+
+// --- storage -----------------------------------------------------------------
+
+prometheus.remote_write "metrics" {
+  endpoint {
+    url = "http://victoriametrics:8428/api/v1/write"
+  }
+}
+
+// --- OTLP traces -------------------------------------------------------------
+// Senders: alloy:4318 (HTTP) or alloy:4317 (gRPC) on the misplease network.
+
+otelcol.receiver.otlp "default" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  output {
+    traces = [otelcol.processor.batch.default.input]
+  }
+}
+
+otelcol.processor.batch "default" {
+  timeout = "2s"
+
+  output {
+    traces = [otelcol.exporter.otlphttp.traces.input]
+  }
+}
+
+otelcol.exporter.otlphttp "traces" {
+  client {
+    // otlphttp appends /v1/traces, so this lands on
+    // http://victoria-traces:10428/opentelemetry/v1/traces
+    endpoint = "http://victoria-traces:10428/opentelemetry"
+    timeout  = "10s"
+  }
+
+  sending_queue {
+    enabled    = true
+    queue_size = 512
+  }
+}
