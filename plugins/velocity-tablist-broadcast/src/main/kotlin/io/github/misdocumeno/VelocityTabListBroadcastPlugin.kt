@@ -10,6 +10,7 @@ import io.github.misdocumeno.domain.model.AuthEvent
 import io.github.misdocumeno.infra.redis.RedisAuthAdapter
 import io.github.misdocumeno.infra.redis.RedisAuthListener
 import io.github.misdocumeno.infra.redis.RedisAuthenticatedRepository
+import io.github.misdocumeno.infra.redis.RedisNameListener
 import io.github.misdocumeno.infra.velocity.GlobalTabListRebuilder
 import io.github.misdocumeno.infra.velocity.VelocityAuthEventHandler
 import io.github.misdocumeno.infra.velocity.VelocityEventListener
@@ -58,6 +59,10 @@ class VelocityTabListBroadcastPlugin @Inject constructor(
         val handler = VelocityAuthEventHandler(listener::scheduleRebuilds)
         val adapter = RedisAuthAdapter(handler, json)
         RedisAuthListener(connectionPubSub, adapter).start()
+        RedisNameListener(connectionPubSub, json) { update ->
+            rebuilder.updateName(update.uuid, update.name)
+            listener.scheduleRebuilds()
+        }.start()
 
         proxy.eventManager.register(this, listener)
     }

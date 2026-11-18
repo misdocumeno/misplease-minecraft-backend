@@ -5,6 +5,7 @@ import io.github.misdocumeno.infra.paper.ChatSounds
 import io.github.misdocumeno.infra.paper.PaperChatBroadcastHandler
 import io.github.misdocumeno.infra.paper.PaperChatListener
 import io.github.misdocumeno.infra.paper.PaperChatRenderer
+import io.github.misdocumeno.infra.paper.TabListNamePublisher
 import io.github.misdocumeno.infra.redis.RedisChatBroadcastAdapter
 import io.github.misdocumeno.infra.redis.RedisChatBroadcastListener
 import io.github.misdocumeno.infra.redis.RedisChatIntentPublisher
@@ -51,6 +52,7 @@ class BackendChatAdapterPlugin : JavaPlugin() {
 
         val publisher = RedisChatIntentPublisher(connection, json)
         server.pluginManager.registerEvents(PaperChatListener(publisher), this)
+        TabListNamePublisher(this, connection).start()
     }
 
     override fun onDisable() {
