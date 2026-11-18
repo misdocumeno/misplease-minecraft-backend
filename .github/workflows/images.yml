@@ -61,6 +61,11 @@ jobs:
         id: filter
         if: github.event_name != 'workflow_dispatch'
         with:
+          # `some` (default) ORs the rules and silently ignores `!` negations, so
+          # the config-hot-reload exclusions below only work with
+          # `some-with-excludes`. All other filters have no negation, so this is
+          # equivalent to `some` for them.
+          predicate-quantifier: 'some-with-excludes'
           filters: |
             auth:
               - 'services/auth/**'
@@ -86,8 +91,12 @@ jobs:
               - 'plugins/backend-*/**'
             plugins_velocity:
               - 'plugins/velocity-*/**'
-            # Config-only hot-reload paths (see tools/deploy/hot-reload.yml) must NOT
-            # rebuild images — the deployer syncs + RCON instead.
+            # Config-only hot-reload paths (see tools/deploy/config-hot-reload.yml)
+            # must NOT rebuild images: the deployer writes the file into the live
+            # container and runs the plugin's reload command instead. Only list
+            # folders whose tracked content is entirely covered by a rule — a
+            # change that is not hot-reloadable still needs an image, because the
+            # compose fallback pulls IMAGE_TAG=<sha>.
             main:
               - 'infra/minecraft/main/**'
               - '!infra/minecraft/main/config/plugins/BetterWarps/**'
