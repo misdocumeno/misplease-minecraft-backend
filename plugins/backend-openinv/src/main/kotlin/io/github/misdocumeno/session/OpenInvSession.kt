@@ -51,6 +51,8 @@ class OpenInvSession(
     val server: String,
     private val initial: Snapshot,
     private val remote: RemoteSource? = null,
+    /** Set when [initial] came from a world profile instead of the group cache. */
+    private val seedProfile: Snapshot? = null,
 ) {
 
     val id: UUID = UUID.randomUUID()
@@ -247,7 +249,7 @@ class OpenInvSession(
                 return LiveSource(player, kind, server, group)
             }
         }
-        return ProfileSource(plugin.mvi, targetUuid, targetName, kind, server, group)
+        return ProfileSource(plugin.mvi, targetUuid, targetName, kind, server, group, seedProfile)
     }
 
     private fun onlineInGroup(): Boolean {

@@ -50,6 +50,10 @@ class OpenInvPlugin : JavaPlugin() {
 
     private val lastOpen = ConcurrentHashMap<UUID, Long>()
 
+    /** Snapshot of the registered players, refreshed in the background for tab completion. */
+    @Volatile
+    private var playerDirectory: List<LastSessionRepository.KnownPlayer> = emptyList()
+
     override fun onEnable() {
         saveDefaultConfig()
         reloadConfig()
@@ -57,6 +61,13 @@ class OpenInvPlugin : JavaPlugin() {
         mvi = MviBridge(this)
         lastSessions = LastSessionRepository.fromEnv(logger)
         sessions = SessionRegistry()
+        refreshPlayerDirectory()
+        server.scheduler.runTaskTimerAsynchronously(
+            this,
+            Runnable { refreshPlayerDirectory() },
+            20L,
+            20L * DIRECTORY_REFRESH_SECONDS,
+        )
         ownerHandler = RemoteOwnerHandler(this)
         transport =
             RedisTransport(
@@ -214,22 +225,43 @@ class OpenInvPlugin : JavaPlugin() {
                 onMain { if (viewer.isOnline) viewer.sendMessage(messages.component("mvi-missing")) }
                 return@execute
             }
+            val lastWorld = mvi.lastWorld(targetUuid, targetName)
             val group = explicitGroup
-                ?: mvi.lastWorld(targetUuid, targetName)?.let { mvi.groupForWorld(it) }
+                ?: lastWorld?.let { mvi.groupForWorld(it) }
                 ?: mvi.defaultGroup()
             if (group == null) {
                 onMain { if (viewer.isOnline) groupUnknown(viewer, groups) }
                 return@execute
             }
-            val profileExists = mvi.hasProfile(targetUuid, targetName, group)
-            val snapshot = runCatching { mvi.read(targetUuid, targetName, group, kind) }
+            // Prefer the group cache (what MVI applies on login). A player who has
+            // not joined since MVI was installed has no group cache yet; their
+            // current inventory still lives in the last world profile. Reading
+            // that beats showing an empty GUI that would overwrite the .dat.
+            val groupExists = mvi.hasProfile(targetUuid, targetName, group)
+            val worldFallback = lastWorld
+                ?.takeIf { mvi.groupForWorld(it) == group && mvi.hasWorldProfile(targetUuid, targetName, it) }
+            val snapshot = when {
+                groupExists -> runCatching { mvi.read(targetUuid, targetName, group, kind) }
+                worldFallback != null -> runCatching { mvi.readWorld(targetUuid, targetName, worldFallback, kind) }
+                else -> null
+            }
             onMain {
                 if (!viewer.isOnline) return@onMain
-                if (!profileExists) {
-                    viewer.sendMessage(messages.component("empty-profile", "player" to targetName, "group" to group))
+                if (snapshot == null) {
+                    viewer.sendMessage(messages.component("no-profile", "player" to targetName, "group" to group))
+                    return@onMain
                 }
                 snapshot.onSuccess {
-                    start(viewer, targetUuid, targetName, kind, group, server, it)
+                    start(
+                        viewer,
+                        targetUuid,
+                        targetName,
+                        kind,
+                        group,
+                        server,
+                        it,
+                        seed = it.takeIf { !groupExists },
+                    )
                 }.onFailure { error ->
                     logger.warning("profile read failed for $targetName: ${error.message}")
                     viewer.sendMessage(messages.component("write-failed", "reason" to (error.message ?: "read error")))
@@ -271,6 +303,17 @@ class OpenInvPlugin : JavaPlugin() {
     /** Backends we can address: ours plus whatever the proxy presence feed reports. */
     fun knownServers(): List<String> =
         (transport.presence.values + serverId).filter { it.isNotBlank() && it != "proxy" }.distinct().sorted()
+
+    /** Registered players, last connection first; the snapshot is maintained off-thread. */
+    fun knownPlayers(): List<LastSessionRepository.KnownPlayer> = playerDirectory
+
+    private fun refreshPlayerDirectory() {
+        profileExecutor.execute {
+            val players = lastSessions.players()
+            // Keep the previous snapshot on a transient DB failure.
+            if (players.isNotEmpty()) playerDirectory = players
+        }
+    }
 
     /**
      * Opens an inventory owned by another backend. One state read doubles as the
@@ -361,8 +404,9 @@ class OpenInvPlugin : JavaPlugin() {
         group: String,
         server: String,
         snapshot: io.github.misdocumeno.domain.Snapshot,
+        seed: io.github.misdocumeno.domain.Snapshot? = null,
     ) {
-        val session = OpenInvSession(this, viewer.uniqueId, targetUuid, targetName, kind, group, server, snapshot)
+        val session = OpenInvSession(this, viewer.uniqueId, targetUuid, targetName, kind, group, server, snapshot, seedProfile = seed)
         sessions.add(session)
         session.start()
         viewer.sendMessage(
@@ -380,5 +424,9 @@ class OpenInvPlugin : JavaPlugin() {
         val now = System.currentTimeMillis()
         val previous = lastOpen.put(viewer.uniqueId, now)
         return previous != null && now - previous < 500L
+    }
+
+    companion object {
+        private const val DIRECTORY_REFRESH_SECONDS = 30L
     }
 }

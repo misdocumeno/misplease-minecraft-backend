@@ -43,11 +43,27 @@ class RemoteOwnerHandler(private val plugin: OpenInvPlugin) {
             plugin.profileExecutor.execute {
                 val result = runCatching {
                     if (!plugin.mvi.available) error("Multiverse-Inventories is not available on ${plugin.serverId}")
+                    val lastWorld = plugin.mvi.lastWorld(uuid, request.targetName)
                     val group = request.group
-                        ?: plugin.mvi.lastWorld(uuid, request.targetName)?.let { plugin.mvi.groupForWorld(it) }
+                        ?: lastWorld?.let { plugin.mvi.groupForWorld(it) }
                         ?: plugin.mvi.defaultGroup()
                         ?: error("no inventory group")
-                    val snapshot = plugin.mvi.read(uuid, request.targetName, group, kind)
+                    val groupExists = plugin.mvi.hasProfile(uuid, request.targetName, group)
+                    val worldFallback = lastWorld
+                        ?.takeIf {
+                            plugin.mvi.groupForWorld(it) == group &&
+                                plugin.mvi.hasWorldProfile(uuid, request.targetName, it)
+                        }
+                    val snapshot = when {
+                        groupExists -> plugin.mvi.read(uuid, request.targetName, group, kind)
+                        worldFallback != null -> plugin.mvi.readWorld(uuid, request.targetName, worldFallback, kind)
+                            .also {
+                                // Materialize the group cache now: the apply protocol only
+                                // carries deltas, so it must not land on an empty profile.
+                                plugin.mvi.apply(uuid, request.targetName, group, kind, emptyMap(), it)
+                            }
+                        else -> error("${request.targetName} has no stored inventory in $group yet; they must log in once")
+                    }
                     group to snapshot
                 }
                 plugin.onMain {

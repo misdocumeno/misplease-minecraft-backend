@@ -58,19 +58,39 @@ class MviBridge(@Suppress("unused") private val plugin: Plugin) {
             key.playerUUID to (key.playerName ?: name)
         }.getOrNull()
 
-    /** Known names (MVI name mapper), for tab completion. */
-    fun names(): List<String> =
-        runCatching { api().playerNamesMapper.keys.mapNotNull { it.playerName } }.getOrDefault(emptyList())
-
-    /** Whether a stored profile already exists in this group. Errors count as true (do not nag). */
+    /** Whether a stored profile already exists in this group. Errors count as missing. */
     fun hasProfile(uuid: UUID, name: String, group: String): Boolean =
         runCatching {
             api().profileDataSource.listPlayerProfileNames(ContainerType.GROUP, group)
                 .any { it.equals(name, ignoreCase = true) }
-        }.getOrDefault(true)
+        }.getOrDefault(false)
 
-    fun read(uuid: UUID, name: String, group: String, kind: io.github.misdocumeno.domain.InventoryKind): io.github.misdocumeno.domain.Snapshot {
-        val profile = loadProfile(uuid, name, group)
+    /** Whether MVI already migrated this player's per-world profile (pre-group-cache installs). */
+    fun hasWorldProfile(uuid: UUID, name: String, world: String): Boolean =
+        runCatching {
+            api().profileDataSource.listPlayerProfileNames(ContainerType.WORLD, world)
+                .any { it.equals(name, ignoreCase = true) }
+        }.getOrDefault(false)
+
+    fun read(uuid: UUID, name: String, group: String, kind: io.github.misdocumeno.domain.InventoryKind): io.github.misdocumeno.domain.Snapshot =
+        readContainer(ContainerType.GROUP, group, uuid, name, kind)
+
+    /**
+     * Fallback for a player who has not logged in since MVI was installed: the
+     * group cache does not exist yet, but the per-world profile (written by MVI)
+     * may. Reading it is safe; writing still goes to the group profile.
+     */
+    fun readWorld(uuid: UUID, name: String, world: String, kind: io.github.misdocumeno.domain.InventoryKind): io.github.misdocumeno.domain.Snapshot =
+        readContainer(ContainerType.WORLD, world, uuid, name, kind)
+
+    private fun readContainer(
+        container: ContainerType,
+        dataName: String,
+        uuid: UUID,
+        name: String,
+        kind: io.github.misdocumeno.domain.InventoryKind,
+    ): io.github.misdocumeno.domain.Snapshot {
+        val profile = loadProfile(container, dataName, uuid, name)
         val items = ArrayList<ItemStack?>(kind.size)
         when (kind) {
             io.github.misdocumeno.domain.InventoryKind.INVENTORY -> {
@@ -100,8 +120,15 @@ class MviBridge(@Suppress("unused") private val plugin: Plugin) {
         group: String,
         kind: io.github.misdocumeno.domain.InventoryKind,
         changed: Map<Int, ItemStack?>,
+        seed: io.github.misdocumeno.domain.Snapshot? = null,
     ) {
-        val profile = loadProfile(uuid, name, group)
+        // A player who has not joined since MVI was installed has no group cache.
+        // If the session was read from their world profile, copy that whole profile
+        // first; otherwise applying only the viewer's deltas to an empty profile
+        // would erase the rest of the inventory at the next login.
+        val groupExists = hasProfile(uuid, name, group)
+        val profile = loadProfile(ContainerType.GROUP, group, uuid, name)
+        if (!groupExists && seed != null) seedProfile(profile, kind, seed)
         when (kind) {
             io.github.misdocumeno.domain.InventoryKind.INVENTORY -> {
                 val storage = MviArrays.copy(profile.get(Sharables.INVENTORY), 36)
@@ -138,8 +165,32 @@ class MviBridge(@Suppress("unused") private val plugin: Plugin) {
         api().profileCacheManager.clearPlayerProfileCache { it.playerUUID == uuid }
     }
 
-    private fun loadProfile(uuid: UUID, name: String, group: String): PlayerProfile {
-        val key = ProfileKey.of(ContainerType.GROUP, group, ProfileTypes.getDefault(), uuid, name)
+    private fun seedProfile(
+        profile: PlayerProfile,
+        kind: io.github.misdocumeno.domain.InventoryKind,
+        seed: io.github.misdocumeno.domain.Snapshot,
+    ) {
+        when (kind) {
+            io.github.misdocumeno.domain.InventoryKind.INVENTORY -> {
+                val storage = arrayOfNulls<ItemStack>(36)
+                for (i in 0 until 36) storage[i] = seed.items.getOrNull(i)?.clone()
+                val armor = arrayOfNulls<ItemStack>(4)
+                for (i in 0 until 4) armor[i] = seed.items.getOrNull(36 + i)?.clone()
+                profile.set(Sharables.INVENTORY, storage)
+                profile.set(Sharables.ARMOR, armor)
+                profile.set(Sharables.OFF_HAND, seed.items.getOrNull(40)?.clone())
+            }
+
+            io.github.misdocumeno.domain.InventoryKind.ENDER_CHEST -> {
+                val ender = arrayOfNulls<ItemStack>(27)
+                for (i in 0 until 27) ender[i] = seed.items.getOrNull(i)?.clone()
+                profile.set(Sharables.ENDER_CHEST, ender)
+            }
+        }
+    }
+
+    private fun loadProfile(container: ContainerType, dataName: String, uuid: UUID, name: String): PlayerProfile {
+        val key = ProfileKey.of(container, dataName, ProfileTypes.getDefault(), uuid, name)
         return api().profileDataSource.getPlayerProfile(key).get(TIMEOUT_SECONDS, TimeUnit.SECONDS)
     }
 

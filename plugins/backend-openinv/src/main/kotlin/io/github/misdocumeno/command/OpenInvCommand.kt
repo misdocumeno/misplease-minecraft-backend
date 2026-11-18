@@ -91,9 +91,16 @@ class OpenInvCommand(
     }
 
     private fun resolveOffline(name: String): Pair<java.util.UUID, String>? {
+        // Registration list first: it knows players whose playerdata is not on this
+        // backend yet and does not depend on hasPlayedBefore (broken on the new
+        // world/players/data layout, which made every offline player "unknown").
+        plugin.lastSessions.findByName(name)?.let { return it.uuid to it.name }
         plugin.mvi.findByName(name)?.let { return it }
+        plugin.knownPlayers()
+            .firstOrNull { it.name.equals(name, ignoreCase = true) }
+            ?.let { return it.uuid to it.name }
         val offline = runCatching { Bukkit.getOfflinePlayer(name) }.getOrNull() ?: return null
-        if (!offline.hasPlayedBefore()) return null
+        if (!offline.hasPlayedBefore() && !offline.isOnline) return null
         return offline.uniqueId to (offline.name ?: name)
     }
 
@@ -116,15 +123,15 @@ class OpenInvCommand(
         return when (args.size) {
             1 -> {
                 val partial = args[0]
-                val names = buildSet {
-                    Bukkit.getOnlinePlayers().forEach { add(it.name) }
-                    plugin.mvi.names().forEach { add(it) }
-                    if (kind == InventoryKind.INVENTORY && "reload".startsWith(partial, ignoreCase = true)) {
-                        add("reload")
-                    }
+                // Insertion order is the suggestion order: online players first, then
+                // the registered list by last connection (the DB snapshot).
+                val names = LinkedHashSet<String>()
+                Bukkit.getOnlinePlayers().map { it.name }.sorted().forEach { names.add(it) }
+                plugin.knownPlayers().forEach { names.add(it.name) }
+                if (kind == InventoryKind.INVENTORY && "reload".startsWith(partial, ignoreCase = true)) {
+                    names.add("reload")
                 }
                 names.filter { it.startsWith(partial, ignoreCase = true) && !it.equals(sender.name, ignoreCase = true) }
-                    .sorted()
             }
 
             2 -> {

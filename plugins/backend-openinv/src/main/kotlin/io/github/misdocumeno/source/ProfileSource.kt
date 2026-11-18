@@ -18,11 +18,13 @@ class ProfileSource(
     private val kind: InventoryKind,
     override val server: String,
     override val group: String,
+    /** Snapshot read from the world profile when the group cache did not exist yet. */
+    private val seed: Snapshot? = null,
 ) : InventorySource {
 
     override val live: Boolean = false
 
     override fun read(): Snapshot = bridge.read(uuid, name, group, kind)
 
-    override fun apply(changed: Map<Int, ItemStack?>) = bridge.apply(uuid, name, group, kind, changed)
+    override fun apply(changed: Map<Int, ItemStack?>) = bridge.apply(uuid, name, group, kind, changed, seed)
 }
