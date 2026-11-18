@@ -69,7 +69,7 @@
     {
       "id": 3,
       "type": "timeseries",
-      "title": "Container memory (working set)",
+      "title": "Container memory (RSS)",
       "datasource": { "type": "prometheus", "uid": "vm" },
       "gridPos": { "h": 9, "w": 12, "x": 0, "y": 8 },
       "fieldConfig": {
@@ -87,7 +87,7 @@
         {
           "refId": "A",
           "legendFormat": "{{name}}",
-          "expr": "sum by (container_label_com_docker_compose_service) (container_memory_working_set_bytes{job=\"cadvisor\"})"
+          "expr": "sum by (container_label_com_docker_compose_service) (container_memory_rss{job=\"cadvisor\"})"
         }
       ]
     },
