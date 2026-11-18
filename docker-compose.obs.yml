@@ -5,13 +5,16 @@
 # treat anything else in that project as an orphan. Nothing here is ever touched
 # by CD, and nothing here restarts the game.
 #
-#   core  (always on, ~300 MB): victoriametrics + victoria-traces + alloy + grafana
+#   core  (always on, ~130 MB): victoriametrics + victoria-traces + alloy
+#   ui    (on demand, +~180 MB): grafana, http://<vm>:3001
 #   logs  (on demand, +~200 MB): victoria-logs, backfilled from docker's files
 #
 # Usage, from the stack root:
-#   docker compose -f docker-compose.obs.yml up -d                 # core
-#   docker compose -f docker-compose.obs.yml --profile logs up -d  # + logs
-#   docker compose -f docker-compose.obs.yml --profile logs down   # back to core
+#   docker compose -f docker-compose.obs.yml up -d                        # core
+#   docker compose -f docker-compose.obs.yml --profile ui up -d           # + Grafana
+#   docker compose -f docker-compose.obs.yml --profile logs up -d         # + logs
+#   docker compose -f docker-compose.obs.yml --profile ui --profile logs up -d
+#   docker compose -f docker-compose.obs.yml --profile ui --profile logs down
 #   docker compose -f docker-compose.obs.yml logs -f alloy
 #
 # Docs: tools/obs/README.md. Reasoning and RAM budget: .local/notes/observability.md
@@ -96,16 +99,19 @@ services:
     mem_limit: 256m
     cpus: 1.0
     ports:
-      # Alloy UI/API for debugging (component health). Loopback only.
+      # OTLP + Alloy API on loopback only, for local debugging and test spans.
+      - 127.0.0.1:4317:4317
+      - 127.0.0.1:4318:4318
       - 127.0.0.1:12345:12345
     networks:
       - default
       - misplease
     logging: *logging
 
-  # --- UI (always on) and logs (on demand) ----------------------------------
-
+  # --- UI (on demand). Grafana alone costs ~170 MB resident; the game stack has
+  # no room to keep it up 24/7, so it is one command away instead.
   grafana:
+    profiles: ["ui"]
     image: grafana/grafana:13.2.6
     container_name: misplease-obs-grafana
     restart: unless-stopped

@@ -9,11 +9,15 @@ into swap.
 | `victoriametrics` | metrics, 48 h | yes |
 | `victoria-traces` | OTLP traces, 14 d | yes (idle until instrumented) |
 | `alloy` | host + container metrics, OTLP receiver | yes |
-| `grafana` | dashboards, LAN `:3000` | yes |
-| `victoria-logs` | logs, 7 d | on demand |
+| `grafana` | dashboards, LAN `:3001` | on demand (`ui`) |
+| `victoria-logs` | logs, 7 d | on demand (`logs`) |
 
-Budget: ~300 MB core, +~200 MB while the log tier is up. Hard `mem_limit`
-per container, so a runaway scraper cannot take the game down with it.
+Measured on prod: core ≈ 130 MB (alloy 87, metrics 36, traces 3). Grafana adds
+~170 MB, VictoriaLogs ~2–20 MB. Every container has a hard `mem_limit`, so a
+runaway scraper or UI cannot take the game down with it.
+
+Grafana is on demand on purpose: 170 MB resident is not free on a VM that already
+swaps, and it holds no data of its own — starting it takes seconds.
 
 ## Use
 
@@ -23,14 +27,17 @@ never touches it and it never restarts the game.
 ```bash
 cd /home/mis/misplease
 
-# core (metrics + traces + Grafana), survives reboots
+# core (metrics + traces), survives reboots
 docker compose -f docker-compose.obs.yml up -d
+
+# + Grafana (UI)
+docker compose -f docker-compose.obs.yml --profile ui up -d
 
 # + VictoriaLogs (the log tier)
 docker compose -f docker-compose.obs.yml --profile logs up -d
 
-# drop the log tier again (its data is kept)
-docker compose -f docker-compose.obs.yml --profile logs down
+# drop them again (their data is kept)
+docker compose -f docker-compose.obs.yml --profile ui --profile logs down
 ```
 
 Grafana: `http://192.168.100.200:3001` (admin / `GRAFANA_ADMIN_PASSWORD` from the
@@ -46,12 +53,12 @@ data. Start the log tier, then backfill:
 python3 tools/obs/import-logs.py --since 48h
 ```
 
-Fields: `_stream` (container), `_msg`, `_time`. Query in Grafana, or with
-`vlogscli`-style HTTP:
+Fields: `container` (stream name), `_msg`, `_time`. Query in Grafana, or with
+LogsQL over HTTP:
 
 ```bash
 curl -s 'http://127.0.0.1:9428/select/logsql/query' \
-  --data-urlencode 'query=_stream:misplease-main "logged in"' \
+  --data-urlencode 'query=container:misplease-main logged in' \
   --data-urlencode 'limit=50'
 ```
 

@@ -55,7 +55,7 @@ def rows(container: str, since: str):
         # docker prints RFC3339Nano, which VictoriaLogs accepts as _time.
         yield {
             "_time": ts,
-            "_stream": container,
+            "container": container,
             "_msg": msg,
         }
 
@@ -63,7 +63,7 @@ def rows(container: str, since: str):
 def post(url: str, batch: list[dict]) -> None:
     body = "\n".join(json.dumps(r, ensure_ascii=False) for r in batch).encode()
     req = urllib.request.Request(
-        f"{url}/insert/jsonline?_stream_fields=_stream",
+        f"{url}/insert/jsonline?_stream_fields=container",
         data=body,
         headers={"Content-Type": "application/stream+json"},
         method="POST",
