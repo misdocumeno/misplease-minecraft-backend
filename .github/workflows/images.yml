@@ -57,40 +57,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # A diff made only of tracked plugin config that the deployer can hot-reload
-      # (or of agent/CI files) needs no image at all. Ask the deployer's own
-      # classifier so config-hot-reload.yml stays the single source of truth.
-      # Any error just falls through to a full build.
-      - id: hotreload
-        if: github.event_name == 'push'
-        continue-on-error: true
-        shell: bash
-        env:
-          BEFORE: ${{ github.event.before }}
-          SHA: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-          if [ -z "$BEFORE" ] || [[ "$BEFORE" =~ ^0+$ ]]; then
-            echo "no usable base commit — build everything"
-            exit 1
-          fi
-          out="$(MISPLEASE_ROOT="$GITHUB_WORKSPACE" python3 tools/deploy/agent.py classify "$BEFORE" "$SHA" 2>&1)" || exit 1
-          printf '%s\n' "$out"
-          if grep -q 'compose deploy' <<<"$out"; then
-            echo "an image is needed"
-            exit 1
-          fi
-          echo "skip=true" >> "$GITHUB_OUTPUT"
-
       - uses: dorny/paths-filter@v4
         id: filter
         if: github.event_name != 'workflow_dispatch'
         with:
-          # `some` (default) ORs the rules and silently ignores `!` negations, so
-          # the config-hot-reload exclusions below only work with
-          # `some-with-excludes` (v4+). All other filters have no negation, so
-          # this is equivalent to `some` for them.
-          predicate-quantifier: 'some-with-excludes'
           filters: |
             auth:
               - 'services/auth/**'
@@ -116,18 +86,17 @@ jobs:
               - 'plugins/backend-*/**'
             plugins_velocity:
               - 'plugins/velocity-*/**'
-            # Per-server image filters. The `hotreload` step above already skips the
-            # build when the WHOLE diff is config-only; these exclusions only matter
-            # for mixed pushes (e.g. a jar plus one server's config), where that
-            # server's image would otherwise be rebuilt for nothing.
+            # An image only contains the server jar, the locked jars and
+            # entrypoint.sh. Per-server plugin config is bind-mounted at runtime
+            # (/config:ro) and never copied in, so only the lock can change what
+            # is built for a cell. Config edits still trigger this workflow (see
+            # `on.push.paths`) so the deployer learns the new sha, but no cell runs.
             main:
-              - 'infra/minecraft/main/**'
-              - '!infra/minecraft/main/config/plugins/BetterWarps/**'
+              - 'infra/minecraft/main/plugins-lock.yml'
             tech:
-              - 'infra/minecraft/tech/**'
-              - '!infra/minecraft/tech/config/plugins/BetterWarps/**'
+              - 'infra/minecraft/tech/plugins-lock.yml'
             velocity:
-              - 'infra/velocity/**'
+              - 'infra/velocity/plugins-lock.yml'
 
       - id: resolve
         shell: bash
@@ -148,15 +117,8 @@ jobs:
             f_tech='${{ steps.filter.outputs.tech }}'
             f_velocity='${{ steps.filter.outputs.velocity }}'
 
-            # Config-only / agent-only push: the deployer hot-reloads it, no image.
-            if [[ '${{ steps.hotreload.outputs.skip }}' == "true" ]]; then
-              echo "config-only or agent-only diff — no images to build"
-              auth=false
-              main=false
-              tech=false
-              velocity=false
             # Shared docker/lock/workflow or Gradle root → every image.
-            elif [[ "$f_shared" == "true" || "$f_plugins_all" == "true" ]]; then
+            if [[ "$f_shared" == "true" || "$f_plugins_all" == "true" ]]; then
               auth=true
               main=true
               tech=true
