@@ -30,6 +30,10 @@ class OpenInvListener(private val plugin: OpenInvPlugin) : Listener {
         val player = event.whoClicked as? Player ?: return
         val session = plugin.sessions.find(player.uniqueId) ?: return
         if (event.view.topInventory !== session.gui) return
+        if (session.isSettling()) {
+            event.isCancelled = true
+            return
+        }
 
         val top = session.gui
         if (GuiPads.isPad(event.currentItem) || isPadSlot(event.rawSlot, top, session.kind)) {
@@ -59,6 +63,10 @@ class OpenInvListener(private val plugin: OpenInvPlugin) : Listener {
         val player = event.whoClicked as? Player ?: return
         val session = plugin.sessions.find(player.uniqueId) ?: return
         if (event.view.topInventory !== session.gui) return
+        if (session.isSettling()) {
+            event.isCancelled = true
+            return
+        }
 
         val topSize = session.gui.size
         val padSlots = GuiMapping.pads(session.kind).toSet()

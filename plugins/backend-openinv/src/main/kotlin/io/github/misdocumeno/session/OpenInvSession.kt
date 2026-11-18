@@ -64,6 +64,8 @@ class OpenInvSession(
     private var taskId = -1
     private var closed = false
     private var lastTitle: String? = null
+    private var lastOnlineState = initiallyOnline
+    private var settleUntilMillis = 0L
 
     fun start() {
         for (index in 0 until kind.size) {
@@ -86,12 +88,23 @@ class OpenInvSession(
         if (closed) return
         val player = Bukkit.getPlayer(viewer)
         if (player == null || !isOpenFor(player)) return finish(closeView = false)
+        val online = onlineInGroup()
+        if (online != lastOnlineState) {
+            // MVI applies the group profile on the join tick; pause the mirror
+            // for 2s so a stale/empty .dat can never be mirrored and duplicated.
+            lastOnlineState = online
+            settleUntilMillis = System.currentTimeMillis() + SETTLE_MILLIS
+        }
         notifyState(player)
         refresh(player)
     }
 
+    /** True right after an online/offline switch: interactions are paused. */
+    fun isSettling(): Boolean = System.currentTimeMillis() < settleUntilMillis
+
     /** Reconciles the mirror with its source. Never writes by itself. */
     private fun refresh(player: Player) {
+        if (isSettling()) return
         val source = resolveSource()
         if (source.live) {
             runCatching { source.read() }.onSuccess { merge(it) }
@@ -127,7 +140,7 @@ class OpenInvSession(
 
     /** Diffs the GUI against the last acked state and writes the difference. */
     fun syncNow() {
-        if (closed) return
+        if (closed || isSettling()) return
         val changed = LinkedHashMap<Int, ItemStack?>()
         for (index in 0 until kind.size) {
             val slot = GuiMapping.toGui(kind, index) ?: continue
@@ -268,5 +281,10 @@ class OpenInvSession(
         if (a == null || a.type.isAir) return b == null || b.type.isAir
         if (b == null || b.type.isAir) return false
         return a.amount == b.amount && a.isSimilar(b)
+    }
+
+    private companion object {
+        /** MVI applies the group profile right after join; stay read-only briefly. */
+        const val SETTLE_MILLIS = 2000L
     }
 }

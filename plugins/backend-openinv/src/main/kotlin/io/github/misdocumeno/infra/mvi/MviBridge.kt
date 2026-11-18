@@ -128,6 +128,12 @@ class MviBridge(@Suppress("unused") private val plugin: Plugin) {
             }
         }
         api().profileDataSource.updatePlayerProfile(profile).get(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        // save_load_on_log_in_out is false: Paper loads vanilla playerdata on join and
+        // MVI only applies a group profile when loadOnLogin is set. Without this flag an
+        // offline edit would be overwritten by the stale .dat at the next login.
+        api().profileDataSource
+            .modifyGlobalProfile(GlobalProfileKey.of(uuid, name)) { it.setLoadOnLogin(true) }
+            .get(TIMEOUT_SECONDS, TimeUnit.SECONDS)
         // Next read (refresh, login) must not see the pre-write cached profile.
         api().profileCacheManager.clearPlayerProfileCache { it.playerUUID == uuid }
     }
