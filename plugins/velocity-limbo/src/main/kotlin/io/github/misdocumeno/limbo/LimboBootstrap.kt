@@ -11,6 +11,7 @@ import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
 import net.elytrium.limboapi.api.Limbo
 import net.elytrium.limboapi.api.LimboFactory
+import net.elytrium.limboapi.api.command.LimboCommandMeta
 import net.elytrium.limboapi.api.player.GameMode
 import org.slf4j.Logger
 
@@ -31,15 +32,32 @@ class LimboBootstrap(
         val factory = limboApi.instance.orElse(null) as? LimboFactory
             ?: error("limboapi is registered but does not expose a LimboFactory")
 
+        val world = LimboWorlds.platform(factory)
         val limbo: Limbo = factory
-            .createLimbo(LimboWorlds.platform(factory))
+            .createLimbo(world)
             .setName("limbo")
             .setGameMode(GameMode.ADVENTURE)
             .setViewDistance(4)
             .setSimulationDistance(2)
             // Authenticated players leave for a real backend; never pull them back.
             .setShouldRejoin(false)
-            .setShouldRespawn(false)
+            // Keep this true: `shouldRespawn` is what makes LimboAPI send the
+            // position + spawn chunks on join. Turning it off leaves the client
+            // on "Loading terrain" until it gives up and drops into the void.
+            .setShouldRespawn(true)
+            // Declare it in the limbo command tree, otherwise the client treats
+            // `/login` as unknown (LimboAPI still routes the packet to onChat).
+            .registerCommand(LimboCommandMeta(listOf("login")))
+
+        logger.info(
+            "limbo world: {} chunks, spawn {}/{}/{}, block at y={} is {}",
+            world.chunks.size,
+            world.spawnX,
+            world.spawnY,
+            world.spawnZ,
+            LimboWorlds.FLOOR_Y,
+            world.getBlock(0, LimboWorlds.FLOOR_Y, 0).modernStringID.ifEmpty { "air" },
+        )
 
         val api: LoginApi = KtorLoginApi(
             HttpClient(CIO) {
@@ -48,6 +66,7 @@ class LimboBootstrap(
                 install(HttpTimeout) { requestTimeoutMillis = 10_000 }
             },
             System.getenv("AUTH_URL")?.takeIf { it.isNotBlank() } ?: "http://auth:3000",
+            logger,
         )
         val entryServer = System.getenv("LIMBO_ENTRY_SERVER")?.takeIf { it.isNotBlank() } ?: "main"
         val timeoutSeconds = System.getenv("LIMBO_LOGIN_TIMEOUT_SECONDS")?.toLongOrNull() ?: 120L

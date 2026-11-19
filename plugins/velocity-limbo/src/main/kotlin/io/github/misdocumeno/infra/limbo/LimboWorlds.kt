@@ -15,7 +15,7 @@ import net.elytrium.limboapi.api.chunk.VirtualWorld
 object LimboWorlds {
 
     private const val RADIUS = 4
-    private const val FLOOR_Y = 64
+    const val FLOOR_Y = 64
 
     fun platform(factory: LimboFactory): VirtualWorld {
         val world = factory.createVirtualWorld(
