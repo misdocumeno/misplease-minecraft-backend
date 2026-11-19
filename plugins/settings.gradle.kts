@@ -37,6 +37,7 @@ include(
     "velocity-chat-control",
     "velocity-global-teleporter",
     "velocity-last-session",
+    "velocity-limbo",
     "backend-last-session",
     "backend-openinv",
     "velocity-maintenance",
