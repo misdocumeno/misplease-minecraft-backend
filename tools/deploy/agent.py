@@ -551,6 +551,8 @@ def container_for(server: str) -> str:
 # The agent re-execs itself so the new Python process loads.
 _AGENT_ONLY_GLOBS = [
     "tools/deploy/**",
+    # The hibernate agent is its own container (restarted below), never a game jar.
+    "tools/hibernate/**",
     # CI wiring: changes what the pipeline does, never what the running servers do.
     ".github/**",
     ".env.example",
@@ -667,6 +669,30 @@ def reload_agent_process() -> None:
     script = str(Path(__file__).resolve())
     log(f"re-exec agent to load {script}")
     os.execv(sys.executable, [sys.executable, "-u", script, "run"])
+
+
+HIBERNATE_CONTAINER = os.environ.get("HIBERNATE_CONTAINER", "misplease-hibernate")
+
+
+def reload_hibernate() -> None:
+    """Restart the hibernate agent so `tools/hibernate/agent.py` is re-read.
+
+    It runs `python /app/agent.py` from a bind mount, so a compose `up -d` does
+    not recreate it when the script changes (same image, same service config).
+    Cheap and safe: the agent reconciles frozen state from Docker on start.
+    """
+    r = subprocess.run(
+        ["docker", "inspect", "-f", "{{.State.Running}}", HIBERNATE_CONTAINER],
+        cwd=str(ROOT),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if r.stdout.strip() != "true":
+        log(f"{HIBERNATE_CONTAINER} not running - nothing to reload")
+        return
+    log(f"restarting {HIBERNATE_CONTAINER} to load tools/hibernate")
+    run(["docker", "restart", HIBERNATE_CONTAINER], check=False)
 
 
 def _safe_rel(rel: str) -> str:
@@ -854,6 +880,7 @@ def apply_config_hot_reload(sha: str, actions: list[dict[str, Any]]) -> bool:
             st["applying"] = False
             save_state(st)
             log(f"agent-only/git-pin OK {sha} — re-exec agent")
+            reload_hibernate()
             reload_agent_process()
             return True
 
@@ -1120,6 +1147,7 @@ def apply_compose(sha: str) -> bool:
             st["applying"] = False
             save_state(st)
             maintenance_clear()
+            reload_hibernate()
             log(f"compose apply OK {sha}")
             return True
 

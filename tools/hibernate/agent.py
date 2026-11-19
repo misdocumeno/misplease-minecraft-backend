@@ -22,9 +22,9 @@ Measured on prod (main, 3.4 GiB, 2026-11-19): frozen 122 MiB, host available
 +2.4 GiB, thaw 1.2 s. Reclaim is the slow part (~45 s for 3 GiB), so it is
 chunked and can be interrupted by a wake request.
 
-Refusals (log and stay awake): no presence data or stale presence, a deploy
-pending (`wanted != applied`), maintenance on, a restic backup running, a wake
-request pending, HIBERNATE_DRY_RUN=1.
+Refusals (log and stay awake): no presence data, a deploy pending
+(`wanted != applied`), maintenance on, a restic backup running, a wake request
+pending, a missing RCON password, HIBERNATE_DRY_RUN=1.
 """
 
 from __future__ import annotations
@@ -34,14 +34,15 @@ import os
 import subprocess
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 POLL_SECONDS = float(os.getenv("HIBERNATE_POLL_SECONDS", "15"))
 AFTER_SECONDS = float(os.getenv("HIBERNATE_AFTER_SECONDS", "600"))
 SERVERS = [s.strip() for s in os.getenv("HIBERNATE_SERVERS", "main,tech").split(",") if s.strip()]
-DRY_RUN = os.getenv("HIBERNATE_DRY_RUN", "0") == "1"
+# Default to logging only: arming is an explicit `HIBERNATE_DRY_RUN=0`.
+DRY_RUN = os.getenv("HIBERNATE_DRY_RUN", "1") == "1"
 RECLAIM_STEP_MB = int(os.getenv("HIBERNATE_RECLAIM_STEP_MB", "512"))
-PRESENCE_MAX_AGE = float(os.getenv("HIBERNATE_PRESENCE_MAX_AGE", "30"))
 
 STATE_KEY = "misplease:hibernate:state"
 WAKE_PREFIX = "misplease:hibernate:wake:"
@@ -123,21 +124,38 @@ def rcon_ready(server: str) -> bool:
         return False
 
 
-def empty_servers(presence: dict | None) -> set[str] | None:
-    """Names that currently have no players, or None if the data is unusable."""
-    if not presence:
-        return None
-    try:
-        updated = presence.get("updatedAt")
-        if updated:
-            # ISO-8601 with Z; only the age matters.
-            from datetime import datetime, timezone
+def presence_age(presence: dict) -> float:
+    """Seconds since the proxy last published presence.
 
-            then = datetime.fromisoformat(updated.replace("Z", "+00:00"))
-            age = (datetime.now(timezone.utc) - then).total_seconds()
-            if age > PRESENCE_MAX_AGE:
-                return None
+    `velocity-presence` writes on boot, join, switch and leave, so this is how
+    long the current (empty) state has been true - not a heartbeat. Same reading
+    as `empty_age_seconds` in `tools/deploy/agent.py`.
+    """
+    raw = presence.get("updatedAt") or ""
+    try:
+        text = raw.replace("Z", "+00:00")
+        if "." in text:
+            head, rest = text.split(".", 1)
+            frac = ""
+            tz = "+00:00"
+            for i, ch in enumerate(rest):
+                if ch.isdigit():
+                    frac += ch
+                else:
+                    tz = rest[i:]
+                    break
+            text = f"{head}.{(frac + '000000')[:6]}{tz}"
+        then = datetime.fromisoformat(text)
     except Exception:
+        return 0.0
+    if then.tzinfo is None:
+        then = then.replace(tzinfo=timezone.utc)
+    return max(0.0, (datetime.now(timezone.utc) - then).total_seconds())
+
+
+def empty_servers(presence: dict | None) -> set[str] | None:
+    """Names that currently have no players, or None if there is no data at all."""
+    if not presence:
         return None
     occupied = presence.get("servers") or {}
     return {name for name in SERVERS if int(occupied.get(name, 0)) == 0}
@@ -259,27 +277,29 @@ def thaw(server: str) -> None:
 def tick() -> None:
     presence = read_json(PRESENCE_KEY)
     empty = empty_servers(presence)
+    # 0 when presence is missing/unparseable; seeding then falls back to "wait
+    # AFTER_SECONDS from now".
+    age = presence_age(presence) if presence else 0.0
     state = read_json(STATE_KEY) or {}
 
     for server in SERVERS:
-        current = state.get(server, "awake")
-        published[server] = current
+        published[server] = state.get(server, "awake")
 
     for server in SERVERS:
-        if published.get(server) != "asleep":
-            continue
-        # Something outside this agent may have thawed it (a deploy unpauses
-        # every backend before `compose up`); trust Docker over our own state.
-        try:
-            if not is_paused(server):
-                log(f"{server}: no longer paused, publishing awake")
-                set_state(server, "awake")
+        if published.get(server) == "asleep":
+            # Something outside this agent may have thawed it (a deploy unpauses
+            # every backend before `compose up`); trust Docker over our state.
+            try:
+                if not is_paused(server):
+                    log(f"{server}: no longer paused, publishing awake")
+                    set_state(server, "awake")
+                    continue
+            except Exception as e:
+                log(f"{server}: cannot read paused state: {e}")
                 continue
-        except Exception as e:
-            log(f"{server}: cannot read paused state: {e}")
+            if wake_requested(server):
+                thaw(server)
             continue
-        if wake_requested(server):
-            thaw(server)
 
         if empty is None:
             empty_since.pop(server, None)
@@ -291,7 +311,10 @@ def tick() -> None:
                 set_state(server, "awake")
             continue
 
-        since = empty_since.setdefault(server, time.monotonic())
+        # Seed from the presence timestamp: it is written when the last player
+        # left, so a backend that emptied before this agent started still
+        # freezes on the first tick instead of waiting another full period.
+        since = empty_since.setdefault(server, time.monotonic() - age)
         idle = time.monotonic() - since
         if idle < AFTER_SECONDS:
             continue
@@ -305,6 +328,8 @@ def tick() -> None:
             reason = "backup running"
         elif wake_requested(server):
             reason = "wake requested"
+        elif not RCON_PASSWORD:
+            reason = "no RCON password"
         if reason:
             log(f"{server}: empty {idle:.0f}s but {reason}, staying awake")
             continue
