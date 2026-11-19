@@ -44,6 +44,9 @@ SERVERS = [s.strip() for s in os.getenv("HIBERNATE_SERVERS", "main,tech").split(
 # Default to logging only: arming is an explicit `HIBERNATE_DRY_RUN=0`.
 DRY_RUN = os.getenv("HIBERNATE_DRY_RUN", "1") == "1"
 RECLAIM_STEP_MB = int(os.getenv("HIBERNATE_RECLAIM_STEP_MB", "512"))
+# Stop reclaiming here: below this the JVM keeps native/direct pages that cannot
+# be reclaimed anyway, and every extra MiB is swap-file IO on the way back in.
+RECLAIM_FLOOR_MB = int(os.getenv("HIBERNATE_RECLAIM_FLOOR_MB", "192"))
 
 STATE_KEY = "misplease:hibernate:state"
 WAKE_PREFIX = "misplease:hibernate:wake:"
@@ -256,28 +259,46 @@ def freeze(server: str) -> None:
         log(f"{server}: pause failed: {res.stderr.strip()}")
         return
     set_state(server, "asleep")
+    reclaim(server)
 
-    cg = cgroup_dir(server)
-    total = 0
+
+def reclaim(server: str) -> None:
+    """Push anon pages out of RAM in steps, stopping at the floor or a wake.
+
+    Root-only (`memory.reclaim`), hence the root container. Steps keep the host
+    responsive; the spike on 2026-11-19 measured ~45 s for 3 GiB in one blast.
+    """
     try:
-        while True:
-            if wake_requested(server):
-                log(f"{server}: wake requested during reclaim, stopping reclaim")
-                break
-            before = int((cg / "memory.current").read_text().strip())
-            if before < RECLAIM_STEP_MB * 1024 * 1024:
-                break
-            try:
-                (cg / "memory.reclaim").write_text(str(RECLAIM_STEP_MB * 1024 * 1024))
-            except OSError as e:
-                log(f"{server}: reclaim stopped: {e}")
-                break
-            total += RECLAIM_STEP_MB
-            log(f"{server}: reclaimed {total} MiB (current "
-                f"{int((cg / 'memory.current').read_text().strip()) // (1024 * 1024)} MiB)")
-    finally:
+        cg = cgroup_dir(server)
+    except Exception as e:
+        log(f"{server}: cannot resolve cgroup: {e}")
+        return
+    floor = RECLAIM_FLOOR_MB * 1024 * 1024
+    step = RECLAIM_STEP_MB * 1024 * 1024
+    done = 0
+    while True:
+        if wake_requested(server):
+            log(f"{server}: wake requested during reclaim, stopping")
+            break
+        try:
+            current = int((cg / "memory.current").read_text().strip())
+        except OSError as e:
+            log(f"{server}: reclaim stopped: {e}")
+            break
+        if current <= floor:
+            break
+        try:
+            (cg / "memory.reclaim").write_text(str(step))
+        except OSError as e:
+            log(f"{server}: reclaim stopped: {e}")
+            break
+        done += RECLAIM_STEP_MB
+        log(f"{server}: reclaimed {done} MiB (current {current // (1024 * 1024)} MiB)")
+    try:
         current = int((cg / "memory.current").read_text().strip()) // (1024 * 1024)
         log(f"{server}: asleep, memory.current {current} MiB")
+    except OSError:
+        pass
 
 
 def thaw(server: str) -> None:
@@ -324,6 +345,19 @@ def tick() -> None:
                 continue
             if wake_requested(server):
                 thaw(server)
+                continue
+            # Keep converging: a freeze that stopped early (agent restarted, or
+            # the host was busy) finishes here instead of waiting for a replay.
+            # Skipped while a deploy is queued, since that unpauses it anyway.
+            if not deploy_pending() and not backup_running():
+                try:
+                    cg = cgroup_dir(server)
+                    current = int((cg / "memory.current").read_text().strip())
+                except Exception:
+                    current = 0
+                if current > RECLAIM_FLOOR_MB * 1024 * 1024:
+                    log(f"{server}: asleep with {current // (1024 * 1024)} MiB, reclaiming")
+                    reclaim(server)
             continue
 
         if empty is None:
@@ -368,7 +402,7 @@ def tick() -> None:
 
 def run() -> None:
     log(f"hibernate agent: servers={SERVERS} after={AFTER_SECONDS:.0f}s "
-        f"step={RECLAIM_STEP_MB} MiB dry_run={DRY_RUN}")
+        f"step={RECLAIM_STEP_MB} MiB floor={RECLAIM_FLOOR_MB} MiB dry_run={DRY_RUN}")
     if not RCON_PASSWORD:
         log("RCON_PASSWORD is empty: freezing is disabled")
     while True:
