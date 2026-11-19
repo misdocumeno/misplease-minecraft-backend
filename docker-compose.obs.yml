@@ -112,7 +112,7 @@ services:
   # no room to keep it up 24/7, so it is one command away instead.
   grafana:
     profiles: ["ui"]
-    image: grafana/grafana:13.2.6
+    image: grafana/grafana:13.2
     container_name: misplease-obs-grafana
     restart: unless-stopped
     environment:

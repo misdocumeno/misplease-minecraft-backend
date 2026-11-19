@@ -209,7 +209,7 @@ services:
   # Static host for Paper resource-pack URL (server.properties → :24256/...).
   # Zip lives under main data/state (not in git); cutover/restic keep it on the VM.
   resource-pack:
-    image: nginx:1-alpine
+    image: nginx:stable-alpine
     container_name: misplease-resource-pack
     restart: unless-stopped
     volumes:

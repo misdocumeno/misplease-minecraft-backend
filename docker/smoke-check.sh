@@ -48,6 +48,10 @@ for _ in $(seq 1 30); do
   sleep 1
 done
 
+# LibertyBans keeps its own database (created out of band on prod, runtime state).
+# Without it the proxy logs an ERROR and the generic ERROR gate below goes red.
+docker exec "$DB" psql -U misplease -d misplease -c 'CREATE DATABASE libertybans' >/dev/null
+
 # Heap stays small for CI. Non-heap flags match prod main today, plus preferSparkPlugin
 # for the baked-image stack. Sources: docker-compose*.yml, .env.example, live prod cmdline.
 JVM_OPTS="-Xms256M -Xmx${HEAP_MX} -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC -Dorg.maxgamer.quickshop.util.envcheck.skip.SIGNATURE_VERIFY -Dpaper.preferSparkPlugin=true --add-modules=jdk.incubator.vector"
@@ -126,6 +130,25 @@ if grep -E "$FAIL_RE" "$LOG" >/tmp/smoke-errors.txt; then
   cat /tmp/smoke-errors.txt >&2
   echo "---- stack context ----" >&2
   grep -A 40 -E "$FAIL_RE" "$LOG" >&2 || true
+  echo "---- last 60 log lines ----" >&2
+  tail -n 60 "$LOG" >&2
+  exit 1
+fi
+
+# Generic gate: no [ERROR]/[SEVERE] may appear during boot. A plugin that throws
+# from an init/event handler keeps the process alive and exits 0, so the log is the
+# only signal - this catches wordings we did not predict.
+# The allowlist is empty on purpose: fix the cause (e.g. create the missing DB)
+# instead of silencing a class of errors. If an expected one is unavoidable, add a
+# narrow pattern below with a comment saying why.
+ERROR_LINE_RE='(\[|[[:space:]/])(ERROR|SEVERE)\]'
+ERROR_ALLOW_RE='a^'
+grep -E "$ERROR_LINE_RE" "$LOG" | grep -vE "$ERROR_ALLOW_RE" >/tmp/smoke-error-lines.txt || true
+if [ -s /tmp/smoke-error-lines.txt ]; then
+  echo "smoke failed: unexpected ERROR lines" >&2
+  cat /tmp/smoke-error-lines.txt >&2
+  echo "---- first error context ----" >&2
+  grep -A 30 -m1 -E "$ERROR_LINE_RE" "$LOG" >&2 || true
   echo "---- last 60 log lines ----" >&2
   tail -n 60 "$LOG" >&2
   exit 1
