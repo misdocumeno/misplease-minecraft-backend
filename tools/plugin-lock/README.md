@@ -38,16 +38,3 @@ server. Only the lock is consumed by CI/prod.
 Delete the entry from `plugins.yml` and run the same `update` command. The lock
 row disappears; the next image no longer contains the jar. Runtime data under
 `infra/**/data/` is untouched.
-
-## Rules
-
-- Never copy a jar by hand onto the VM, into `infra/**/data/`, or into the image.
-  A jar that is not in the lock does not exist as far as prod is concerned.
-- Never edit `plugins-lock.yml` by hand. It is generated.
-- A plugin that is a hard `@Plugin(dependencies = ...)` requirement must be added
-  here first; the proxy/server will otherwise refuse to load the dependent plugin
-  (that is intentional, and the smoke gate catches it before prod).
-- Re-uploading an asset under an existing tag gives it a new asset id and breaks
-  the lock; cut a new tag and re-run `--only`.
-- Own plugins are **not** in the lock: their jars are compiled from `plugins/`
-  during the image build (`PLUGIN_PREFIX`).

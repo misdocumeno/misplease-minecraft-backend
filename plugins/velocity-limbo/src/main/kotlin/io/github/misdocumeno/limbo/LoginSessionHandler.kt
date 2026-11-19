@@ -32,6 +32,12 @@ class LoginSessionHandler(
 
     private val mm = MiniMessage.miniMessage()
     private val done = AtomicBoolean(false)
+
+    /**
+     * Floodgate prefixes Bedrock proxy usernames (`.` in `floodgate/config.yml`);
+     * the auth service stores the unprefixed name (same strip as velocity-auth-adapter).
+     */
+    private val authUsername = player.username.removePrefix(FLOODGATE_PREFIX)
     private var attempts = 0
     private var timeoutTask: ScheduledTask? = null
 
@@ -75,7 +81,7 @@ class LoginSessionHandler(
 
     private fun authenticate(password: String) {
         if (done.get()) return
-        when (val result = runBlocking { api.login(player.username, password) }) {
+        when (val result = runBlocking { api.login(authUsername, password) }) {
             LoginResult.SUCCESS -> {
                 if (!done.compareAndSet(false, true)) return
                 timeoutTask?.cancel()
@@ -108,5 +114,8 @@ class LoginSessionHandler(
 
     private companion object {
         const val MAX_ATTEMPTS = 5
+
+        /** Keep in sync with `username-prefix` in `infra/velocity/config/plugins/floodgate/config.yml`. */
+        const val FLOODGATE_PREFIX = "."
     }
 }
