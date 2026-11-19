@@ -41,7 +41,7 @@ docker compose -f docker-compose.obs.yml --profile logs up -d
 docker compose -f docker-compose.obs.yml stop grafana victoria-logs
 ```
 
-Grafana: `http://192.168.100.200:3001` (admin / `GRAFANA_ADMIN_PASSWORD` from the
+Grafana: `http://<prod-vm>:3001` (admin / `GRAFANA_ADMIN_PASSWORD` from the
 stack `.env`). Metrics, traces and logs are **not** published beyond the host;
 they listen on `127.0.0.1` (`8428` metrics, `10428` traces, `9428` logs).
 
