@@ -18,6 +18,9 @@ directly:
     misplease:hibernate:state          JSON {"main": "asleep", "tech": "awake"}
     misplease:hibernate:wake:<server>  set by velocity-wake, deleted on thaw
 
+While anything sleeps the loop watches those keys once a second, because a
+player's connect is waiting inside Velocity's `connection-timeout` (10 s).
+
 Measured on prod (main, 3.4 GiB, 2026-11-19): frozen 122 MiB, host available
 +2.4 GiB, thaw 1.2 s. Reclaim is the slow part (~45 s for 3 GiB), so it is
 chunked and can be interrupted by a wake request.
@@ -39,6 +42,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 POLL_SECONDS = float(os.getenv("HIBERNATE_POLL_SECONDS", "15"))
+# While something sleeps, watch the wake keys this often instead of POLL_SECONDS.
+WAKE_POLL_SECONDS = float(os.getenv("HIBERNATE_WAKE_POLL_SECONDS", "1"))
 AFTER_SECONDS = float(os.getenv("HIBERNATE_AFTER_SECONDS", "600"))
 SERVERS = [s.strip() for s in os.getenv("HIBERNATE_SERVERS", "main,tech").split(",") if s.strip()]
 # Default to logging only: arming is an explicit `HIBERNATE_DRY_RUN=0`.
@@ -309,6 +314,10 @@ def thaw(server: str) -> None:
         log(f"{server}: unpause failed: {res.stderr.strip()}")
         return
     set_state(server, "awake")
+    # Restart the idle clock. Presence only changes when someone joins or leaves,
+    # so it still says "empty since hours ago" right after a wake; without this a
+    # thawed server freezes again on the next tick, in the middle of the join.
+    empty_since[server] = time.monotonic()
     started = time.monotonic()
     while time.monotonic() - started < 60:
         if rcon_ready(server):
@@ -400,6 +409,10 @@ def tick() -> None:
         freeze(server)
 
 
+def asleep_now() -> list[str]:
+    return [s for s in SERVERS if published.get(s) == "asleep"]
+
+
 def run() -> None:
     log(f"hibernate agent: servers={SERVERS} after={AFTER_SECONDS:.0f}s "
         f"step={RECLAIM_STEP_MB} MiB floor={RECLAIM_FLOOR_MB} MiB dry_run={DRY_RUN}")
@@ -414,6 +427,19 @@ def run() -> None:
             time.sleep(POLL_SECONDS)
     while True:
         try:
+            sleeping = asleep_now()
+            if sleeping:
+                # A join is waiting: Velocity gives up after
+                # `connection-timeout` (10 s), so the slow poll is too slow for
+                # the wake. One Redis GET per sleeping server per second is
+                # cheaper than any of the docker calls in tick().
+                woke = [s for s in sleeping if wake_requested(s)]
+                if woke:
+                    for server in woke:
+                        thaw(server)
+                else:
+                    time.sleep(WAKE_POLL_SECONDS)
+                    continue
             tick()
         except Exception as e:
             log(f"tick failed: {type(e).__name__}: {e}")
