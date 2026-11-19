@@ -27,6 +27,37 @@ fun sha256(file: File): String {
     return digest.digest().joinToString("") { "%02X".format(it) }
 }
 
+// Velocity proxy internals (com.velocitypowered.proxy.*) are needed for the self
+// skin-metadata packet: `MinecraftPacket` and `ProtocolUtils`. They are not
+// published as an API artifact, so we compile against the exact jar the proxy
+// runs. The sha256 is also the fill-data object id; keep it in sync with
+// `server:` in infra/velocity/plugins-lock.yml.
+val velocityVersion = "4.3.1"
+val velocityBuild = "45"
+val velocityProxySha256 = "0844BCABDCDB4F5B875906FD4C3365BC1BB76918E42BC595ED88AD195258DD75"
+val velocityProxyJar = layout.buildDirectory.file("deps/velocity-proxy-$velocityVersion.jar")
+
+val downloadVelocityProxy = tasks.register("downloadVelocityProxy") {
+    description = "Download the pinned Velocity proxy jar (compileOnly internals)."
+    val target = velocityProxyJar.get().asFile
+    outputs.file(target)
+    doLast {
+        if (target.isFile && sha256(target) == velocityProxySha256) return@doLast
+        target.parentFile.mkdirs()
+        val tmp = File(target.parentFile, target.name + ".part")
+        val url = "https://fill-data.papermc.io/v1/objects/" +
+            "${velocityProxySha256.lowercase()}/velocity-$velocityVersion-$velocityBuild.jar"
+        URI.create(url).toURL().openStream().use { input ->
+            tmp.outputStream().use { output -> input.copyTo(output) }
+        }
+        val actual = sha256(tmp)
+        check(actual == velocityProxySha256) {
+            "velocity-$velocityVersion-$velocityBuild.jar sha256 mismatch: expected $velocityProxySha256, got $actual"
+        }
+        tmp.renameTo(target)
+    }
+}
+
 val downloadLimboApi = tasks.register("downloadLimboApi") {
     description = "Download the pinned LimboAPI release jar (compileOnly API)."
     val target = limboApiJar.get().asFile
@@ -52,10 +83,13 @@ dependencies {
     implementation(libs.ktor.client.cio)
     implementation(libs.kotlinx.serialization.json)
     compileOnly(files(limboApiJar).builtBy(downloadLimboApi))
+    compileOnly(files(velocityProxyJar).builtBy(downloadVelocityProxy))
 }
 
 tasks.shadowJar {
     val libPackage = "${project.group}.shaded"
     relocate("io.ktor.", "$libPackage.io.ktor.")
-    relocate("io.netty.", "$libPackage.io.netty.")
+    // Do NOT relocate io.netty: SelfSkinPacket implements a Velocity interface
+    // whose `encode` takes an `io.netty.buffer.ByteBuf`, and a relocated signature
+    // stops overriding it. Nothing in this jar bundles netty anyway.
 }

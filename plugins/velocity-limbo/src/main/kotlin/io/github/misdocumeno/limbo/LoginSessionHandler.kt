@@ -1,5 +1,6 @@
 package io.github.misdocumeno.limbo
 
+import com.velocitypowered.api.network.ProtocolVersion
 import com.velocitypowered.api.proxy.Player
 import com.velocitypowered.api.scheduler.ScheduledTask
 import com.velocitypowered.api.scheduler.Scheduler
@@ -7,6 +8,7 @@ import io.github.misdocumeno.VelocityLimboPlugin
 import io.github.misdocumeno.domain.LoginApi
 import io.github.misdocumeno.domain.LoginResult
 import io.github.misdocumeno.infra.limbo.LimboWorlds
+import io.github.misdocumeno.infra.limbo.SelfSkinPacket
 import kotlinx.coroutines.runBlocking
 import net.elytrium.limboapi.api.Limbo
 import net.elytrium.limboapi.api.LimboSessionHandler
@@ -14,6 +16,7 @@ import net.elytrium.limboapi.api.player.LimboPlayer
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.title.Title
+import org.slf4j.Logger
 import java.time.Duration
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -31,6 +34,7 @@ class LoginSessionHandler(
     private val api: LoginApi,
     private val onAuthenticated: (LimboPlayer) -> Unit,
     private val timeoutSeconds: Long,
+    private val logger: Logger,
 ) : LimboSessionHandler {
 
     private val mm = MiniMessage.miniMessage()
@@ -47,6 +51,7 @@ class LoginSessionHandler(
 
     override fun onSpawn(server: Limbo, limboPlayer: LimboPlayer) {
         this.limboPlayer = limboPlayer
+        sendSkinLayers(limboPlayer)
         // Same title the backend auth plugin used to show, so the login screen
         // looks identical whether the player is pre- or post-migration.
         player.showTitle(
@@ -67,6 +72,24 @@ class LoginSessionHandler(
             .buildTask(plugin, Runnable { timedOut() })
             .delay(timeoutSeconds, TimeUnit.SECONDS)
             .schedule()
+    }
+
+    /**
+     * 1.21.11+ clients only draw the outer skin layer once the server sends the
+     * local player's own metadata on join; the limbo never does. Version-gated:
+     * we only send packet ids we have verified (see LimboBootstrap.registerPacket).
+     * Floodgate sessions are skipped - Geyser translates the packet, and there is
+     * no reason to hand it a metadata entry it does not need.
+     */
+    private fun sendSkinLayers(limboPlayer: LimboPlayer) {
+        if (player.protocolVersion !in SKIN_PACKET_VERSIONS) return
+        if (player.username.startsWith(FLOODGATE_PREFIX)) return
+        try {
+            limboPlayer.writePacketAndFlush(SelfSkinPacket())
+        } catch (e: Exception) {
+            // Cosmetic only: never let it break the login the player is in.
+            logger.warn("could not send skin layers to {}: {}", player.username, e.message)
+        }
     }
 
     /**
@@ -172,5 +195,14 @@ class LoginSessionHandler(
 
         /** Keep in sync with `username-prefix` in `infra/velocity/config/plugins/floodgate/config.yml`. */
         const val FLOODGATE_PREFIX = "."
+
+        /**
+         * Versions whose Set Entity Metadata id is registered in
+         * [io.github.misdocumeno.limbo.LimboBootstrap]. Add both places together.
+         */
+        val SKIN_PACKET_VERSIONS = setOf(
+            ProtocolVersion.MINECRAFT_1_21_11,
+            ProtocolVersion.MINECRAFT_26_3,
+        )
     }
 }

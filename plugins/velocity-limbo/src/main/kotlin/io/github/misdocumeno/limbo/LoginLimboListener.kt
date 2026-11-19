@@ -46,6 +46,7 @@ class LoginLimboListener(
                         limboPlayer.disconnect()
                     },
                     timeoutSeconds = timeoutSeconds,
+                    logger = logger,
                 ),
             )
         }

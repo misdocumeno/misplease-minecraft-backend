@@ -1,11 +1,13 @@
 package io.github.misdocumeno.limbo
 
+import com.velocitypowered.api.network.ProtocolVersion
 import com.velocitypowered.api.plugin.PluginContainer
 import com.velocitypowered.api.proxy.ProxyServer
 import io.github.misdocumeno.VelocityLimboPlugin
 import io.github.misdocumeno.domain.LoginApi
 import io.github.misdocumeno.infra.http.KtorLoginApi
 import io.github.misdocumeno.infra.limbo.LimboWorlds
+import io.github.misdocumeno.infra.limbo.SelfSkinPacket
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
@@ -13,6 +15,8 @@ import net.elytrium.limboapi.api.Limbo
 import net.elytrium.limboapi.api.LimboFactory
 import net.elytrium.limboapi.api.command.LimboCommandMeta
 import net.elytrium.limboapi.api.player.GameMode
+import net.elytrium.limboapi.api.protocol.PacketDirection
+import net.elytrium.limboapi.api.protocol.packets.PacketMapping
 import org.slf4j.Logger
 
 /**
@@ -50,6 +54,18 @@ class LimboBootstrap(
             // Declare it in the limbo command tree, otherwise the client treats
             // `/login` as unknown (LimboAPI still routes the packet to onChat).
             .registerCommand(LimboCommandMeta(listOf("login")))
+            // See SelfSkinPacket: without this, 1.21.11+ clients draw the player
+            // without the outer skin layer. Ids are per protocol version; versions
+            // we have not verified are deliberately absent and simply not sent.
+            .registerPacket(
+                PacketDirection.CLIENTBOUND,
+                SelfSkinPacket::class.java,
+                { SelfSkinPacket() },
+                arrayOf(
+                    PacketMapping(0x61, ProtocolVersion.MINECRAFT_1_21_11, true),
+                    PacketMapping(0x65, ProtocolVersion.MINECRAFT_26_3, true),
+                ),
+            )
 
         logger.info(
             "limbo world: {} chunks, spawn {}/{}/{}, carpet block is {}",
