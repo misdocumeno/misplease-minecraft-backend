@@ -2,6 +2,7 @@ package io.github.misdocumeno.limbo
 
 import com.velocitypowered.api.plugin.PluginContainer
 import com.velocitypowered.api.proxy.ProxyServer
+import io.github.misdocumeno.VelocityLimboPlugin
 import io.github.misdocumeno.domain.LoginApi
 import io.github.misdocumeno.infra.http.KtorLoginApi
 import io.github.misdocumeno.infra.limbo.LimboWorlds
@@ -9,32 +10,29 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
+import net.elytrium.limboapi.api.Limbo
 import net.elytrium.limboapi.api.LimboFactory
 import net.elytrium.limboapi.api.player.GameMode
 import org.slf4j.Logger
 
 /**
- * Everything that touches LimboAPI.
+ * Wires our login flow onto LimboAPI.
  *
- * Only constructed when the limboapi plugin is present, and deliberately holds
- * **no field** of a LimboAPI type — a field descriptor is resolved while the
- * class is loaded, which would break the proxy on a host without LimboAPI.
- * The limbo lives in [start]'s local scope and is owned by LimboAPI itself.
+ * [VelocityLimboPlugin] declares `limboapi` as a hard dependency, so its classes
+ * are on our classloader and can be used as normal types here.
  */
 class LimboBootstrap(
     private val proxy: ProxyServer,
+    private val plugin: VelocityLimboPlugin,
     private val limboApi: PluginContainer,
     private val logger: Logger,
 ) {
 
     fun start() {
         val factory = limboApi.instance.orElse(null) as? LimboFactory
-        if (factory == null) {
-            logger.error("limboapi has no LimboFactory instance — login limbo disabled")
-            return
-        }
+            ?: error("limboapi is registered but does not expose a LimboFactory")
 
-        val limbo = factory
+        val limbo: Limbo = factory
             .createLimbo(LimboWorlds.platform(factory))
             .setName("limbo")
             .setGameMode(GameMode.ADVENTURE)
@@ -56,7 +54,7 @@ class LimboBootstrap(
             LoginLimboListener(
                 proxy = proxy,
                 scheduler = proxy.scheduler,
-                plugin = this,
+                plugin = plugin,
                 limbo = limbo,
                 api = api,
                 entryServer = entryServer,

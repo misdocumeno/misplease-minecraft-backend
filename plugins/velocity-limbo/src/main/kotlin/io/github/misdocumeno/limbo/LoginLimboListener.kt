@@ -4,6 +4,7 @@ import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.proxy.Player
 import com.velocitypowered.api.proxy.ProxyServer
 import com.velocitypowered.api.scheduler.Scheduler
+import io.github.misdocumeno.VelocityLimboPlugin
 import io.github.misdocumeno.domain.LoginApi
 import net.elytrium.limboapi.api.Limbo
 import net.elytrium.limboapi.api.event.LoginLimboRegisterEvent
@@ -20,7 +21,7 @@ import org.slf4j.Logger
 class LoginLimboListener(
     private val proxy: ProxyServer,
     private val scheduler: Scheduler,
-    private val plugin: Any,
+    private val plugin: VelocityLimboPlugin,
     private val limbo: Limbo,
     private val api: LoginApi,
     private val entryServer: String,

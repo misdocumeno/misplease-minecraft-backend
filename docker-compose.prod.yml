@@ -192,7 +192,7 @@ services:
       - 127.0.0.1:5432:5432
 
   redis:
-    image: redis:8.10-alpine
+    image: redis:8-alpine
     container_name: misplease-redis
     restart: unless-stopped
     command: >
@@ -209,7 +209,7 @@ services:
   # Static host for Paper resource-pack URL (server.properties → :24256/...).
   # Zip lives under main data/state (not in git); cutover/restic keep it on the VM.
   resource-pack:
-    image: nginx:1.27-alpine
+    image: nginx:1-alpine
     container_name: misplease-resource-pack
     restart: unless-stopped
     volumes:
@@ -299,7 +299,7 @@ services:
 
   backup:
     profiles: ["ops"]
-    image: restic/restic:0.18.0
+    image: restic/restic:0
     container_name: misplease-backup
     restart: unless-stopped
     entrypoint: ["/bin/sh", "-c", "apk add --no-cache docker-cli docker-cli-compose >/dev/null && exec /bin/sh /scripts/restic-loop.sh"]

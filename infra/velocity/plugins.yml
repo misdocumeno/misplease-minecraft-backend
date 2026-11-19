@@ -1,4 +1,10 @@
 # Desired set only. Versions live in plugins-lock.yml.
+# Adding/removing a plugin: edit this file, re-lock with
+#   cd tools/plugin-lock && node --experimental-strip-types src/cli.ts update \
+#     --desired ../../infra/velocity/plugins.yml \
+#     --lock ../../infra/velocity/plugins-lock.yml --only <Name>
+# then commit both files. Never place jars by hand on the VM.
+# Full workflow: tools/plugin-lock/README.md
 # server.version = Velocity release *line* (Fill API). Omit build → latest build of that line.
 server:
   source: papermc
@@ -51,3 +57,12 @@ plugins:
     repo: misdocumeno/Floodgate-misplease
     version: v2.2.5-misplease.1
     jar: /^floodgate-sqlite-database\.jar$/
+  # Virtual world for the proxy login limbo. velocity-limbo declares it as a hard
+  # dependency, so this entry must exist before that plugin can load. Not on
+  # Maven: the release jar is also the compile-time API (see the plugin's
+  # build.gradle.kts, pinned to the same 1.2.0 + sha256).
+  - name: LimboAPI
+    source: github
+    repo: Elytrium/LimboAPI
+    version: "1.2.0"
+    jar: /^limboapi-1\.2\.0\.jar$/

@@ -3,6 +3,7 @@ package io.github.misdocumeno.limbo
 import com.velocitypowered.api.proxy.Player
 import com.velocitypowered.api.scheduler.ScheduledTask
 import com.velocitypowered.api.scheduler.Scheduler
+import io.github.misdocumeno.VelocityLimboPlugin
 import io.github.misdocumeno.domain.LoginApi
 import io.github.misdocumeno.domain.LoginResult
 import kotlinx.coroutines.runBlocking
@@ -23,7 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class LoginSessionHandler(
     private val player: Player,
     private val scheduler: Scheduler,
-    private val plugin: Any,
+    private val plugin: VelocityLimboPlugin,
     private val api: LoginApi,
     private val onAuthenticated: (Player) -> Unit,
     private val timeoutSeconds: Long,

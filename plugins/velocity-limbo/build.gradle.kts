@@ -6,9 +6,10 @@ plugins {
     id("misplease.velocity")
 }
 
-// LimboAPI is not published to Maven: the 2.0.0-SNAPSHOT there predates the
-// 1.2.0 plugin release and no longer has the chunk/world API. The release jar
-// carries the API classes, so it is the compileOnly source, pinned by hash.
+// LimboAPI is not published to Maven: 2.0.0-SNAPSHOT on repo.elytrium.net is
+// unreleased master (no 2.x release exists yet) and dropped the chunk/world API
+// used below. The 1.2.0 release jar is both the runtime plugin (plugins.yml +
+// lock) and the compileOnly API, so versions must move together.
 val limboApiVersion = "1.2.0"
 val limboApiSha256 = "25582EBF5567FEC1C20A03AD2C6E01FA05911A76749C67E7B0192ACF508F7D31"
 val limboApiJar = layout.buildDirectory.file("deps/limboapi-$limboApiVersion.jar")
