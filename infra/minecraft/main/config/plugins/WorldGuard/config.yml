@@ -59,7 +59,7 @@ summary-on-start: true
 op-permissions: true
 build-permission-nodes:
     enable: false
-    deny-message: '&5&lMisPlease&8&l >> &7No podés hacer eso acá.'
+    deny-message: '&5&lMisPlease&8&l » &7No podés hacer eso acá.'
 event-handling:
     block-entity-spawns-with-untraceable-cause: false
     interaction-whitelist: []

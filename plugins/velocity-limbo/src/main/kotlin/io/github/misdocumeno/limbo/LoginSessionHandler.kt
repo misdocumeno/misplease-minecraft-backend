@@ -45,7 +45,7 @@ class LoginSessionHandler(
     override fun onSpawn(server: Limbo, limboPlayer: LimboPlayer) {
         this.limboPlayer = limboPlayer
         player.sendMessage(
-            mm.deserialize("<gold><bold>misplease</bold></gold> <gray>·</gray> <white>Ingresá con <yellow>/login <contraseña></yellow></white>"),
+            mm.deserialize("$PREFIX<gray>Ingresá con <white>/login <contraseña></white>.</gray>"),
         )
         timeoutTask = scheduler
             .buildTask(plugin, Runnable { timedOut() })
@@ -58,11 +58,11 @@ class LoginSessionHandler(
 
         val parts = chat.trim().split(Regex("\\s+"))
         if (parts.isEmpty() || !parts[0].equals("/login", ignoreCase = true)) {
-            prompt("Usá <yellow>/login <contraseña></yellow> para entrar.")
+            prompt("Usá <white>/login <contraseña></white> para entrar.")
             return
         }
         if (parts.size < 2) {
-            prompt("Falta la contraseña: <yellow>/login <contraseña></yellow>")
+            prompt("Falta la contraseña: <white>/login <contraseña></white>")
             return
         }
         if (attempts >= MAX_ATTEMPTS) {
@@ -88,7 +88,7 @@ class LoginSessionHandler(
                 if (!done.compareAndSet(false, true)) return
                 timeoutTask?.cancel()
                 player.sendMessage(
-                    mm.deserialize("<green>Sesión iniciada.</green> <gray>Conectando…</gray>"),
+                    mm.deserialize("$PREFIX<gray>Sesión iniciada. Conectando…</gray>"),
                 )
                 val limboPlayer = limboPlayer
                 if (limboPlayer != null) {
@@ -99,7 +99,7 @@ class LoginSessionHandler(
             }
 
             LoginResult.INVALID_CREDENTIALS ->
-                prompt("Contraseña incorrecta. Intentos restantes: <yellow>${MAX_ATTEMPTS - attempts}</yellow>")
+                prompt("Contraseña incorrecta. Intentos restantes: <white>${MAX_ATTEMPTS - attempts}</white>")
 
             LoginResult.UNREACHABLE ->
                 prompt("El servicio de login no responde. Probá de nuevo en unos segundos.")
@@ -108,18 +108,22 @@ class LoginSessionHandler(
 
     private fun timedOut() {
         if (!done.compareAndSet(false, true)) return
-        disconnect("Tiempo agotado. Reconectá e ingresá con <yellow>/login</yellow>.")
+        disconnect("Tiempo agotado. Reconectá e ingresá con <white>/login</white>.")
     }
 
     private fun prompt(text: String) {
-        player.sendMessage(mm.deserialize("<gray>$text</gray>"))
+        player.sendMessage(mm.deserialize("$PREFIX<gray>$text</gray>"))
     }
 
     private fun disconnect(text: String) {
-        player.disconnect(mm.deserialize("<red>$text</red>"))
+        player.disconnect(mm.deserialize("$PREFIX<red>$text</red>"))
     }
 
     private companion object {
+        /** Shared chat prefix; keep in sync with backend-tp-command lang files. */
+        const val PREFIX =
+            "<dark_purple><bold>MisPlease</bold></dark_purple><dark_gray><bold> » </bold></dark_gray>"
+
         const val MAX_ATTEMPTS = 5
 
         /** Keep in sync with `username-prefix` in `infra/velocity/config/plugins/floodgate/config.yml`. */

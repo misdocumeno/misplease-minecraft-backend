@@ -38,6 +38,9 @@ object LimboWorlds {
         }
 
         world.fillSkyLight(15)
+        // Sky light alone leaves the platform near-black on 26.x: the dimension
+        // type carries its own light attributes, so fill block light as well.
+        world.fillBlockLight(15)
         return world
     }
 }
