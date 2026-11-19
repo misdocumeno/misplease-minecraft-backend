@@ -52,8 +52,10 @@ class LimboBootstrap(
         val entryServer = System.getenv("LIMBO_ENTRY_SERVER")?.takeIf { it.isNotBlank() } ?: "main"
         val timeoutSeconds = System.getenv("LIMBO_LOGIN_TIMEOUT_SECONDS")?.toLongOrNull() ?: 120L
 
+        // First arg must be the plugin instance: Velocity resolves it with
+        // PluginManager.ensurePluginContainer() and throws for any other object.
         proxy.eventManager.register(
-            this,
+            plugin,
             LoginLimboListener(
                 proxy = proxy,
                 scheduler = proxy.scheduler,

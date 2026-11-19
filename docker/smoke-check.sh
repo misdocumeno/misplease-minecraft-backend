@@ -125,10 +125,7 @@ if grep -E "$FAIL_RE" "$LOG" >/tmp/smoke-errors.txt; then
   echo "smoke failed: plugin load/enable errors" >&2
   cat /tmp/smoke-errors.txt >&2
   echo "---- stack context ----" >&2
-  awk -v re="$FAIL_RE" '
-    $0 ~ re { show=40; print; next }
-    show > 0 { print; show--; if ($0 ~ /^[[:space:]]*$/) show=0 }
-  ' "$LOG" >&2
+  grep -A 40 -E "$FAIL_RE" "$LOG" >&2 || true
   echo "---- last 60 log lines ----" >&2
   tail -n 60 "$LOG" >&2
   exit 1
