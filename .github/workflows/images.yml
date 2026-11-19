@@ -164,19 +164,23 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
 
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@v4
         if: env.PUSH_IMAGES == 'true'
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         with:
           context: .
           file: services/auth/Dockerfile
+          # Refresh mutable base tags (e.g. node:24-bookworm) on every build: a
+          # security patch published under the same tag is otherwise masked by
+          # the builder's cached base layer.
+          pull: true
           push: ${{ env.PUSH_IMAGES == 'true' }}
           tags: |
             ghcr.io/${{ github.repository }}/auth:${{ github.sha }}
@@ -214,7 +218,7 @@ jobs:
 
       # JDK/Maven for source: git (plugin-lock). Stable key — contents rarely change.
       # Do not put run_id in the key (immutable Actions caches would duplicate GB every run).
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v6
         id: misplease-tools
         with:
           path: ~/.cache/misplease
@@ -240,15 +244,15 @@ jobs:
           server-out: ${{ github.workspace }}/.materialize/${{ matrix.name }}/server
           cache-dir: ${{ github.workspace }}/.plugin-lock-cache
 
-      - uses: actions/cache/save@v4
+      - uses: actions/cache/save@v6
         if: always() && steps.misplease-tools.outputs.cache-hit != 'true'
         with:
           path: ~/.cache/misplease
           key: misplease-tools-${{ runner.os }}-temurin-maven
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
 
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@v4
         if: env.PUSH_IMAGES == 'true'
         with:
           registry: ghcr.io
@@ -265,7 +269,7 @@ jobs:
       # files (deps). Source .class outputs live under build/, not here. Save only on miss;
       # after save, delete superseded keys with the same prefix (controlled rotation).
       - name: Restore Gradle BuildKit mounts
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         id: gradle-mount
         with:
           path: |
@@ -276,7 +280,7 @@ jobs:
             ${{ steps.gradle-mount-key.outputs.prefix }}
 
       - name: Inject Gradle mounts into BuildKit
-        uses: reproducible-containers/buildkit-cache-dance@v3.1.2
+        uses: reproducible-containers/buildkit-cache-dance@v3
         with:
           skip-extraction: true
           cache-map: |
@@ -294,13 +298,17 @@ jobs:
       # Image build only copies host-materialized jars + compiles our plugins.
       # Dummy plugin-cache context satisfies the local Dockerfile branch's FROM name;
       # LOCK_VARIANT=ci selects fetch-ci (lock-jars / lock-server) instead.
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         id: server-image
         with:
           context: .
           file: docker/server.Dockerfile
           load: true
           push: false
+          # Refresh mutable base tags (eclipse-temurin:25-jre, node:24-bookworm)
+          # on every build, so a security patch republished under the same tag
+          # is not masked by the builder's cached base layer.
+          pull: true
           build-contexts: |
             plugin-cache=docker/empty-plugin-cache
             lock-jars=.materialize/${{ matrix.name }}/jars
@@ -319,7 +327,7 @@ jobs:
       # skip-extraction must be false here or extractCaches() no-ops.
       - name: Extract Gradle mounts from BuildKit
         if: always() && steps.server-image.outcome == 'success'
-        uses: reproducible-containers/buildkit-cache-dance@v3.1.2
+        uses: reproducible-containers/buildkit-cache-dance@v3
         env:
           STATE_POST: "true"
         with:
@@ -339,7 +347,7 @@ jobs:
       - name: Save Gradle BuildKit mounts
         id: gradle-mount-save
         if: always() && steps.server-image.outcome == 'success' && steps.gradle-mount.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: |
             .gradle-ci/caches
@@ -414,7 +422,7 @@ jobs:
       (needs.servers.result == 'success' || needs.servers.result == 'skipped')
     runs-on: ubuntu-24.04
     steps:
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}

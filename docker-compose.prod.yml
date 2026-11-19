@@ -24,7 +24,7 @@ services:
       # Heap returns to the OS when idle: periodic GC + free-ratio bounds, so an
       # empty server does not keep 3 GB committed. Compact object headers (JEP
       # 519, product in JDK 25) cut ~10-20% of heap on object-heavy workloads.
-      - JVM_OPTS=${VELOCITY_JVM_OPTS:--Xms256M -Xmx512M -XX:+UseCompactObjectHeaders -XX:G1PeriodicGCInterval=300000 -XX:MinHeapFreeRatio=20 -XX:MaxHeapFreeRatio=40}
+      - JVM_OPTS=${VELOCITY_JVM_OPTS:--Xms256M -Xmx512M -XX:+UseCompactObjectHeaders -XX:-UseBASE64Intrinsics -XX:G1PeriodicGCInterval=300000 -XX:MinHeapFreeRatio=20 -XX:MaxHeapFreeRatio=40}
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - DB_PASSWORD=${DB_PASSWORD}
@@ -87,7 +87,9 @@ services:
       # Default = live prod main cmdline + preferSparkPlugin. Override heaps via MAIN_JVM_OPTS.
       # Compact headers (JEP 519) + periodic GC/free ratios: less heap per object
       # and memory handed back when the server is idle.
-      - JVM_OPTS=${MAIN_JVM_OPTS:--Xms256M -Xmx3G -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC -XX:+UseCompactObjectHeaders -XX:G1PeriodicGCInterval=300000 -XX:MinHeapFreeRatio=20 -XX:MaxHeapFreeRatio=40 -Dorg.maxgamer.quickshop.util.envcheck.skip.SIGNATURE_VERIFY -Dpaper.preferSparkPlugin=true --add-modules=jdk.incubator.vector}
+      # -XX:-UseBASE64Intrinsics: stopgap for CVE-2026-114938 (Java4Shell, fixed in
+      # 25.0.5.1+). Remove once the image reports 25.0.5.1 or newer.
+      - JVM_OPTS=${MAIN_JVM_OPTS:--Xms256M -Xmx3G -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC -XX:+UseCompactObjectHeaders -XX:G1PeriodicGCInterval=300000 -XX:MinHeapFreeRatio=20 -XX:MaxHeapFreeRatio=40 -XX:-UseBASE64Intrinsics -Dorg.maxgamer.quickshop.util.envcheck.skip.SIGNATURE_VERIFY -Dpaper.preferSparkPlugin=true --add-modules=jdk.incubator.vector}
       - RCON_PASSWORD=${RCON_PASSWORD:-}
     volumes:
       - ./infra/minecraft/main/config:/config:ro
@@ -129,7 +131,7 @@ services:
       - FLOODGATE_KEY_PEM=${FLOODGATE_KEY_PEM:-}
       - FLOODGATE_KEY_B64=${FLOODGATE_KEY_B64:-}
       # Default = live prod tech cmdline + preferSparkPlugin. Override heaps via TECH_JVM_OPTS.
-      - JVM_OPTS=${TECH_JVM_OPTS:--Xms256M -Xmx2G -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseCompactObjectHeaders -XX:G1PeriodicGCInterval=300000 -XX:MinHeapFreeRatio=20 -XX:MaxHeapFreeRatio=40 -Dpaper.preferSparkPlugin=true}
+      - JVM_OPTS=${TECH_JVM_OPTS:--Xms256M -Xmx2G -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseCompactObjectHeaders -XX:G1PeriodicGCInterval=300000 -XX:MinHeapFreeRatio=20 -XX:MaxHeapFreeRatio=40 -XX:-UseBASE64Intrinsics -Dpaper.preferSparkPlugin=true}
       - RCON_PASSWORD=${RCON_PASSWORD:-}
     volumes:
       - ./infra/minecraft/tech/config:/config:ro

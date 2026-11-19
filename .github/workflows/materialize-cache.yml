@@ -20,7 +20,7 @@ jobs:
           cache: npm
           cache-dependency-path: tools/plugin-lock/package-lock.json
 
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v6
         with:
           path: ~/.cache/misplease
           key: misplease-tools-${{ runner.os }}-${{ github.run_id }}-manual
@@ -61,7 +61,7 @@ jobs:
           server-out: ${{ github.workspace }}/.materialize/velocity/server
           cache-dir: ${{ github.workspace }}/.plugin-lock-cache
 
-      - uses: actions/cache/save@v4
+      - uses: actions/cache/save@v6
         if: always()
         with:
           path: ~/.cache/misplease
