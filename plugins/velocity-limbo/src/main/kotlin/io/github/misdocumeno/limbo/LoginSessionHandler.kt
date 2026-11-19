@@ -6,12 +6,15 @@ import com.velocitypowered.api.scheduler.Scheduler
 import io.github.misdocumeno.VelocityLimboPlugin
 import io.github.misdocumeno.domain.LoginApi
 import io.github.misdocumeno.domain.LoginResult
+import io.github.misdocumeno.infra.limbo.LimboWorlds
 import kotlinx.coroutines.runBlocking
 import net.elytrium.limboapi.api.Limbo
 import net.elytrium.limboapi.api.LimboSessionHandler
 import net.elytrium.limboapi.api.player.LimboPlayer
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
+import net.kyori.adventure.title.Title
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -44,6 +47,19 @@ class LoginSessionHandler(
 
     override fun onSpawn(server: Limbo, limboPlayer: LimboPlayer) {
         this.limboPlayer = limboPlayer
+        // Same title the backend auth plugin used to show, so the login screen
+        // looks identical whether the player is pre- or post-migration.
+        player.showTitle(
+            Title.title(
+                mm.deserialize("<dark_purple><bold>Iniciá sesión</bold></dark_purple>"),
+                mm.deserialize("<gray>Usá <white>/login <contraseña></white></gray>"),
+                Title.Times.times(
+                    Duration.ofMillis(250),
+                    Duration.ofMinutes(5),
+                    Duration.ofMillis(0),
+                ),
+            ),
+        )
         player.sendMessage(
             mm.deserialize("$PREFIX<gray>Ingresá con <white>/login <contraseña></white>.</gray>"),
         )
@@ -51,6 +67,23 @@ class LoginSessionHandler(
             .buildTask(plugin, Runnable { timedOut() })
             .delay(timeoutSeconds, TimeUnit.SECONDS)
             .schedule()
+    }
+
+    /**
+     * The hub has open edges: a player who walks off would fall forever, since
+     * the limbo keeps no position. Put them back on the carpet instead.
+     */
+    override fun onMove(x: Double, y: Double, z: Double) {
+        if (done.get() || y >= LimboWorlds.FALL_Y) return
+        val limboPlayer = limboPlayer ?: return
+        limboPlayer.teleport(
+            LimboWorlds.SPAWN_X,
+            LimboWorlds.SPAWN_Y,
+            LimboWorlds.SPAWN_Z,
+            0.0f,
+            0.0f,
+        )
+        player.sendActionBar(mm.deserialize("$PREFIX<gray>Volviste al spawn.</gray>"))
     }
 
     override fun onChat(chat: String) {
@@ -87,6 +120,17 @@ class LoginSessionHandler(
             LoginResult.SUCCESS -> {
                 if (!done.compareAndSet(false, true)) return
                 timeoutTask?.cancel()
+                player.showTitle(
+                    Title.title(
+                        mm.deserialize("<dark_purple><bold>Sesión iniciada</bold></dark_purple>"),
+                        mm.deserialize("<gray>Conectando…</gray>"),
+                        Title.Times.times(
+                            Duration.ofMillis(250),
+                            Duration.ofSeconds(3),
+                            Duration.ofSeconds(1),
+                        ),
+                    ),
+                )
                 player.sendMessage(
                     mm.deserialize("$PREFIX<gray>Sesión iniciada. Conectando…</gray>"),
                 )

@@ -30,7 +30,7 @@ import org.slf4j.Logger
 @Plugin(
     id = "limbo",
     name = "Limbo",
-    version = "0.3.0",
+    version = "0.4.0",
     description = "Proxy-side login limbo",
     authors = ["Mis"],
     dependencies = [Dependency(id = "limboapi")],

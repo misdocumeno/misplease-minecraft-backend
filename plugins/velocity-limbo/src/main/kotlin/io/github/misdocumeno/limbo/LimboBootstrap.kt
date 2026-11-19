@@ -32,12 +32,14 @@ class LimboBootstrap(
         val factory = limboApi.instance.orElse(null) as? LimboFactory
             ?: error("limboapi is registered but does not expose a LimboFactory")
 
-        val world = LimboWorlds.platform(factory)
+        val world = LimboWorlds.hub(factory)
         val limbo: Limbo = factory
             .createLimbo(world)
             .setName("limbo")
             .setGameMode(GameMode.ADVENTURE)
-            .setViewDistance(4)
+            // The hub is ~12x12 chunks off-centre from the carpet; 5 keeps the
+            // whole build in view without sending chunks nobody can see.
+            .setViewDistance(5)
             .setSimulationDistance(2)
             // Authenticated players leave for a real backend; never pull them back.
             .setShouldRejoin(false)
@@ -50,13 +52,12 @@ class LimboBootstrap(
             .registerCommand(LimboCommandMeta(listOf("login")))
 
         logger.info(
-            "limbo world: {} chunks, spawn {}/{}/{}, block at y={} is {}",
+            "limbo world: {} chunks, spawn {}/{}/{}, carpet block is {}",
             world.chunks.size,
             world.spawnX,
             world.spawnY,
             world.spawnZ,
-            LimboWorlds.FLOOR_Y,
-            world.getBlock(0, LimboWorlds.FLOOR_Y, 0).modernStringID.ifEmpty { "air" },
+            world.getBlock(0, 129, 0).modernStringID.ifEmpty { "air" },
         )
 
         val api: LoginApi = KtorLoginApi(
