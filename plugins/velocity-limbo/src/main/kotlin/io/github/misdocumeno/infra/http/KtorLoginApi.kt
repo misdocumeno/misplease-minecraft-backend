@@ -9,6 +9,8 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 class KtorLoginApi(
     private val client: HttpClient,
@@ -17,9 +19,14 @@ class KtorLoginApi(
 
     override suspend fun login(username: String, password: String): LoginResult {
         return try {
+            // Encode here and send a plain string body instead of installing Ktor's
+            // ContentNegotiation: its kotlinx provider service file ships with a
+            // leading space, which Shadow's relocation does not rewrite, so the
+            // provider is not found after shading.
+            val payload = Json.encodeToString(Credentials(username, password))
             val response = client.post("$baseUrl/login") {
                 contentType(ContentType.Application.Json)
-                setBody(Credentials(username, password))
+                setBody(payload)
             }
             when (response.status) {
                 HttpStatusCode.OK -> LoginResult.SUCCESS
