@@ -10,16 +10,24 @@ export class RedisSessionStore implements SessionStore {
     private static AUTH_SET_KEY = 'game-sessions:authenticated'
     private static EVENTS_CHANNEL = 'game-sessions:events'
     private static ORIGIN_PREFIX = 'game-sessions:origin:'
+    private static CREATED_PREFIX = 'game-sessions:created-at:'
     /** A session lives in memory of the player, not here; the id is only for logs. */
-    private static ORIGIN_TTL_SECONDS = 24 * 60 * 60
+    private static SESSION_META_TTL_SECONDS = 24 * 60 * 60
 
     constructor(private readonly redis: AppRedisClient) {}
 
     async create(username: string, loginId: string) {
         await this.redis.sAdd(RedisSessionStore.AUTH_SET_KEY, username)
         await this.redis.set(RedisSessionStore.originKey(username), loginId, {
-            EX: RedisSessionStore.ORIGIN_TTL_SECONDS,
+            EX: RedisSessionStore.SESSION_META_TTL_SECONDS,
         })
+        // Lets the proxy reconciler tell "just logged in, still handing off to a
+        // backend" apart from a genuinely orphaned session. See auth-sessions.md.
+        await this.redis.set(
+            RedisSessionStore.createdKey(username),
+            String(Math.floor(Date.now() / 1000)),
+            { EX: RedisSessionStore.SESSION_META_TTL_SECONDS },
+        )
         logEvent('info', 'session.create', { username, loginId })
         const event: AuthEvent = { type: 'Authenticated', username, loginId }
         await this.redis.publish(RedisSessionStore.EVENTS_CHANNEL, JSON.stringify(event))
@@ -39,7 +47,10 @@ export class RedisSessionStore implements SessionStore {
         // first-time join emit "left the game" before the player had even /login'd.
         const loginId = await this.loginIdFor(username)
         const removed = await this.redis.sRem(RedisSessionStore.AUTH_SET_KEY, username)
-        await this.redis.del(RedisSessionStore.originKey(username))
+        await this.redis.del([
+            RedisSessionStore.originKey(username),
+            RedisSessionStore.createdKey(username),
+        ])
         logEvent('info', 'session.invalidate', {
             username,
             source,
@@ -65,7 +76,10 @@ export class RedisSessionStore implements SessionStore {
         }
         await this.redis.del(RedisSessionStore.AUTH_SET_KEY)
         for (const username of members) {
-            await this.redis.del(RedisSessionStore.originKey(username))
+            await this.redis.del([
+                RedisSessionStore.originKey(username),
+                RedisSessionStore.createdKey(username),
+            ])
             const event: AuthEvent = { type: 'Invalidated', username, source }
             await this.redis.publish(RedisSessionStore.EVENTS_CHANNEL, JSON.stringify(event))
         }
@@ -75,5 +89,9 @@ export class RedisSessionStore implements SessionStore {
 
     private static originKey(username: string): string {
         return `${RedisSessionStore.ORIGIN_PREFIX}${username}`
+    }
+
+    private static createdKey(username: string): string {
+        return `${RedisSessionStore.CREATED_PREFIX}${username}`
     }
 }

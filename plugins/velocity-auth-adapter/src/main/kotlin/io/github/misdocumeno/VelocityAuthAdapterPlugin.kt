@@ -75,6 +75,7 @@ class VelocityAuthAdapterPlugin @Inject constructor(
     private lateinit var api: AuthApi
     private var redis: RedisClient? = null
     private var redisConnection: StatefulRedisConnection<String, String>? = null
+    private var redisAuth: RedisAuthSet? = null
 
     /**
      * Consecutive reconcile ticks a session name has been authenticated but missing
@@ -105,7 +106,9 @@ class VelocityAuthAdapterPlugin @Inject constructor(
                 redis = redisClient
                 val conn = redisClient.connect()
                 redisConnection = conn
-                proxy.eventManager.register(this, UnauthCommandGate(RedisAuthSet(conn), logger))
+                val authSet = RedisAuthSet(conn)
+                redisAuth = authSet
+                proxy.eventManager.register(this, UnauthCommandGate(authSet, logger))
             } catch (e: Exception) {
                 logger.warn("redis unavailable for unauth command gate: {}", e.message)
             }
@@ -313,14 +316,21 @@ class VelocityAuthAdapterPlugin @Inject constructor(
                     }
                     val misses = (orphanMisses[name] ?: 0) + 1
                     orphanMisses[name] = misses
+                    val ageSeconds = redisAuth?.sessionAgeSeconds(name)
+                    if (ageSeconds != null && ageSeconds < ORPHAN_MIN_AGE_SECONDS) {
+                        // `/login` just succeeded and the player is still in the limbo
+                        // or waiting for a cold backend: never drop this session.
+                        continue
+                    }
                     if (misses < ORPHAN_MISSES_BEFORE_INVALIDATE) {
                         // Normal during the limbo→backend hand-off: the session exists,
                         // the player is not a proxy player yet. Decide on a later tick.
                         logger.debug(
-                            "reconcile: {} not on the proxy yet ({}/{}), keeping session",
+                            "reconcile: {} not on the proxy yet ({}/{} age={}s), keeping session",
                             name,
                             misses,
                             ORPHAN_MISSES_BEFORE_INVALIDATE,
+                            ageSeconds,
                         )
                         continue
                     }
@@ -354,6 +364,13 @@ class VelocityAuthAdapterPlugin @Inject constructor(
          * still invalidated at once by DisconnectEvent.
          */
         private const val ORPHAN_MISSES_BEFORE_INVALIDATE = 3
+
+        /**
+         * A session younger than this is never an orphan: the player may still be
+         * in the limbo or waiting for a frozen backend to thaw (cold thaw 13-21 s,
+         * worse under maintenance). Real leaves do not rely on this path.
+         */
+        private const val ORPHAN_MIN_AGE_SECONDS = 180L
 
         /**
          * 1.21. Same floor as `limboapi prepare-min-version`, ViaVersion's
