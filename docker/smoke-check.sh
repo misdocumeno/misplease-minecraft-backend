@@ -33,7 +33,7 @@ trap cleanup EXIT
 docker network create "$NET" >/dev/null
 
 docker run -d --name "$REDIS" --network "$NET" --network-alias redis \
-  redis:8.10-alpine >/dev/null
+  redis:8-alpine >/dev/null
 
 docker run -d --name "$DB" --network "$NET" --network-alias db \
   -e POSTGRES_USER=misplease \
@@ -149,6 +149,11 @@ if ! grep -q '\[SmokeCheck\] OK' "$LOG"; then
     exit 1
 fi
 grep '\[SmokeCheck\]' "$LOG" || true
+
+# Proxy plugins that start something at init (the login limbo) log one `[limbo]`
+# line. Surface it: the smoke gate can prove the plugin is registered, not that
+# its init succeeded.
+grep '\[limbo\]' "$LOG" || true
 
 # Always surface warnings (Paper/Velocity/log4j). Do not fail the job on WARN alone.
 echo "---- smoke WARN ----"
