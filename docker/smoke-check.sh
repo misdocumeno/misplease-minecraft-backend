@@ -41,8 +41,10 @@ docker run -d --name "$DB" --network "$NET" --network-alias db \
   -e POSTGRES_DB=misplease \
   postgres:18-alpine >/dev/null
 
-for _ in $(seq 1 30); do
-  if docker exec "$DB" pg_isready -U misplease -d misplease >/dev/null 2>&1; then
+for _ in $(seq 1 60); do
+  # pg_isready answers while initdb is still creating the database, so probe the
+  # real one instead: the smoke stack connects to `misplease`.
+  if docker exec "$DB" psql -U misplease -d misplease -tAc 'select 1' >/dev/null 2>&1; then
     break
   fi
   sleep 1
@@ -50,7 +52,9 @@ done
 
 # LibertyBans keeps its own database (created out of band on prod, runtime state).
 # Without it the proxy logs an ERROR and the generic ERROR gate below goes red.
-docker exec "$DB" psql -U misplease -d misplease -c 'CREATE DATABASE libertybans' >/dev/null
+docker exec "$DB" psql -U misplease -d postgres -tAc \
+  "SELECT 1 FROM pg_database WHERE datname='libertybans'" | grep -q 1 ||
+  docker exec "$DB" psql -U misplease -d postgres -c 'CREATE DATABASE libertybans' >/dev/null
 
 # Heap stays small for CI. Non-heap flags match prod main today, plus preferSparkPlugin
 # for the baked-image stack. Sources: docker-compose*.yml, .env.example, live prod cmdline.
