@@ -4,7 +4,6 @@ import com.google.inject.Inject
 import com.velocitypowered.api.event.PostOrder
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.connection.DisconnectEvent
-import com.velocitypowered.api.event.connection.LoginEvent
 import com.velocitypowered.api.event.connection.PreLoginEvent
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
@@ -36,14 +35,18 @@ import java.util.concurrent.TimeUnit
  * Proxy is the truth for "is this player connected to the network".
  *
  * Velocity events:
- * - LoginEvent / DisconnectEvent: real proxy join/leave (NOT fired when moving main↔tech)
+ * - DisconnectEvent: real proxy leave (NOT fired when moving main↔tech)
  * - ServerConnected / KickedFromServer: backend switches only — do NOT touch auth sessions
  *
  * Redis AUTH_SET is owned by the auth service. This plugin only calls auth HTTP:
- * - LoginEvent: invalidate (drop any stale session before backends check Redis)
  * - DisconnectEvent: invalidate (quit / timeout / proxy kick — every leave path)
  * - Proxy boot/shutdown: clear-all
  * - Reconcile: list authenticated, invalidate anyone not on the proxy
+ *
+ * Deliberately **not** on LoginEvent: login happens in the proxy limbo and
+ * LimboAPI re-fires LoginEvent when the player leaves it, so invalidating there
+ * would drop the session `/login` just created. Boot-time clear-all covers the
+ * stale-session-after-crash case this used to guard.
  *
  * Bedrock (Floodgate): strip username prefix, resolve auth UUID, persist own-linking
  * (sqlite via Floodgate-misplease). Do NOT rewrite GameProfile — Floodgate must own the
@@ -139,13 +142,6 @@ class VelocityAuthAdapterPlugin @Inject constructor(
                 }
             }
         }
-    }
-
-    @Subscribe
-    fun onLogin(event: LoginEvent) {
-        // Proxy join (not a backend switch). Belts-and-suspenders against stale Redis
-        // after a crash where DisconnectEvent never ran.
-        dropSession(event.player.username, "proxy-login")
     }
 
     @Subscribe
