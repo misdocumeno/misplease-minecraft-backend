@@ -3,21 +3,11 @@ package io.github.misdocumeno
 import com.google.inject.Inject
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
-import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
 import com.velocitypowered.api.plugin.Dependency
 import com.velocitypowered.api.plugin.Plugin
+import com.velocitypowered.api.plugin.PluginContainer
 import com.velocitypowered.api.proxy.ProxyServer
-import io.github.misdocumeno.domain.LoginApi
-import io.github.misdocumeno.infra.http.KtorLoginApi
-import io.github.misdocumeno.infra.limbo.LimboWorlds
-import io.github.misdocumeno.limbo.LoginLimboListener
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.serialization.kotlinx.json.json
-import net.elytrium.limboapi.api.Limbo
-import net.elytrium.limboapi.api.LimboFactory
-import net.elytrium.limboapi.api.player.GameMode
+import io.github.misdocumeno.limbo.LimboBootstrap
 import org.slf4j.Logger
 
 /**
@@ -30,7 +20,12 @@ import org.slf4j.Logger
  * authenticated" bugs disappears by construction.
  *
  * The auth service owns the session: a successful `POST /login` writes the same
- * Redis session the backends read, so no second implementation of auth exists.
+ * Redis session the backends read, so there is no second implementation of auth.
+ *
+ * This class deliberately references no LimboAPI type: the plugin has to load
+ * (and no-op) on a proxy that does not have LimboAPI installed yet. Everything
+ * limbo-related is in [LimboBootstrap], which is only touched once the plugin is
+ * present.
  */
 @Plugin(
     id = "limbo",
@@ -45,58 +40,16 @@ class VelocityLimboPlugin @Inject constructor(
     private val logger: Logger,
 ) {
 
-    private lateinit var limbo: Limbo
+    private var bootstrap: LimboBootstrap? = null
 
     @Subscribe
     fun onProxyInitialize(event: ProxyInitializeEvent) {
-        val container = proxy.pluginManager.getPlugin("limboapi").orElse(null)
-        if (container == null) {
-            logger.error("limboapi is not installed — players cannot log in, limbo disabled")
-            return
-        }
-        val factory = container.instance.orElse(null) as? LimboFactory
-        if (factory == null) {
-            logger.error("limboapi has no LimboFactory instance — limbo disabled")
-            return
-        }
+        val container: PluginContainer = proxy.pluginManager.getPlugin("limboapi").orElse(null)
+            ?: run {
+                logger.warn("limboapi is not installed — login limbo disabled, players go straight to a backend")
+                return
+            }
 
-        limbo = factory
-            .createLimbo(LimboWorlds.platform(factory))
-            .setName("limbo")
-            .setGameMode(GameMode.ADVENTURE)
-            .setViewDistance(4)
-            .setSimulationDistance(2)
-            // Authenticated players leave for a real backend; never pull them back.
-            .setShouldRejoin(false)
-            .setShouldRespawn(false)
-
-        val api: LoginApi = KtorLoginApi(
-            HttpClient(CIO) { install(ContentNegotiation) { json() } },
-            System.getenv("AUTH_URL")?.takeIf { it.isNotBlank() } ?: "http://auth:3000",
-        )
-        val entryServer = System.getenv("LIMBO_ENTRY_SERVER")?.takeIf { it.isNotBlank() } ?: "main"
-        val timeoutSeconds = System.getenv("LIMBO_LOGIN_TIMEOUT_SECONDS")?.toLongOrNull() ?: 120L
-
-        proxy.eventManager.register(
-            this,
-            LoginLimboListener(
-                proxy = proxy,
-                scheduler = proxy.scheduler,
-                plugin = this,
-                limbo = limbo,
-                api = api,
-                entryServer = entryServer,
-                timeoutSeconds = timeoutSeconds,
-                logger = logger,
-            ),
-        )
-        logger.info("login limbo ready (entry server: {}, timeout: {}s)", entryServer, timeoutSeconds)
-    }
-
-    @Subscribe
-    fun onProxyShutdown(event: ProxyShutdownEvent) {
-        if (::limbo.isInitialized) {
-            limbo.dispose()
-        }
+        bootstrap = LimboBootstrap(proxy, container, logger).also { it.start() }
     }
 }
