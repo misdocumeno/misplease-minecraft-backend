@@ -17,7 +17,10 @@ settings:
   save-user-cache-on-stop-only: false
   moved-wrongly-threshold: 0.0625
   moved-too-quickly-multiplier: 10.0
-  timeout-time: 60
+  # -1 = disabled. The watchdog measures wall-clock idle time, so a container
+  # freeze longer than this makes it "restart" the server on thaw (see main's
+  # spigot.yml). Required for hibernation.
+  timeout-time: -1
   restart-on-crash: true
   restart-script: ./start.sh
   netty-threads: 4

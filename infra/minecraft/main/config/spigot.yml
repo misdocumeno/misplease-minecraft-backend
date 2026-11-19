@@ -19,7 +19,12 @@ settings:
   player-shuffle: 0
   user-cache-size: 1000
   log-villager-deaths: true
-  timeout-time: 60
+  # -1 = disabled. The watchdog measures wall-clock idle time, so any container
+  # freeze longer than this (hibernation, `docker pause`) makes it "restart" the
+  # server as soon as it thaws: main rebooted 20 s after a wake on 2026-11-19
+  # (8 min freeze, timeout 60). Hangs are covered by the obs stack + TPS alerts
+  # and the deploy health check instead.
+  timeout-time: -1
   restart-on-crash: true
   restart-script: ./start.sh
   netty-threads: 4
