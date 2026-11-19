@@ -81,12 +81,11 @@ last_ping=0
 while (( SECONDS < deadline )); do
   docker logs "$NAME" >"$LOG" 2>&1 || true
   done_ok=false
-  smoke_ok=true
+  smoke_ok=false
   grep -q 'Done (' "$LOG" && done_ok=true
-  if [ "$KIND" = "server" ]; then
-    smoke_ok=false
-    grep -qE '\[SmokeCheck\] (OK|FAIL)' "$LOG" && smoke_ok=true
-  fi
+  # Both kinds bake a smoke-check plugin (backend-smoke-check / velocity-smoke-check)
+  # that asserts every jar in plugins/ actually registered.
+  grep -qE '\[SmokeCheck\] (OK|FAIL)' "$LOG" && smoke_ok=true
   if $done_ok && $smoke_ok; then
     break
   fi
@@ -135,21 +134,21 @@ if grep -E "$FAIL_RE" "$LOG" >/tmp/smoke-errors.txt; then
   exit 1
 fi
 
-# Final assertion (Paper only): backend-smoke-check scans jars vs PluginManager.
-# Avoids brittle color parsing of /plugins; emits one grep-friendly line.
-if [ "$KIND" = "server" ]; then
-  if grep -q '\[SmokeCheck\] FAIL' "$LOG"; then
+# Final assertion: both kinds bake a smoke-check plugin that scans jars vs the
+# plugin manager (backend-smoke-check / velocity-smoke-check). A plugin that fails
+# to load still leaves the process alive, so this line is the real gate - not
+# "Done (" and not the stdout regex.
+if grep -q '\[SmokeCheck\] FAIL' "$LOG"; then
     echo "smoke failed: SmokeCheck reported plugin load failures" >&2
     grep '\[SmokeCheck\]' "$LOG" >&2 || true
     exit 1
-  fi
-  if ! grep -q '\[SmokeCheck\] OK' "$LOG"; then
+fi
+if ! grep -q '\[SmokeCheck\] OK' "$LOG"; then
     echo "smoke failed: missing [SmokeCheck] OK line (plugin not in image?)" >&2
     grep '\[SmokeCheck\]' "$LOG" >&2 || true
     exit 1
-  fi
-  grep '\[SmokeCheck\]' "$LOG" || true
 fi
+grep '\[SmokeCheck\]' "$LOG" || true
 
 # Always surface warnings (Paper/Velocity/log4j). Do not fail the job on WARN alone.
 echo "---- smoke WARN ----"

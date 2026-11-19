@@ -42,6 +42,7 @@ include(
     "backend-openinv",
     "velocity-maintenance",
     "velocity-presence",
+    "velocity-smoke-check",
     "velocity-social",
     "velocity-tablist-broadcast",
 )
