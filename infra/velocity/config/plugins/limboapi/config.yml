@@ -46,9 +46,9 @@ main:
   # Every limbo world is prepared as a packet per version in this range, in direct
   # memory, once (first spawn) and kept for the limbo's lifetime. Default 1_7_2
   # means ~52 encodings; the hub blew the proxy's 512M direct-memory cap with
-  # OutOfDirectMemoryError. 1_20 is the floor the network actually accepts
-  # (ViaVersion blocks <1.20 on main/tech), which is ~16 encodings instead.
-  prepare-min-version: "1_20"
+  # OutOfDirectMemoryError. 1_21 is the floor the network accepts (ViaVersion
+  # blocks <1.21 on main/tech), which is ~12 encodings instead of ~52.
+  prepare-min-version: "1_21"
   prepare-max-version: "LATEST"
   # Helpful if you want some plugins proceed before LimboAPI. For example, it is needed to Floodgate to replace UUID.
   # LimboAPI sends this profile in its own tab-list packet, so anything that sets

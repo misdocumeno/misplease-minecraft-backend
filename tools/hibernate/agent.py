@@ -204,6 +204,9 @@ def freeze(server: str) -> None:
     if "Saved the game" not in saved and "Saving" not in saved:
         log(f"{server}: save not confirmed, not freezing")
         return
+    # `save-all flush` returns once vanilla has written, but region/chunk IO can
+    # still be in flight; give it a moment so the freeze never lands on a write.
+    time.sleep(3)
 
     res = docker("pause", name)
     if res.returncode != 0:
