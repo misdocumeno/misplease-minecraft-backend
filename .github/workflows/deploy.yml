@@ -9,6 +9,12 @@
 #   - workflow_dispatch (manual pin)
 #   - push that only touches deploy agent / obs / this workflow (no image rebuild)
 #
+# A push trigger fires immediately, so it must skip mixed commits: one that also
+# changes image inputs pins `wanted` before GHCR has the tag and before smoke
+# (8762418 did exactly that and armed maintenance on a SHA that never published).
+# The gate below pins here only when every changed file is obs/deploy-agent; the
+# `images` workflow_run pins everything else once smoke is green.
+#
 # Do NOT trigger on every main push in parallel with `images`: that pinned wanted
 # before tags existed and before smoke. Failed smoke → images conclusion≠success
 # → set-wanted must not run.
@@ -59,7 +65,56 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
+      - name: Decide whether this push may pin wanted
+        id: gate
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          python3 - "$REPO" "$SHA" <<'PY'
+          import json, os, sys, urllib.request
+
+          repo, sha = sys.argv[1], sys.argv[2]
+          req = urllib.request.Request(
+              f"https://api.github.com/repos/{repo}/commits/{sha}",
+              headers={
+                  "Authorization": f"Bearer {os.environ['GH_TOKEN']}",
+                  "Accept": "application/vnd.github+json",
+                  "User-Agent": "misplease-deploy-gate",
+              },
+          )
+          with urllib.request.urlopen(req, timeout=30) as r:
+              files = [f["filename"] for f in json.load(r).get("files") or []]
+
+          # Only these never change an image. Anything else (including paths added
+          # to images.yml later) counts as image-affecting: fail safe, wait for
+          # the images workflow_run instead of racing GHCR.
+          def pin_only(path: str) -> bool:
+              return (
+                  path == "docker-compose.obs.yml"
+                  or path == ".github/workflows/deploy.yml"
+                  or path.startswith("tools/deploy/")
+                  or path.startswith("tools/obs/")
+              )
+
+          other = [f for f in files if not pin_only(f)]
+          pin = bool(files) and not other
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
+              out.write(f"pin={'true' if pin else 'false'}\n")
+          if pin:
+              print("obs/deploy-agent-only push: pinning wanted now")
+          elif not files:
+              print("commit file list unavailable: not pinning")
+          else:
+              print(f"{len(other)} image-affecting file(s), e.g. {other[:5]}: "
+                    "leaving the pin to the images workflow_run")
+          PY
+
       - name: Write .deploy-state.json wanted
+        if: github.event_name != 'push' || steps.gate.outputs.pin == 'true'
         env:
           MISPLEASE_ROOT: ${{ vars.MISPLEASE_ROOT }}
           DEPLOY_ALERT_WEBHOOK: ${{ secrets.DEPLOY_ALERT_WEBHOOK }}

@@ -11,7 +11,8 @@ tools/deploy/config-hot-reload.yml:
   git pin → write the changed files into the running container's /srv tree →
   RCON reload command (live). Jars never change here: this only reloads config.
 Else:
-  wait empty → maintenance → git pin → compose pull/up → health.
+  check the SHA's image tags exist → wait empty → maintenance → git pin →
+  compose pull/up → health.
 
 A config hot-reload that fails is retried up to MAX_CONFIG_RELOAD_ATTEMPTS,
 then falls back to the compose path so the change still lands at the cost of a
@@ -990,6 +991,42 @@ def unpause_all() -> None:
             run(["docker", "unpause", name], check=False)
 
 
+def missing_image_tags(tag: str) -> list[str]:
+    """Image tags of the compose file that the registry does not have yet.
+
+    `wanted` can name a SHA whose images never got published (smoke failed) or
+    are still building. Checked before the empty gate/maintenance so that pin
+    costs no downtime: 8762418 armed maintenance and then failed every pull for
+    25 minutes. `docker manifest inspect` is a manifest HEAD, no layer download.
+    """
+    cfg = subprocess.run(
+        ["docker", "compose", "-f", COMPOSE_FILE, "config", "--images"],
+        cwd=str(ROOT),
+        env=compose_env(tag),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if cfg.returncode != 0:
+        # Cannot resolve: let the compose pull surface the real error.
+        return []
+    images = sorted(
+        {line.strip() for line in cfg.stdout.splitlines() if line.strip().endswith(f":{tag}")}
+    )
+    missing: list[str] = []
+    for image in images:
+        r = subprocess.run(
+            ["docker", "manifest", "inspect", image],
+            cwd=str(ROOT),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if r.returncode != 0:
+            missing.append(image)
+    return missing
+
+
 def compose_pull_up(tag: str) -> str:
     """Pull + up with IMAGE_TAG=$sha. Missing tags → raise and retry (no :dev fallback)."""
     env = compose_env(tag)
@@ -1129,6 +1166,9 @@ def recover_crashed_apply() -> None:
         save_state(st)
 
 
+_missing_tags_notice: dict[str, str] = {}
+
+
 def tick() -> None:
     st = load_state()
     wanted = st.get("wanted")
@@ -1161,6 +1201,17 @@ def tick() -> None:
             )
             apply_config_hot_reload(wanted_s, matched)
             return
+
+    missing = missing_image_tags(wanted_s)
+    if missing:
+        note = f"{wanted_s}|{','.join(missing)}"
+        if _missing_tags_notice.get("notice") != note:
+            _missing_tags_notice["notice"] = note
+            log(
+                f"images not published yet for {wanted_s} "
+                f"({', '.join(missing)}) — waiting, maintenance stays off"
+            )
+        return
 
     age = empty_age_seconds()
     if age is None:
