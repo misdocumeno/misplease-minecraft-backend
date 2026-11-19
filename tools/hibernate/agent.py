@@ -510,6 +510,7 @@ def run() -> None:
         except Exception as e:
             log(f"reconcile failed: {type(e).__name__}: {e}")
             time.sleep(POLL_SECONDS)
+    last_tick = 0.0
     while True:
         try:
             sleeping = asleep_now()
@@ -522,10 +523,17 @@ def run() -> None:
                 if woke:
                     for server in woke:
                         thaw(server)
-                else:
-                    time.sleep(WAKE_POLL_SECONDS)
-                    continue
+                elif time.monotonic() - last_tick >= POLL_SECONDS:
+                    # Still tick while everything sleeps: a freeze interrupted by
+                    # an agent restart (every deploy recreates this container)
+                    # leaves the container above the reclaim floor, and tick() is
+                    # what finishes the ladder (`asleep with N MiB, reclaiming`).
+                    tick()
+                    last_tick = time.monotonic()
+                time.sleep(WAKE_POLL_SECONDS)
+                continue
             tick()
+            last_tick = time.monotonic()
         except Exception as e:
             log(f"tick failed: {type(e).__name__}: {e}")
         time.sleep(POLL_SECONDS)
