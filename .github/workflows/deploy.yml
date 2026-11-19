@@ -2,18 +2,20 @@
 #   - hot-reload.yml-only diffs → sync overlay upper + RCON (live)
 #   - obs-only diffs (docker-compose.obs.yml, tools/obs/**) → obs compose only,
 #     no maintenance, no empty gate, no game bounce
+#   - hibernate-agent-only diffs (tools/hibernate/**) → restart that container
 #   - anything else → empty gate + compose pull/up + health
 #
 # Triggers (never race images):
 #   - successful `images` workflow_run on main push (after build+smoke+GHCR tags)
 #   - workflow_dispatch (manual pin)
-#   - push that only touches deploy agent / obs / this workflow (no image rebuild)
+#   - push that only touches deploy agent / obs / hibernate / this workflow (no
+#     image rebuild)
 #
 # A push trigger fires immediately, so it must skip mixed commits: one that also
 # changes image inputs pins `wanted` before GHCR has the tag and before smoke
 # (8762418 did exactly that and armed maintenance on a SHA that never published).
-# The gate below pins here only when every changed file is obs/deploy-agent; the
-# `images` workflow_run pins everything else once smoke is green.
+# The gate below pins here only when every changed file is obs/deploy-agent/
+# hibernate; the `images` workflow_run pins everything else once smoke is green.
 #
 # Do NOT trigger on every main push in parallel with `images`: that pinned wanted
 # before tags existed and before smoke. Failed smoke → images conclusion≠success
@@ -41,6 +43,8 @@ on:
       # `wanted` so the reconciler applies the obs compose project.
       - "docker-compose.obs.yml"
       - "tools/obs/**"
+      # Same for the hibernate agent: no image, but the container must reload.
+      - "tools/hibernate/**"
       - ".github/workflows/deploy.yml"
 
 concurrency:
@@ -106,6 +110,8 @@ jobs:
                   or path == ".github/workflows/deploy.yml"
                   or path.startswith("tools/deploy/")
                   or path.startswith("tools/obs/")
+                  # Host hibernate agent: its own container, no game image, no jar.
+                  or path.startswith("tools/hibernate/")
               )
 
           other = [f for f in files if not pin_only(f)]
