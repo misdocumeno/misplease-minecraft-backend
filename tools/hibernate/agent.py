@@ -178,8 +178,19 @@ def maintenance_on() -> bool:
 
 
 def backup_running() -> bool:
-    out = docker("ps", "--filter", "name=misplease-backup", "--filter", "status=running", "-q")
-    return bool(out.stdout.strip())
+    """True while restic/pg_dump is actually working, not while the loop sleeps.
+
+    `misplease-backup` stays up all day sleeping until the next window, so
+    `status=running` on that container says nothing. The real work shows up as a
+    child process (`restic backup ...`, `docker compose exec ... pg_dump`).
+    """
+    out = docker("top", "misplease-backup", "-o", "cmd")
+    for line in (out.stdout or "").splitlines():
+        if re.search(r"\brestic (init|snapshots|backup|forget|check|unlock|find)\b", line):
+            return True
+        if "docker compose" in line:
+            return True
+    return False
 
 
 def wake_requested(server: str) -> bool:
