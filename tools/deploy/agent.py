@@ -64,7 +64,7 @@ MAINTENANCE_VALUE = os.environ.get(
 )
 SERVICES = os.environ.get(
     "DEPLOY_SERVICES",
-    "velocity main tech auth db-migrate db redis resource-pack",
+    "velocity main tech auth db-migrate db redis resource-pack hibernate",
 ).split()
 HEALTH_SCRIPT = Path(
     os.environ.get(

@@ -45,4 +45,5 @@ include(
     "velocity-smoke-check",
     "velocity-social",
     "velocity-tablist-broadcast",
+    "velocity-wake",
 )

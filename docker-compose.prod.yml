@@ -297,6 +297,41 @@ services:
       - ${MISPLEASE_SSH_DIR:-/home/mis/.ssh}/known_hosts:/root/.ssh/known_hosts:ro
       - ${MISPLEASE_DOCKER_CONFIG:-/home/mis/.docker/config.json}:/root/.docker/config.json:ro
 
+  # Freezes an idle backend and pushes its pages out of RAM (`tools/hibernate`).
+  # Root + `/sys/fs/cgroup` rw is required: `memory.reclaim` is root-only, and
+  # this container already has docker.sock, so it is the same trust level as the
+  # deployer. DRY_RUN defaults to 1: it only logs until the stack is happy.
+  hibernate:
+    profiles: ["ops"]
+    image: python:3.13-alpine
+    container_name: misplease-hibernate
+    restart: unless-stopped
+    entrypoint:
+      - /bin/sh
+      - -c
+      - >-
+          apk add --no-cache docker-cli redis >/dev/null
+          && pip install --no-cache-dir -q mcrcon
+          && exec python -u /app/agent.py
+    environment:
+      MISPLEASE_ROOT: ${MISPLEASE_HOST_ROOT:-/home/mis/misplease}
+      REDIS_URL: redis://default:${REDIS_PASSWORD}@redis:6379/0
+      RCON_PASSWORD: ${RCON_PASSWORD:-}
+      RCON_PORT: "25575"
+      HIBERNATE_SERVERS: ${HIBERNATE_SERVERS:-main,tech}
+      HIBERNATE_AFTER_SECONDS: ${HIBERNATE_AFTER_SECONDS:-600}
+      HIBERNATE_RECLAIM_STEP_MB: ${HIBERNATE_RECLAIM_STEP_MB:-512}
+      HIBERNATE_DRY_RUN: ${HIBERNATE_DRY_RUN:-1}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Host cgroup v2 (systemd scope per container), writable for memory.reclaim.
+      - /sys/fs/cgroup:/sys/fs/cgroup
+      - ${MISPLEASE_HOST_ROOT:-/home/mis/misplease}:${MISPLEASE_HOST_ROOT:-/home/mis/misplease}
+      - ./tools/hibernate:/app:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+
   backup:
     profiles: ["ops"]
     image: restic/restic:0.20
