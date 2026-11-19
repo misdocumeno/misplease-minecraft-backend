@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Backfill container logs into VictoriaLogs.
 
-The log tier is on demand (`--profile deep`), so starting it late must not lose
+The log tier is on demand (`--profile logs`), so starting it late must not lose
 history: docker already keeps the logs on disk. This dumps them, timestamps
 included, into VictoriaLogs.
 
