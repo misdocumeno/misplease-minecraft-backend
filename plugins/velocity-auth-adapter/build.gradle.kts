@@ -11,6 +11,12 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.lettuce.core)
     compileOnly(MispleaseDeps.FLOODGATE_API)
+
+    testImplementation(kotlin("test"))
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 tasks.shadowJar {

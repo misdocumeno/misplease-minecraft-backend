@@ -11,6 +11,7 @@ import com.velocitypowered.api.plugin.Dependency
 import com.velocitypowered.api.plugin.Plugin
 import com.velocitypowered.api.proxy.ProxyServer
 import com.velocitypowered.api.network.ProtocolVersion
+import io.github.misdocumeno.application.OrphanDecision
 import io.github.misdocumeno.application.SessionInvalidator
 import io.github.misdocumeno.application.UsernameCaseChecker
 import io.github.misdocumeno.domain.AuthApi
@@ -317,19 +318,14 @@ class VelocityAuthAdapterPlugin @Inject constructor(
                     val misses = (orphanMisses[name] ?: 0) + 1
                     orphanMisses[name] = misses
                     val ageSeconds = redisAuth?.sessionAgeSeconds(name)
-                    if (ageSeconds != null && ageSeconds < ORPHAN_MIN_AGE_SECONDS) {
-                        // `/login` just succeeded and the player is still in the limbo
-                        // or waiting for a cold backend: never drop this session.
-                        continue
-                    }
-                    if (misses < ORPHAN_MISSES_BEFORE_INVALIDATE) {
-                        // Normal during the limbo→backend hand-off: the session exists,
-                        // the player is not a proxy player yet. Decide on a later tick.
+                    if (!OrphanDecision.shouldInvalidate(misses, ageSeconds)) {
+                        // Normal during the limbo→backend hand-off (or a slow thaw):
+                        // the session exists, the player is not a proxy player yet.
                         logger.debug(
-                            "reconcile: {} not on the proxy yet ({}/{} age={}s), keeping session",
+                            "reconcile: {} not on the proxy yet (misses={}/{} age={}s), keeping session",
                             name,
                             misses,
-                            ORPHAN_MISSES_BEFORE_INVALIDATE,
+                            OrphanDecision.MISSES_BEFORE_INVALIDATE,
                             ageSeconds,
                         )
                         continue
@@ -356,21 +352,6 @@ class VelocityAuthAdapterPlugin @Inject constructor(
     companion object {
         /** Keep in sync with floodgate username-prefix on the proxy. */
         private const val FLOODGATE_PREFIX = "."
-
-        /**
-         * Reconcile ticks (15 s each) a session may be authenticated but absent from
-         * `proxy.allPlayers` before it is treated as an orphan. Covers the
-         * limbo→backend hand-off (milliseconds) with a wide margin; real leaves are
-         * still invalidated at once by DisconnectEvent.
-         */
-        private const val ORPHAN_MISSES_BEFORE_INVALIDATE = 3
-
-        /**
-         * A session younger than this is never an orphan: the player may still be
-         * in the limbo or waiting for a frozen backend to thaw (cold thaw 13-21 s,
-         * worse under maintenance). Real leaves do not rely on this path.
-         */
-        private const val ORPHAN_MIN_AGE_SECONDS = 180L
 
         /**
          * 1.21. Same floor as `limboapi prepare-min-version`, ViaVersion's
