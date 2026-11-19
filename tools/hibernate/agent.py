@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -215,6 +216,19 @@ def freeze(server: str) -> None:
 
     if not rcon_ready(server):
         log(f"{server}: RCON not answering, not freezing")
+        return
+
+    # Last gate before the irreversible part: ask the server itself. Presence is
+    # published by the proxy on join/leave, so a desynced proxy or a stale Redis
+    # value must not be able to freeze a server with people on it.
+    listing = rcon(server, "list")
+    m = re.search(r"There are (\d+)", listing or "")
+    if m is None:
+        log(f"{server}: cannot read `list` output ({listing.strip()[:60]!r}), not freezing")
+        return
+    if int(m.group(1)) != 0:
+        log(f"{server}: {m.group(1)} players online, not freezing")
+        empty_since.pop(server, None)
         return
 
     saved = rcon(server, "save-all flush")
