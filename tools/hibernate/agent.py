@@ -52,6 +52,12 @@ RECLAIM_STEP_MB = int(os.getenv("HIBERNATE_RECLAIM_STEP_MB", "512"))
 # Stop reclaiming here: below this the JVM keeps native/direct pages that cannot
 # be reclaimed anyway, and every extra MiB is swap-file IO on the way back in.
 RECLAIM_FLOOR_MB = int(os.getenv("HIBERNATE_RECLAIM_FLOOR_MB", "192"))
+# Liveness probe (replaces Spigot's watchdog, which cannot tell a freeze from a
+# hang: its timeout is wall-clock, so every long freeze looked like a hang).
+PROBE_SECONDS = float(os.getenv("HIBERNATE_PROBE_SECONDS", "30"))
+HANG_ALERT_AFTER = int(os.getenv("HIBERNATE_HANG_ALERT_AFTER", "3"))
+HANG_RESTART_AFTER = int(os.getenv("HIBERNATE_HANG_RESTART_AFTER", "6"))
+ALERT_WEBHOOK = os.getenv("DEPLOY_ALERT_WEBHOOK", "")
 
 STATE_KEY = "misplease:hibernate:state"
 WAKE_PREFIX = "misplease:hibernate:wake:"
@@ -67,10 +73,39 @@ CGROUP_ROOT = Path(os.getenv("HIBERNATE_CGROUP_ROOT", "/sys/fs/cgroup"))
 empty_since: dict[str, float] = {}
 # server -> state we last published
 published: dict[str, str] = {}
+# server -> monotonic time of the last liveness probe
+probed_at: dict[str, float] = {}
+# server -> consecutive failed probes
+hang_failures: dict[str, int] = {}
+# server -> we already sent the alert for this run of failures
+hang_alerted: dict[str, bool] = {}
+# server -> it answered at least one probe since it last started
+hang_baseline: dict[str, bool] = {}
 
 
 def log(msg: str) -> None:
     print(time.strftime("%Y-%m-%d %H:%M:%S"), msg, flush=True)
+
+
+def alert(msg: str) -> None:
+    """Same webhook shape as the deployer, so both land in one channel."""
+    log(f"ALERT: {msg}")
+    if not ALERT_WEBHOOK:
+        return
+    try:
+        import urllib.error
+        import urllib.request
+
+        body = json.dumps({"content": msg[:1800]}).encode()
+        req = urllib.request.Request(
+            ALERT_WEBHOOK,
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        urllib.request.urlopen(req, timeout=15)
+    except Exception as e:
+        log(f"alert webhook failed: {e}")
 
 
 def redis(*args: str) -> str:
@@ -131,6 +166,54 @@ def rcon_ready(server: str) -> bool:
         return True
     except Exception:
         return False
+
+
+def probe_liveness(server: str) -> None:
+    """Freeze-aware hang detection for a server we expect to be running.
+
+    RCON commands run on the server thread, so `list` never answering is the
+    main thread being stuck - exactly what Spigot's watchdog used to catch, but
+    this one knows a frozen container is not a hung one (we only probe while the
+    container is unpaused, and only after it has answered once).
+
+    Alert first, restart only if it stays stuck. A deploy in flight is exempt:
+    `compose up` reboots the backend and RCON is down for a minute or so.
+    """
+    now = time.monotonic()
+    if now - probed_at.get(server, 0.0) < PROBE_SECONDS:
+        return
+    if deploy_pending():
+        return
+    probed_at[server] = now
+    try:
+        rcon(server, "list", timeout=10)
+    except Exception as e:
+        if not hang_baseline.get(server):
+            # Still booting (or this is the first tick after an agent start);
+            # wait for the first answer before calling anything a hang.
+            return
+        failures = hang_failures.get(server, 0) + 1
+        hang_failures[server] = failures
+        log(f"{server}: liveness probe {failures} failed ({type(e).__name__})")
+        if failures >= HANG_ALERT_AFTER and not hang_alerted.get(server):
+            hang_alerted[server] = True
+            alert(
+                f"{server} is not answering RCON ({failures} probes): main thread "
+                "looks hung."
+            )
+        if failures >= HANG_RESTART_AFTER and not DRY_RUN:
+            log(f"{server}: still stuck after {failures} probes, restarting container")
+            docker("restart", container(server))
+            hang_failures[server] = 0
+            hang_alerted[server] = False
+            hang_baseline[server] = False
+            probed_at[server] = time.monotonic() + 120  # let it boot
+        return
+    if hang_failures.get(server):
+        log(f"{server}: liveness probe recovered after {hang_failures[server]} failures")
+    hang_failures[server] = 0
+    hang_alerted[server] = False
+    hang_baseline[server] = True
 
 
 def presence_age(presence: dict) -> float:
@@ -354,8 +437,7 @@ def tick() -> None:
                 continue
             if wake_requested(server):
                 thaw(server)
-                continue
-            # Keep converging: a freeze that stopped early (agent restarted, or
+                continue            # Keep converging: a freeze that stopped early (agent restarted, or
             # the host was busy) finishes here instead of waiting for a replay.
             # Skipped while a deploy is queued, since that unpauses it anyway.
             if not deploy_pending() and not backup_running():
@@ -368,6 +450,9 @@ def tick() -> None:
                     log(f"{server}: asleep with {current // (1024 * 1024)} MiB, reclaiming")
                     reclaim(server)
             continue
+
+        # Awake: make sure it still answers, the way Spigot's watchdog used to.
+        probe_liveness(server)
 
         if empty is None:
             empty_since.pop(server, None)
