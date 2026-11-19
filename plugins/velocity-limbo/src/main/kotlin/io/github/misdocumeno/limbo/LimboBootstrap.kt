@@ -68,7 +68,6 @@ class LimboBootstrap(
             System.getenv("AUTH_URL")?.takeIf { it.isNotBlank() } ?: "http://auth:3000",
             logger,
         )
-        val entryServer = System.getenv("LIMBO_ENTRY_SERVER")?.takeIf { it.isNotBlank() } ?: "main"
         val timeoutSeconds = System.getenv("LIMBO_LOGIN_TIMEOUT_SECONDS")?.toLongOrNull() ?: 120L
 
         // First arg must be the plugin instance: Velocity resolves it with
@@ -76,16 +75,14 @@ class LimboBootstrap(
         proxy.eventManager.register(
             plugin,
             LoginLimboListener(
-                proxy = proxy,
                 scheduler = proxy.scheduler,
                 plugin = plugin,
                 limbo = limbo,
                 api = api,
-                entryServer = entryServer,
                 timeoutSeconds = timeoutSeconds,
                 logger = logger,
             ),
         )
-        logger.info("login limbo ready (entry server: {}, timeout: {}s)", entryServer, timeoutSeconds)
+        logger.info("login limbo ready (login timeout: {}s)", timeoutSeconds)
     }
 }

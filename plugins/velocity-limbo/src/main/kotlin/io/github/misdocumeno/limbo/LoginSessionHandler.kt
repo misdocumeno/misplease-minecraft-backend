@@ -26,7 +26,7 @@ class LoginSessionHandler(
     private val scheduler: Scheduler,
     private val plugin: VelocityLimboPlugin,
     private val api: LoginApi,
-    private val onAuthenticated: (Player) -> Unit,
+    private val onAuthenticated: (LimboPlayer) -> Unit,
     private val timeoutSeconds: Long,
 ) : LimboSessionHandler {
 
@@ -40,8 +40,10 @@ class LoginSessionHandler(
     private val authUsername = player.username.removePrefix(FLOODGATE_PREFIX)
     private var attempts = 0
     private var timeoutTask: ScheduledTask? = null
+    private var limboPlayer: LimboPlayer? = null
 
     override fun onSpawn(server: Limbo, limboPlayer: LimboPlayer) {
+        this.limboPlayer = limboPlayer
         player.sendMessage(
             mm.deserialize("<gold><bold>misplease</bold></gold> <gray>·</gray> <white>Ingresá con <yellow>/login <contraseña></yellow></white>"),
         )
@@ -88,7 +90,12 @@ class LoginSessionHandler(
                 player.sendMessage(
                     mm.deserialize("<green>Sesión iniciada.</green> <gray>Conectando…</gray>"),
                 )
-                onAuthenticated(player)
+                val limboPlayer = limboPlayer
+                if (limboPlayer != null) {
+                    onAuthenticated(limboPlayer)
+                } else {
+                    disconnect("Sesión iniciada, pero el limbo no está listo. Reconectá.")
+                }
             }
 
             LoginResult.INVALID_CREDENTIALS ->
