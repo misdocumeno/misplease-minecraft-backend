@@ -37,9 +37,9 @@ class LimboBootstrap(
             .createLimbo(world)
             .setName("limbo")
             .setGameMode(GameMode.ADVENTURE)
-            // The hub is ~12x12 chunks off-centre from the carpet; 5 keeps the
-            // whole build in view without sending chunks nobody can see.
-            .setViewDistance(5)
+            // The build spans 8 chunks from the carpet (x -7..5, z -2..8) and it is
+            // not centred on the spawn, so 5 would clip its south/east half.
+            .setViewDistance(8)
             .setSimulationDistance(2)
             // Authenticated players leave for a real backend; never pull them back.
             .setShouldRejoin(false)
@@ -57,7 +57,7 @@ class LimboBootstrap(
             world.spawnX,
             world.spawnY,
             world.spawnZ,
-            world.getBlock(0, 129, 0).modernStringID.ifEmpty { "air" },
+            world.getBlock(0, 65, 0).modernStringID.ifEmpty { "air" },
         )
 
         val api: LoginApi = KtorLoginApi(

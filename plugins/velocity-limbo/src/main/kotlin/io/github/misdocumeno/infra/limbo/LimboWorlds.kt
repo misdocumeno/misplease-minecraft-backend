@@ -8,30 +8,32 @@ import net.elytrium.limboapi.api.file.BuiltInWorldFileType
 /**
  * The login limbo world: the hub build, loaded from `limbo/hub.schem`.
  *
- * The schematic is a git-tracked build input baked into the plugin jar (the CI
- * compiles it from source; nothing is mounted on the VM). To replace the build:
- * WorldEdit `//schem save misplease_hub` on a scratch world, then copy the file
- * here.
+ * The schematic is a git-tracked build input baked into the plugin jar (CI
+ * compiles it from source; nothing is mounted on the VM).
  *
- * Coordinate notes (Sponge v3, 321x290x321, `Offset [-160,-129,-160]`):
- * - the paste origin puts the gray carpet, local `(160,129,160)`, on world
- *   `(0,129,0)`, which is why the spawn is `(0.5, 130, 0.5)`;
- * - LimboAPI's reader ignores `Offset`/`Metadata` and only reads the block data,
- *   so the offsets below are ours to keep in sync with the saved file.
+ * Two limits of LimboAPI 1.2.0 shape this file, see `tools/limbo-schem/README.md`:
+ * - a `VirtualWorld` only has 16 chunk sections, i.e. y 0..255, and the reader
+ *   calls `setBlock` for every cell including air, so the schematic is trimmed
+ *   to its non-air bounds (196x111x182);
+ * - block entities (beacon levels, sign text) are honoured only for the blocks
+ *   that survive that trim.
+ *
+ * Geometry: the trim keeps the original world layout, so pasting at
+ * `(-102, 10, -40)` puts the gray carpet, local `(102,55,40)`, back on
+ * `(0,65,0)` - the same place it has in the source world.
  */
 object LimboWorlds {
 
-    /** Where the schematic is pasted; makes the gray carpet land on world (0,129,0). */
-    private const val PASTE_X = -160
-    private const val PASTE_Y = 0
-    private const val PASTE_Z = -160
+    private const val PASTE_X = -102
+    private const val PASTE_Y = 10
+    private const val PASTE_Z = -40
 
     const val SPAWN_X = 0.5
-    const val SPAWN_Y = 130.0
+    const val SPAWN_Y = 66.0
     const val SPAWN_Z = 0.5
 
-    /** Below this a player is falling out of the build; put them back on the carpet. */
-    const val FALL_Y = 60.0
+    /** Nothing in the build sits below y=10, so this is already clear of it. */
+    const val FALL_Y = 8.0
 
     fun hub(factory: LimboFactory): VirtualWorld {
         val stream = javaClass.getResourceAsStream("/limbo/hub.schem")
