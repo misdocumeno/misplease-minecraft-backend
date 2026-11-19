@@ -322,6 +322,12 @@ services:
       HIBERNATE_AFTER_SECONDS: ${HIBERNATE_AFTER_SECONDS:-600}
       HIBERNATE_RECLAIM_STEP_MB: ${HIBERNATE_RECLAIM_STEP_MB:-512}
       HIBERNATE_RECLAIM_FLOOR_MB: ${HIBERNATE_RECLAIM_FLOOR_MB:-192}
+      # Freeze-aware watchdog: RCON `list` on awake servers. Alerts first, and
+      # restarts the container only if it stays stuck.
+      HIBERNATE_PROBE_SECONDS: ${HIBERNATE_PROBE_SECONDS:-30}
+      HIBERNATE_HANG_ALERT_AFTER: ${HIBERNATE_HANG_ALERT_AFTER:-3}
+      HIBERNATE_HANG_RESTART_AFTER: ${HIBERNATE_HANG_RESTART_AFTER:-6}
+      DEPLOY_ALERT_WEBHOOK: ${DEPLOY_ALERT_WEBHOOK:-}
       HIBERNATE_DRY_RUN: ${HIBERNATE_DRY_RUN:-1}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock

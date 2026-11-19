@@ -10,6 +10,7 @@ import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
 import com.velocitypowered.api.plugin.Dependency
 import com.velocitypowered.api.plugin.Plugin
 import com.velocitypowered.api.proxy.ProxyServer
+import com.velocitypowered.api.network.ProtocolVersion
 import io.github.misdocumeno.application.SessionInvalidator
 import io.github.misdocumeno.application.UsernameCaseChecker
 import io.github.misdocumeno.domain.AuthApi
@@ -116,6 +117,19 @@ class VelocityAuthAdapterPlugin @Inject constructor(
     @Subscribe(order = PostOrder.LAST)
     fun onPreLogin(event: PreLoginEvent) = runBlocking {
         val fg = findFloodgatePlayer(event.username)
+
+        // Velocity accepts every protocol; the login limbo only prepares packets
+        // for 1.21+, so older clients used to die inside LimboAPI with an internal
+        // error. ViaVersion lives on the backends, and nobody gets that far.
+        // Bedrock is exempt: Floodgate reports Geyser's own protocol, not the
+        // client's Java version.
+        if (fg == null && event.connection.protocolVersion.protocol < MIN_CLIENT_PROTOCOL) {
+            event.result = PreLoginEvent.PreLoginComponentResult.denied(
+                Component.text("Usá Minecraft 1.21 o superior para entrar."),
+            )
+            return@runBlocking
+        }
+
         val lookup = authLookupName(event.username, fg)
 
         when (val result = caseChecker.check(lookup)) {
@@ -283,5 +297,11 @@ class VelocityAuthAdapterPlugin @Inject constructor(
     companion object {
         /** Keep in sync with floodgate username-prefix on the proxy. */
         private const val FLOODGATE_PREFIX = "."
+
+        /**
+         * 1.21. Same floor as `limboapi prepare-min-version`, ViaVersion's
+         * `block-versions` on main/tech and the MOTD. Bump all four together.
+         */
+        private val MIN_CLIENT_PROTOCOL = ProtocolVersion.MINECRAFT_1_21.protocol
     }
 }

@@ -32,6 +32,15 @@ object LimboWorlds {
     const val SPAWN_Y = 66.0
     const val SPAWN_Z = 0.5
 
+    /**
+     * Faces the "MisPlease" build. Yaw 180 is due north (-Z), where the logo is;
+     * -10 pitch looks slightly up so the whole logo fits the screen. Rounded on
+     * purpose (fine-tuning a client's F3 numbers just makes the limbo feel off
+     * for everyone else).
+     */
+    const val SPAWN_YAW = 180.0f
+    const val SPAWN_PITCH = -10.0f
+
     /** Nothing in the build sits below y=10, so this is already clear of it. */
     const val FALL_Y = 8.0
 
@@ -48,8 +57,8 @@ object LimboWorlds {
             SPAWN_X,
             SPAWN_Y,
             SPAWN_Z,
-            0.0f,
-            0.0f,
+            SPAWN_YAW,
+            SPAWN_PITCH,
         )
         file.toWorld(factory, world, PASTE_X, PASTE_Y, PASTE_Z)
 

@@ -80,8 +80,8 @@ class LoginSessionHandler(
             LimboWorlds.SPAWN_X,
             LimboWorlds.SPAWN_Y,
             LimboWorlds.SPAWN_Z,
-            0.0f,
-            0.0f,
+            LimboWorlds.SPAWN_YAW,
+            LimboWorlds.SPAWN_PITCH,
         )
         player.sendActionBar(mm.deserialize("$PREFIX<gray>Volviste al spawn.</gray>"))
     }
