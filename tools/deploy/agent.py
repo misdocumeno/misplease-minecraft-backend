@@ -560,6 +560,10 @@ _AGENT_ONLY_GLOBS = [
     "*.md",
 ]
 
+# Nothing here is baked into an image, so a commit touching only these has no
+# image tags of its own (see image_fallback_sha).
+_PIN_ONLY_GLOBS = _AGENT_ONLY_GLOBS + _OBS_GLOBS
+
 
 def classify_config_hot_reload(
     applied: str | None, wanted: str
@@ -1088,6 +1092,49 @@ def compose_pull_up(tag: str) -> str:
     return used
 
 
+def image_fallback_sha(wanted: str) -> str | None:
+    """Newest ancestor of `wanted` whose image tags exist, if the tail is pin-only.
+
+    A pin-only push (CI/agent/obs only) has no image tags on purpose: nothing
+    rebuilt. If an image-affecting commit was still building when it landed, the
+    pin skips ahead of where the images are and the compose path would wait for
+    tags that will never be published. Applying the newest tagged ancestor first
+    is safe only when every path between it and `wanted` is pin-only; otherwise
+    a build for one of those commits failed or is still running, and waiting is
+    exactly right.
+    """
+    if not (ROOT / ".git").is_dir():
+        return None
+    run(["git", "config", "--global", "--add", "safe.directory", str(ROOT)], check=False)
+    run(
+        ["git", "fetch", "--quiet", "--depth=40", "origin", "main:refs/remotes/origin/main"],
+        check=False,
+    )
+    try:
+        revs = subprocess.run(
+            ["git", "rev-list", "--first-parent", "--max-count=30", "origin/main"],
+            cwd=str(ROOT), capture_output=True, text=True, check=True,
+        ).stdout.split()
+    except subprocess.CalledProcessError:
+        return None
+    if wanted not in revs:
+        return None
+    for cand in revs[revs.index(wanted) + 1:][:10]:
+        if missing_image_tags(cand):
+            continue
+        try:
+            paths = subprocess.run(
+                ["git", "diff", "--name-only", cand, wanted],
+                cwd=str(ROOT), capture_output=True, text=True, check=True,
+            ).stdout.split()
+        except subprocess.CalledProcessError:
+            return None
+        if not paths or all(path_matches(_PIN_ONLY_GLOBS, p) for p in paths):
+            return cand
+        return None
+    return None
+
+
 def run_health() -> bool:
     if not HEALTH_SCRIPT.is_file():
         log(f"missing health script: {HEALTH_SCRIPT}")
@@ -1232,14 +1279,24 @@ def tick() -> None:
 
     missing = missing_image_tags(wanted_s)
     if missing:
-        note = f"{wanted_s}|{','.join(missing)}"
-        if _missing_tags_notice.get("notice") != note:
-            _missing_tags_notice["notice"] = note
-            log(
-                f"images not published yet for {wanted_s} "
-                f"({', '.join(missing)}) — waiting, maintenance stays off"
-            )
-        return
+        fallback = image_fallback_sha(wanted_s)
+        if fallback is None:
+            note = f"{wanted_s}|{','.join(missing)}"
+            if _missing_tags_notice.get("notice") != note:
+                _missing_tags_notice["notice"] = note
+                log(
+                    f"images not published yet for {wanted_s} "
+                    f"({', '.join(missing)}) — waiting, maintenance stays off"
+                )
+            return
+        # Pin-only tail (CI/agent/obs): those commits never get images. Apply the
+        # newest tagged ancestor now; the next tick sees a pin-only diff and only
+        # checks the repo out + reloads the containers.
+        log(
+            f"no images for {wanted_s[:7]} (pin-only tail) — applying "
+            f"{fallback[:7]} first, then the agent/CI commits on top"
+        )
+        wanted_s = fallback
 
     age = empty_age_seconds()
     if age is None:
