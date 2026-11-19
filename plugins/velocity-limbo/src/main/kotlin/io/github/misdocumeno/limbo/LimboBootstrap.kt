@@ -8,6 +8,7 @@ import io.github.misdocumeno.infra.http.KtorLoginApi
 import io.github.misdocumeno.infra.limbo.LimboWorlds
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
 import net.elytrium.limboapi.api.Limbo
@@ -43,7 +44,12 @@ class LimboBootstrap(
             .setShouldRespawn(false)
 
         val api: LoginApi = KtorLoginApi(
-            HttpClient(CIO) { install(ContentNegotiation) { json() } },
+            HttpClient(CIO) {
+                install(ContentNegotiation) { json() }
+                // Login runs while the player waits in the limbo; never let a
+                // stuck auth call hold the scheduler thread forever.
+                install(HttpTimeout) { requestTimeoutMillis = 10_000 }
+            },
             System.getenv("AUTH_URL")?.takeIf { it.isNotBlank() } ?: "http://auth:3000",
         )
         val entryServer = System.getenv("LIMBO_ENTRY_SERVER")?.takeIf { it.isNotBlank() } ?: "main"
