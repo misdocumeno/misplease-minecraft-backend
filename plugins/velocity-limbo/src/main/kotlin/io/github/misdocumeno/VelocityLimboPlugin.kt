@@ -5,9 +5,7 @@ import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
 import com.velocitypowered.api.plugin.Dependency
 import com.velocitypowered.api.plugin.Plugin
-import com.velocitypowered.api.plugin.PluginContainer
 import com.velocitypowered.api.proxy.ProxyServer
-import io.github.misdocumeno.limbo.LimboBootstrap
 import org.slf4j.Logger
 
 /**
@@ -22,10 +20,11 @@ import org.slf4j.Logger
  * The auth service owns the session: a successful `POST /login` writes the same
  * Redis session the backends read, so there is no second implementation of auth.
  *
- * This class deliberately references no LimboAPI type: the plugin has to load
- * (and no-op) on a proxy that does not have LimboAPI installed yet. Everything
- * limbo-related is in [LimboBootstrap], which is only touched once the plugin is
- * present.
+ * This class must not mention a LimboAPI type, not even in a field type: the
+ * proxy has to load the plugin (and no-op) before LimboAPI is installed, and a
+ * field of a LimboAPI type is resolved while the class is loaded. That is why
+ * the handle is `Any` and everything limbo-related lives in `limbo.LimboBootstrap`,
+ * which is only touched when the limboapi plugin is present.
  */
 @Plugin(
     id = "limbo",
@@ -40,16 +39,16 @@ class VelocityLimboPlugin @Inject constructor(
     private val logger: Logger,
 ) {
 
-    private var bootstrap: LimboBootstrap? = null
+    /** [io.github.misdocumeno.limbo.LimboBootstrap]; `Any` on purpose. */
+    private var bootstrap: Any? = null
 
     @Subscribe
     fun onProxyInitialize(event: ProxyInitializeEvent) {
-        val container: PluginContainer = proxy.pluginManager.getPlugin("limboapi").orElse(null)
-            ?: run {
-                logger.warn("limboapi is not installed — login limbo disabled, players go straight to a backend")
-                return
-            }
-
-        bootstrap = LimboBootstrap(proxy, container, logger).also { it.start() }
+        val container = proxy.pluginManager.getPlugin("limboapi").orElse(null)
+        if (container == null) {
+            logger.warn("limboapi is not installed — login limbo disabled, players go straight to a backend")
+            return
+        }
+        bootstrap = io.github.misdocumeno.limbo.LimboBootstrap(proxy, container, logger).also { it.start() }
     }
 }

@@ -117,8 +117,11 @@ if ! grep -q 'Done (' "$LOG"; then
 fi
 
 # Done ( does not mean every plugin loaded. The JVM has no plugin-load exit status;
-# Paper keeps running and only logs. Match Paper logger names (stable) plus known phrases.
-FAIL_RE='Error occurred while enabling |Unsupported server version detected:|Could not load |UnknownDependencyException|\[DirectoryProviderSource\]|\[ModernPluginLoadingStrategy\]|Directory .*\.jar. does not contain a (paper-)?plugin\.yml'
+# Paper keeps running and only logs. Match Paper logger names (stable) plus known
+# phrases, and Velocity's plugin-loader wording ("Can't create plugin X", which is
+# what a NoClassDefFoundError in a proxy plugin looks like: the proxy stays up and
+# just refuses that one plugin).
+FAIL_RE='Error occurred while enabling |Unsupported server version detected:|Could not load |UnknownDependencyException|Can.t create plugin|Unable to load plugin|Failed to load plugin|\[DirectoryProviderSource\]|\[ModernPluginLoadingStrategy\]|Directory .*\.jar. does not contain a (paper-)?plugin\.yml'
 if grep -E "$FAIL_RE" "$LOG" >/tmp/smoke-errors.txt; then
   echo "smoke failed: plugin load/enable errors" >&2
   cat /tmp/smoke-errors.txt >&2
