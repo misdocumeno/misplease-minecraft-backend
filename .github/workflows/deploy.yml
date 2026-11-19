@@ -72,14 +72,22 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           SHA: ${{ github.sha }}
+          BEFORE: ${{ github.event.before }}
         run: |
           set -euo pipefail
-          python3 - "$REPO" "$SHA" <<'PY'
+          python3 - "$REPO" "$SHA" "$BEFORE" <<'PY'
           import json, os, sys, urllib.request
 
-          repo, sha = sys.argv[1], sys.argv[2]
+          repo, sha, before = sys.argv[1], sys.argv[2], sys.argv[3]
+          # A push can carry several commits (we often push a batch): judge the
+          # whole range, not just the tip, or a deploy-only tip hides an earlier
+          # commit that rebuilds the images.
+          if before and set(before) != {"0"}:
+              url = f"https://api.github.com/repos/{repo}/compare/{before}...{sha}"
+          else:
+              url = f"https://api.github.com/repos/{repo}/commits/{sha}"
           req = urllib.request.Request(
-              f"https://api.github.com/repos/{repo}/commits/{sha}",
+              url,
               headers={
                   "Authorization": f"Bearer {os.environ['GH_TOKEN']}",
                   "Accept": "application/vnd.github+json",
