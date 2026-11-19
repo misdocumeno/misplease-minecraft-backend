@@ -3,6 +3,7 @@ package io.github.misdocumeno
 import io.github.misdocumeno.domain.model.TeleportRequest
 import io.github.misdocumeno.infra.paper.PaperEventListener
 import io.github.misdocumeno.infra.paper.PaperTeleportHandler
+import io.github.misdocumeno.infra.paper.PendingTeleport
 import io.github.misdocumeno.infra.redis.RedisTeleportAdapter
 import io.github.misdocumeno.infra.redis.RedisTeleportListener
 import io.lettuce.core.RedisClient
@@ -27,7 +28,7 @@ class BackendGlobalTeleporterPlugin : JavaPlugin() {
         val serverId = System.getenv("SERVER_ID")
             ?: error("SERVER_ID env variable not set.")
 
-        val pending = ConcurrentHashMap<String, TeleportRequest>()
+        val pending = ConcurrentHashMap<String, PendingTeleport>()
         val handler = PaperTeleportHandler(this, serverId, pending)
         val adapter = RedisTeleportAdapter(handler, json)
         RedisTeleportListener(connectionPubSub, adapter).start()

@@ -19,3 +19,9 @@ tech = "tech:25565"
 try = ["main"]
 
 [forced-hosts]
+
+[advanced]
+# A hibernated backend accepts TCP (kernel listen queue) but does not answer
+# until it is unpaused. Wake target is 0.5-3 s; 10 s covers a slow thaw before
+# the proxy gives up and shows "Unable to connect". read-timeout stays 30 s.
+connection-timeout = 10000

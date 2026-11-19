@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentMap
 class PaperTeleportHandler(
     private val plugin: Plugin,
     private val serverId: String,
-    private val pending: ConcurrentMap<String, TeleportRequest>,
+    private val pending: ConcurrentMap<String, PendingTeleport>,
 ) : TeleportHandler {
 
     private val mm = MiniMessage.miniMessage()
@@ -43,7 +43,11 @@ class PaperTeleportHandler(
         val player = Bukkit.getPlayer(event.username)
 
         if (player == null) {
-            pending[event.username] = event
+            // Cross-server: the proxy may be holding this connect until the
+            // backend wakes. Expire instead of applying stale coordinates on a
+            // much later join.
+            pending.entries.removeIf { it.value.isExpired() }
+            pending[event.username] = PendingTeleport(event)
             return
         }
 
