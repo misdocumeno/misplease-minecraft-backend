@@ -1,6 +1,7 @@
 package io.github.misdocumeno
 
 import com.google.inject.Inject
+import com.velocitypowered.api.event.PostOrder
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.player.ServerPreConnectEvent
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
@@ -77,9 +78,15 @@ class VelocityWakePlugin @Inject constructor(
         redis?.shutdown()
     }
 
-    @Subscribe
+    /**
+     * `order = LAST` matters: `velocity-last-session` rewrites the target on the
+     * first connect of a session (`try = ["main"]` offers main, then gets
+     * redirected to the player's real backend). Reading `originalServer` here
+     * woke main on every single login, including players whose target was tech.
+     */
+    @Subscribe(order = PostOrder.LAST)
     fun onServerPreConnect(event: ServerPreConnectEvent) {
-        val server = event.originalServer.serverInfo.name
+        val server = event.result.server.orElse(null)?.serverInfo?.name ?: return
         if (server !in asleep) return
 
         val conn = connection ?: return
