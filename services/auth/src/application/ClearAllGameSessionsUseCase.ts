@@ -3,7 +3,7 @@ import type { SessionStore } from '@/domain/ports/SessionStore'
 export class ClearAllGameSessionsUseCase {
     constructor(private sessionStore: SessionStore) {}
 
-    execute() {
-        return this.sessionStore.clearAll()
+    execute(source: string) {
+        return this.sessionStore.clearAll(source)
     }
 }

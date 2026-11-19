@@ -3,6 +3,7 @@ package io.github.misdocumeno.infra.http
 import io.github.misdocumeno.domain.LoginApi
 import io.github.misdocumeno.domain.LoginResult
 import io.ktor.client.HttpClient
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -28,7 +29,7 @@ class KtorLoginApi(
     private val logger: Logger,
 ) : LoginApi {
 
-    override suspend fun login(username: String, password: String): LoginResult {
+    override suspend fun login(username: String, password: String, loginId: String): LoginResult {
         return try {
             // Encode here and send a plain string body instead of installing Ktor's
             // ContentNegotiation: its kotlinx provider service file ships with a
@@ -37,6 +38,7 @@ class KtorLoginApi(
             val payload = Json.encodeToString(Credentials(username, password))
             val response = client.post("$baseUrl/session/login") {
                 contentType(ContentType.Application.Json)
+                header(REQUEST_ID_HEADER, loginId)
                 setBody(payload)
             }
             when (response.status) {
@@ -44,8 +46,9 @@ class KtorLoginApi(
                 HttpStatusCode.Unauthorized -> LoginResult.INVALID_CREDENTIALS
                 else -> {
                     logger.warn(
-                        "login for {} failed: HTTP {} {}",
+                        "login for {} failed id={}: HTTP {} {}",
                         username,
+                        loginId,
                         response.status.value,
                         response.bodyAsText().take(200),
                     )
@@ -53,11 +56,21 @@ class KtorLoginApi(
                 }
             }
         } catch (e: Exception) {
-            logger.warn("login for {} failed: {}: {}", username, e.javaClass.simpleName, e.message)
+            logger.warn(
+                "login for {} failed id={}: {}: {}",
+                username,
+                loginId,
+                e.javaClass.simpleName,
+                e.message,
+            )
             LoginResult.UNREACHABLE
         }
     }
 
     @Serializable
     private data class Credentials(val username: String, val password: String)
+
+    private companion object {
+        const val REQUEST_ID_HEADER = "X-Request-Id"
+    }
 }

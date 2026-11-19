@@ -18,15 +18,20 @@ class KtorAuthApi(private val client: HttpClient) : AuthApi {
         }.body()
     }
 
-    override suspend fun invalidateSession(username: String) {
+    override suspend fun invalidateSession(username: String, source: String, requestId: String) {
         client.post("http://auth:3000/session/invalidate") {
             contentType(ContentType.Application.Json)
-            setBody(Username(username))
+            header(REQUEST_ID_HEADER, requestId)
+            setBody(InvalidateRequest(username, source))
         }
     }
 
-    override suspend fun clearAllSessions() {
-        client.post("http://auth:3000/session/clear-all")
+    override suspend fun clearAllSessions(source: String, requestId: String) {
+        client.post("http://auth:3000/session/clear-all") {
+            contentType(ContentType.Application.Json)
+            header(REQUEST_ID_HEADER, requestId)
+            setBody(ClearAllRequest(source))
+        }
     }
 
     override suspend fun listAuthenticated(): List<String> {
@@ -35,4 +40,14 @@ class KtorAuthApi(private val client: HttpClient) : AuthApi {
 
     @Serializable
     private data class AuthenticatedList(val usernames: List<String>)
+
+    @Serializable
+    private data class InvalidateRequest(val username: String, val source: String)
+
+    @Serializable
+    private data class ClearAllRequest(val source: String)
+
+    private companion object {
+        const val REQUEST_ID_HEADER = "X-Request-Id"
+    }
 }

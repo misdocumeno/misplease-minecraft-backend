@@ -76,7 +76,7 @@ class BackendAuthAdapterPlugin : JavaPlugin() {
         val sessionManager = SessionManager { PlayerSession(blocker, feedback, timeout) }
 
         server.pluginManager.registerEvents(
-            AuthEventListener(sessionManager, checkSession, scope),
+            AuthEventListener(sessionManager, checkSession, scope, logger),
             this,
         )
 

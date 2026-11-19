@@ -30,6 +30,7 @@ import org.geysermc.floodgate.api.FloodgateApi
 import org.geysermc.floodgate.api.player.FloodgatePlayer
 import org.slf4j.Logger
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 /**
@@ -75,6 +76,17 @@ class VelocityAuthAdapterPlugin @Inject constructor(
     private var redis: RedisClient? = null
     private var redisConnection: StatefulRedisConnection<String, String>? = null
 
+    /**
+     * Consecutive reconcile ticks a session name has been authenticated but missing
+     * from `proxy.allPlayers`. A player who just `/login`'d in the limbo is not a
+     * registered proxy player until LimboAPI hands them to a backend, so treating
+     * one miss as an orphan deleted the session milliseconds after creating it and
+     * the backend asked for `/login` again. Real leaves still go through
+     * DisconnectEvent, which invalidates immediately; this grace only delays
+     * cleanup of a genuinely stale session.
+     */
+    private val orphanMisses = ConcurrentHashMap<String, Int>()
+
     @Subscribe
     fun onProxyInitialize(event: ProxyInitializeEvent) {
         val client = HttpClient(CIO) {
@@ -93,18 +105,19 @@ class VelocityAuthAdapterPlugin @Inject constructor(
                 redis = redisClient
                 val conn = redisClient.connect()
                 redisConnection = conn
-                proxy.eventManager.register(this, UnauthCommandGate(RedisAuthSet(conn)))
+                proxy.eventManager.register(this, UnauthCommandGate(RedisAuthSet(conn), logger))
             } catch (e: Exception) {
                 logger.warn("redis unavailable for unauth command gate: {}", e.message)
             }
         }
 
         runBlocking {
+            val requestId = requestId("clear-all")
             try {
-                api.clearAllSessions()
-                logger.info("cleared auth sessions on proxy start")
+                api.clearAllSessions("proxy-start", requestId)
+                logger.info("cleared auth sessions on proxy start (request={})", requestId)
             } catch (e: Exception) {
-                logger.warn("clear-all on proxy start failed: {}", e.message)
+                logger.warn("clear-all on proxy start failed (request={}): {}", requestId, e.message)
             }
         }
 
@@ -166,10 +179,11 @@ class VelocityAuthAdapterPlugin @Inject constructor(
     @Subscribe
     fun onProxyShutdown(event: ProxyShutdownEvent) {
         runBlocking {
+            val requestId = requestId("shutdown")
             try {
-                api.clearAllSessions()
+                api.clearAllSessions("proxy-shutdown", requestId)
             } catch (e: Exception) {
-                logger.warn("clear-all on proxy shutdown failed: {}", e.message)
+                logger.warn("clear-all on proxy shutdown failed (request={}): {}", requestId, e.message)
             }
         }
         redisConnection?.close()
@@ -268,11 +282,19 @@ class VelocityAuthAdapterPlugin @Inject constructor(
     }
 
     private fun dropSession(username: String, reason: String) {
+        val requestId = requestId(reason)
+        logger.info("invalidating session user={} source={} request={}", username, reason, requestId)
         runBlocking {
             try {
-                invalidator.invalidate(username)
+                invalidator.invalidate(username, reason, requestId)
             } catch (e: Exception) {
-                logger.warn("invalidate {} ({}): {}", username, reason, e.message)
+                logger.warn(
+                    "invalidate {} ({} request={}): {}",
+                    username,
+                    reason,
+                    requestId,
+                    e.message,
+                )
             }
         }
     }
@@ -281,22 +303,57 @@ class VelocityAuthAdapterPlugin @Inject constructor(
         runBlocking {
             try {
                 val authed = api.listAuthenticated()
-                val online = proxy.allPlayers.mapTo(HashSet()) { it.username }
+                val online = proxy.allPlayers.mapTo(HashSet()) { it.username.lowercase() }
+                val stillAuthed = HashSet<String>()
                 for (name in authed) {
-                    if (name !in online) {
-                        invalidator.invalidate(name)
-                        logger.info("reconcile invalidated orphan session {}", name)
+                    stillAuthed += name
+                    if (name.lowercase() in online) {
+                        orphanMisses.remove(name)
+                        continue
                     }
+                    val misses = (orphanMisses[name] ?: 0) + 1
+                    orphanMisses[name] = misses
+                    if (misses < ORPHAN_MISSES_BEFORE_INVALIDATE) {
+                        // Normal during the limbo→backend hand-off: the session exists,
+                        // the player is not a proxy player yet. Decide on a later tick.
+                        logger.debug(
+                            "reconcile: {} not on the proxy yet ({}/{}), keeping session",
+                            name,
+                            misses,
+                            ORPHAN_MISSES_BEFORE_INVALIDATE,
+                        )
+                        continue
+                    }
+                    val requestId = requestId("reconcile")
+                    logger.info(
+                        "reconcile invalidating orphan session user={} misses={} request={}",
+                        name,
+                        misses,
+                        requestId,
+                    )
+                    invalidator.invalidate(name, "proxy-reconcile", requestId)
+                    orphanMisses.remove(name)
                 }
+                orphanMisses.keys.retainAll(stillAuthed)
             } catch (e: Exception) {
                 logger.warn("auth session reconcile failed: {}", e.message)
             }
         }
     }
 
+    private fun requestId(prefix: String): String = "$prefix-${UUID.randomUUID()}"
+
     companion object {
         /** Keep in sync with floodgate username-prefix on the proxy. */
         private const val FLOODGATE_PREFIX = "."
+
+        /**
+         * Reconcile ticks (15 s each) a session may be authenticated but absent from
+         * `proxy.allPlayers` before it is treated as an orphan. Covers the
+         * limbo→backend hand-off (milliseconds) with a wide margin; real leaves are
+         * still invalidated at once by DisconnectEvent.
+         */
+        private const val ORPHAN_MISSES_BEFORE_INVALIDATE = 3
 
         /**
          * 1.21. Same floor as `limboapi prepare-min-version`, ViaVersion's

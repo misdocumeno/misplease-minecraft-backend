@@ -22,6 +22,7 @@ import { CaseSensitivityUsernamePolicy } from './domain/policies/CaseSensitivity
 import { UsernameCasingController } from './infra/http/UsernameCasingController'
 import { AdminController } from './infra/http/AdminController'
 import { RedisSessionStore } from './infra/sessions/RedisSessionStore'
+import { requestLogger } from './infra/log/logger'
 import { BukkitOfflineUUIDGenerator } from './services/BukkitOfflineUUIDGenerator'
 
 const redis = createClient({ url: process.env.REDIS_URL! })
@@ -37,6 +38,8 @@ async function main() {
 
     const app = express()
     app.use(express.json())
+    // One JSON line per request + an X-Request-Id the proxy also logs.
+    app.use(requestLogger)
 
     const passwordHasher = new LegacyAuthMePasswordHasher()
     const uuidGenerator = new BukkitOfflineUUIDGenerator()

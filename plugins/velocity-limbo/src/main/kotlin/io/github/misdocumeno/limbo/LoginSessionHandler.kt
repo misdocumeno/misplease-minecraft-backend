@@ -18,6 +18,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.title.Title
 import org.slf4j.Logger
 import java.time.Duration
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -139,7 +140,11 @@ class LoginSessionHandler(
 
     private fun authenticate(password: String) {
         if (done.get()) return
-        when (val result = runBlocking { api.login(authUsername, password) }) {
+        val loginId = "login-${UUID.randomUUID()}"
+        logger.info("login attempt user={} id={}", authUsername, loginId)
+        val result = runBlocking { api.login(authUsername, password, loginId) }
+        logger.info("login result user={} id={} result={}", authUsername, loginId, result)
+        when (result) {
             LoginResult.SUCCESS -> {
                 if (!done.compareAndSet(false, true)) return
                 timeoutTask?.cancel()

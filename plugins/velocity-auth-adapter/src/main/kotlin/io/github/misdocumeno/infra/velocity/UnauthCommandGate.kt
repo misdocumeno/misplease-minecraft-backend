@@ -8,6 +8,7 @@ import com.velocitypowered.api.proxy.Player
 import io.github.misdocumeno.infra.redis.RedisAuthSet
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import org.slf4j.Logger
 
 /**
  * Proxy-side gate while Redis has no session: block every Velocity command except
@@ -16,6 +17,7 @@ import net.kyori.adventure.text.format.NamedTextColor
  */
 class UnauthCommandGate(
     private val auth: RedisAuthSet,
+    private val logger: Logger,
 ) {
     @Subscribe
     fun onCommand(event: CommandExecuteEvent) {
@@ -32,20 +34,29 @@ class UnauthCommandGate(
     @Subscribe
     fun onAvailableCommands(event: PlayerAvailableCommandsEvent) {
         if (auth.isAuthenticated(event.player.username)) return
-        // Brigadier exposes children as an unmodifiable view; strip via the backing maps.
-        stripCommandsExceptLogin(event.rootNode)
+        // Cosmetic: if Brigadier internals ever move again, an unauthenticated
+        // player keeps seeing the full tree instead of spamming the proxy log
+        // with an event-handler error (the commands are still denied above).
+        runCatching { stripCommandsExceptLogin(event.rootNode) }
+            .onFailure {
+                logger.warn(
+                    "could not hide commands for unauthenticated {}: {}",
+                    event.player.username,
+                    it.toString(),
+                )
+            }
     }
 
     private fun stripCommandsExceptLogin(root: com.mojang.brigadier.tree.RootCommandNode<*>) {
         val names = root.children.map { it.name }.filterNot { isLoginCommand(it) }
         if (names.isEmpty()) return
-        for (fieldName in listOf("children", "literals", "arguments")) {
-            val field = com.mojang.brigadier.tree.CommandNode::class.java.getDeclaredField(fieldName)
-            field.isAccessible = true
-            @Suppress("UNCHECKED_CAST")
-            val map = field.get(root) as MutableMap<String, *>
-            names.forEach { map.remove(it) }
-        }
+        // Velocity's shaded Brigadier only exposes `children`; the upstream
+        // `literals`/`arguments` maps are not present (NoSuchFieldException).
+        val field = com.mojang.brigadier.tree.CommandNode::class.java.getDeclaredField("children")
+        field.isAccessible = true
+        @Suppress("UNCHECKED_CAST")
+        val map = field.get(root) as MutableMap<String, *>
+        names.forEach { map.remove(it) }
     }
 
     @Subscribe

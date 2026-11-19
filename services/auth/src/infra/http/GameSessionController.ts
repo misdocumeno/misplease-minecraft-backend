@@ -5,11 +5,14 @@ import { IsGameSessionAuthenticatedUseCase } from '@/application/IsGameSessionAu
 import { InvalidateGameSessionUseCase } from '@/application/InvalidateGameSessionUseCase'
 import { ClearAllGameSessionsUseCase } from '@/application/ClearAllGameSessionsUseCase'
 import { ListAuthenticatedSessionsUseCase } from '@/application/ListAuthenticatedSessionsUseCase'
+import { logEvent, requestIdOf } from '@/infra/log/logger'
 
 const LoginBodySchema = z.object({
     username: z.string(),
     password: z.string(),
 })
+
+const SourceSchema = z.string().max(64).default('unknown')
 
 export class GameSessionController {
     constructor(
@@ -30,7 +33,9 @@ export class GameSessionController {
 
     private async login(req: Request, res: Response) {
         const { username, password } = LoginBodySchema.parse(req.body)
-        const ok = await this.sessionCreateUseCase.execute(username, password)
+        // The proxy generates this id and logs it on the limbo and session lines.
+        const loginId = requestIdOf(res)
+        const ok = await this.sessionCreateUseCase.execute(username, password, loginId)
         if (ok) {
             res.status(200).json({ type: 'Success' })
         } else {
@@ -39,20 +44,31 @@ export class GameSessionController {
     }
 
     private async invalidate(req: Request, res: Response) {
-        const { username } = z.object({ username: z.string() }).parse(req.body)
+        const { username, source } = z
+            .object({ username: z.string(), source: SourceSchema })
+            .parse(req.body)
         // Must await: otherwise reconnect can race and still see the Redis session.
-        await this.sessionInvalidateUseCase.execute(username)
-        res.status(200).json({ type: 'Success' })
+        const removed = await this.sessionInvalidateUseCase.execute(username, source)
+        res.status(200).json({ type: 'Success', removed })
     }
 
-    private async clearAll(_req: Request, res: Response) {
-        await this.clearAllUseCase.execute()
-        res.status(200).json({ type: 'Success' })
+    private async clearAll(req: Request, res: Response) {
+        const source = z
+            .object({ source: SourceSchema })
+            .parse(req.body ?? {})
+            .source
+        const removed = await this.clearAllUseCase.execute(source)
+        res.status(200).json({ type: 'Success', removed })
     }
 
     private async isAuthenticated(req: Request, res: Response) {
         const { username } = z.object({ username: z.string() }).parse(req.query)
         const authenticated = await this.authenticatedUseCase.execute(username)
+        logEvent('info', 'session.check', {
+            username,
+            authenticated,
+            requestId: requestIdOf(res),
+        })
         res.json({ authenticated })
     }
 
