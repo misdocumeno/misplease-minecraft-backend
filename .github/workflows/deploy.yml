@@ -17,6 +17,10 @@
 # The gate below pins here only when every changed file is obs/deploy-agent/
 # hibernate; the `images` workflow_run pins everything else once smoke is green.
 #
+# `wanted` only ever moves forwards (ancestry, not arrival order): `images` runs
+# finish out of order, and a late completion for an older commit used to overwrite
+# a newer pin, silently skipping an agent-only change.
+#
 # Do NOT trigger on every main push in parallel with `images`: that pinned wanted
 # before tags existed and before smoke. Failed smoke → images conclusion≠success
 # → set-wanted must not run.
@@ -127,8 +131,73 @@ jobs:
                     "leaving the pin to the images workflow_run")
           PY
 
+      # A late `images` completion for an *older* commit must not overwrite a newer
+      # pin: that is how 3fc829b (hibernate watchdog, agent-only) got replaced by
+      # 97d82da on 2026-11-19, so the container restarted with the old agent.py and
+      # nothing reported it. Order by ancestry, not by arrival time. A manual
+      # workflow_dispatch is exempt on purpose (rolling back to an older sha is
+      # exactly what a human dispatches for).
+      - name: Never move wanted backwards
+        id: order
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          MISPLEASE_ROOT: ${{ vars.MISPLEASE_ROOT }}
+          WANTED_SHA: ${{ github.event.inputs.sha || github.event.workflow_run.head_sha || github.sha }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          export MISPLEASE_ROOT="${MISPLEASE_ROOT:-/home/mis/misplease}"
+          if [ "${EVENT}" = "workflow_dispatch" ]; then
+            echo "manual dispatch: pinning what was asked for"
+            echo "ok=true" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+          python3 - "$REPO" "$WANTED_SHA" "${MISPLEASE_ROOT}/.deploy-state.json" <<'PY'
+          import json, os, sys, urllib.error, urllib.request
+
+          repo, sha, state_path = sys.argv[1], sys.argv[2], sys.argv[3]
+          try:
+              with open(state_path, encoding="utf-8") as fh:
+                  current = (json.load(fh).get("wanted") or "").strip()
+          except (OSError, ValueError):
+              current = ""
+
+          ok = True
+          if not current or current == sha:
+              print(f"wanted={sha[:7]}: nothing to reorder")
+          else:
+              url = f"https://api.github.com/repos/{repo}/compare/{current}...{sha}"
+              req = urllib.request.Request(
+                  url,
+                  headers={
+                      "Authorization": f"Bearer {os.environ['GH_TOKEN']}",
+                      "Accept": "application/vnd.github+json",
+                      "User-Agent": "misplease-deploy-order",
+                  },
+              )
+              try:
+                  with urllib.request.urlopen(req, timeout=30) as r:
+                      status = json.load(r).get("status")
+              except (urllib.error.URLError, TimeoutError, OSError) as e:
+                  # Never stall a deploy because ordering could not be read.
+                  print(f"WARNING: cannot compare {current[:7]} with {sha[:7]} ({e}); pinning anyway")
+                  status = "unknown"
+              if status == "behind":
+                  ok = False
+                  print(f"refusing to move wanted backwards: {sha[:7]} is behind {current[:7]}")
+              elif status == "diverged":
+                  print(f"WARNING: {sha[:7]} diverged from {current[:7]}; pinning anyway")
+              else:
+                  print(f"wanted {current[:7]} -> {sha[:7]} ({status})")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
+              out.write(f"ok={'true' if ok else 'false'}\n")
+          PY
+
       - name: Write .deploy-state.json wanted
-        if: github.event_name != 'push' || steps.gate.outputs.pin == 'true'
+        if: >-
+          (github.event_name != 'push' || steps.gate.outputs.pin == 'true') &&
+          steps.order.outputs.ok == 'true'
         env:
           MISPLEASE_ROOT: ${{ vars.MISPLEASE_ROOT }}
           DEPLOY_ALERT_WEBHOOK: ${{ secrets.DEPLOY_ALERT_WEBHOOK }}
