@@ -1,11 +1,13 @@
 # Pin wanted SHA on the host. The ops `deployer` reconciles:
 #   - hot-reload.yml-only diffs → sync overlay upper + RCON (live)
+#   - obs-only diffs (docker-compose.obs.yml, tools/obs/**) → obs compose only,
+#     no maintenance, no empty gate, no game bounce
 #   - anything else → empty gate + compose pull/up + health
 #
 # Triggers (never race images):
 #   - successful `images` workflow_run on main push (after build+smoke+GHCR tags)
 #   - workflow_dispatch (manual pin)
-#   - push that only touches deploy agent / this workflow (no image rebuild)
+#   - push that only touches deploy agent / obs / this workflow (no image rebuild)
 #
 # Do NOT trigger on every main push in parallel with `images`: that pinned wanted
 # before tags existed and before smoke. Failed smoke → images conclusion≠success
@@ -29,6 +31,10 @@ on:
     branches: [main]
     paths:
       - "tools/deploy/**"
+      # Observability has no image: a push that only touches it still has to pin
+      # `wanted` so the reconciler applies the obs compose project.
+      - "docker-compose.obs.yml"
+      - "tools/obs/**"
       - ".github/workflows/deploy.yml"
 
 concurrency:

@@ -71,6 +71,19 @@ HEALTH_SCRIPT = Path(
         str(Path(__file__).resolve().parent / "post-deploy-health.sh"),
     )
 )
+OBS_COMPOSE_FILE = os.environ.get("OBS_COMPOSE_FILE", "docker-compose.obs.yml")
+OBS_CONTAINERS = [
+    os.environ.get("OBS_METRICS_CONTAINER", "misplease-obs-metrics"),
+    os.environ.get("OBS_TRACES_CONTAINER", "misplease-obs-traces"),
+    os.environ.get("OBS_ALLOY_CONTAINER", "misplease-obs-alloy"),
+]
+# Paths owned by the observability project. A diff limited to these is pinned
+# and applied with its own compose file: no maintenance, no empty gate, no game
+# restart. The game deployer only restarts what classify says changed.
+_OBS_GLOBS = [
+    "docker-compose.obs.yml",
+    "tools/obs/**",
+]
 ALERT_WEBHOOK = os.environ.get("DEPLOY_ALERT_WEBHOOK", "")
 
 # Compose service name → Docker DNS name on the project network.
@@ -451,6 +464,53 @@ def path_matches(globs: list[str], path: str) -> bool:
     return False
 
 
+def obs_paths_changed(applied: str | None, wanted: str) -> bool:
+    """True if the applied→wanted diff touches the observability project."""
+    if not applied or applied == wanted:
+        return False
+    try:
+        changes = git_diff_status(applied, wanted)
+    except subprocess.CalledProcessError:
+        return False
+    return any(path_matches(_OBS_GLOBS, path) for _, path, _ in changes)
+
+
+def apply_obs() -> bool:
+    """Bring the obs project to the pinned checkout (idempotent).
+
+    Its own compose project and its own health: never arms maintenance, never
+    waits for the empty gate and never touches a game container. Core services
+    only (profiles such as `ui`/`logs` stay as the operator left them).
+    """
+    path = ROOT / OBS_COMPOSE_FILE
+    if not path.is_file():
+        log(f"obs: {OBS_COMPOSE_FILE} not in checkout — skipped")
+        return False
+    log(f"obs: applying {OBS_COMPOSE_FILE}")
+    try:
+        run(["docker", "compose", "-f", OBS_COMPOSE_FILE, "up", "-d"])
+    except subprocess.CalledProcessError as e:
+        alert(f"obs apply failed ({e}) — game deploy unaffected")
+        return False
+
+    not_running = []
+    for name in OBS_CONTAINERS:
+        r = subprocess.run(
+            ["docker", "inspect", "-f", "{{.State.Running}}", name],
+            cwd=str(ROOT),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if r.stdout.strip() != "true":
+            not_running.append(name)
+    if not_running:
+        alert(f"obs containers not running after apply: {', '.join(not_running)}")
+        return False
+    log("obs apply OK (core services up)")
+    return True
+
+
 def parse_plugins_config_path(path: str) -> tuple[str, str, str] | None:
     """If path is under a server plugins config tree, return (server, kind, rel).
 
@@ -528,6 +588,18 @@ def classify_config_hot_reload(
             "git pin + re-exec agent (no game bounce)"
         )
         return []
+
+    # Observability is its own project: drop it from the game diff so an obs-only
+    # push never arms maintenance, and a mixed diff still hot-reloads the game
+    # side. apply_obs() runs separately from the applied→wanted diff.
+    game_changes = [c for c in non_agent if not path_matches(_OBS_GLOBS, c[1])]
+    if not game_changes:
+        log(
+            f"obs-only diff ({len(non_agent)} paths) — "
+            "git pin + obs project (no game bounce, no empty gate)"
+        )
+        return []
+    non_agent = game_changes
 
     rules = load_config_hot_reload_rules(wanted)
     if not rules:
@@ -765,6 +837,7 @@ def apply_config_hot_reload(sha: str, actions: list[dict[str, Any]]) -> bool:
     global _applying
     _applying = True
     st = load_state()
+    prev_applied = st.get("applied")
     st["applying"] = True
     save_state(st)
     try:
@@ -772,6 +845,8 @@ def apply_config_hot_reload(sha: str, actions: list[dict[str, Any]]) -> bool:
             # Empty diff or agent-only: pin checkout; re-exec so the new code
             # from the /app bind mount replaces this process.
             git_pin(sha)
+            if obs_paths_changed(prev_applied, sha):
+                apply_obs()
             st = load_state()
             st["applied"] = sha
             st.pop("configHotReload", None)
@@ -792,6 +867,8 @@ def apply_config_hot_reload(sha: str, actions: list[dict[str, Any]]) -> bool:
         )
         # Pin first so the checkout (and the rules file on disk) matches wanted.
         git_pin(sha)
+        if obs_paths_changed(prev_applied, sha):
+            apply_obs()
         rules_by_id = {
             str(r.get("id")): r
             for r in load_config_hot_reload_rules(sha)
@@ -893,6 +970,26 @@ def pin_dotenv_image_tag(tag: str) -> None:
     log(f"pinned IMAGE_TAG={tag} in .env")
 
 
+def unpause_all() -> None:
+    """Unpause hibernated containers before compose stops/recreates them.
+
+    Docker refuses to stop a paused container, and an idle backend may be
+    frozen (cgroup freezer) by the sleep feature. Waking it here is the same
+    thing a player join does; the check is per container and idempotent.
+    """
+    for name in CONTAINERS.values():
+        r = subprocess.run(
+            ["docker", "inspect", "-f", "{{.State.Paused}}", name],
+            cwd=str(ROOT),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if r.stdout.strip() == "true":
+            log(f"unpausing {name} before compose apply")
+            run(["docker", "unpause", name], check=False)
+
+
 def compose_pull_up(tag: str) -> str:
     """Pull + up with IMAGE_TAG=$sha. Missing tags → raise and retry (no :dev fallback)."""
     env = compose_env(tag)
@@ -959,6 +1056,7 @@ def apply_compose(sha: str) -> bool:
     global _applying
     _applying = True
     st = load_state()
+    prev_applied = st.get("applied")
     st["applying"] = True
     save_state(st)
     try:
@@ -970,7 +1068,10 @@ def apply_compose(sha: str) -> bool:
             maintenance_clear()
             return False
 
+        unpause_all()
         git_pin(sha)
+        if obs_paths_changed(prev_applied, sha):
+            apply_obs()
         used_tag = compose_pull_up(sha)
         ok = run_health()
         st = load_state()

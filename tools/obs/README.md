@@ -13,8 +13,12 @@ into swap.
 | `victoria-logs` | logs, 7 d | on demand (`logs`) |
 
 Measured on prod: core ≈ 130 MB (alloy 87, metrics 36, traces 3). Grafana adds
-~170 MB, VictoriaLogs ~2–20 MB. Every container has a hard `mem_limit`, so a
+~170 MB, VictoriaLogs ~2-20 MB. Every container has a hard `mem_limit`, so a
 runaway scraper or UI cannot take the game down with it.
+
+**Shipping:** a push touching `docker-compose.obs.yml` or `tools/obs/**` pins the
+deploy, and the deployer applies this project only (`up -d`, core services) — no
+maintenance mode, no empty gate, no game restart. Mixed commits do both.
 
 Grafana is on demand on purpose: 170 MB resident is not free on a VM that already
 swaps, and it holds no data of its own — starting it takes seconds.
