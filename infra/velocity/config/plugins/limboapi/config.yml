@@ -51,9 +51,13 @@ main:
   prepare-min-version: "1_20"
   prepare-max-version: "LATEST"
   # Helpful if you want some plugins proceed before LimboAPI. For example, it is needed to Floodgate to replace UUID.
+  # LimboAPI sends this profile in its own tab-list packet, so anything that sets
+  # skin textures has to run *before* it: without skinsrestorer here the login
+  # limbo shows every player with the default skin (the proxy is offline-mode).
   pre-limbo-profile-request-plugins:
     - "floodgate"
     - "geyser"
+    - "skinsrestorer"
   # Should reduced debug info be enabled (reduced information in F3) if there is no preference for Limbo
   reduced-debug-info: false
   # Used to hide unsigned chat popup
