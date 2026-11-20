@@ -3,50 +3,43 @@ package io.github.misdocumeno
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
-import java.nio.file.Files
-import java.time.Clock
-import java.time.Instant
-import java.time.LocalTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Every calendar day at [at] (local [timezone]), declare one restart intent.
- * If the server is empty (≥ [empty-seconds]), stop now. If not, stay pending and
- * stop at the first later moment it has been empty that long — even days later.
- * Missed days do not stack (one pending max). State survives JVM restarts via
- * `last-completed` in the data folder so Docker bounce does not loop.
+ * Restart the JVM after [maxAwakeSeconds] of *awake* time, once it is empty.
+ *
+ * A calendar slot does not fit hibernation: a server can be frozen for days, and
+ * a missed 05:00 would otherwise fire the moment a player wakes it and leaves.
+ * The counter only advances while the scheduler runs, so frozen time does not
+ * count. It is in-memory on purpose: any JVM restart (deploy, crash, this
+ * restarter) resets it, which is exactly the event this plugin schedules.
+ *
+ * Docker `restart: unless-stopped` brings the JVM back after the stop.
  */
 class BackendRestarterPlugin : JavaPlugin() {
     private val stopping = AtomicBoolean(false)
-    private var zone: ZoneId = ZoneId.systemDefault()
-    private var at: LocalTime = LocalTime.of(5, 0)
+    private var maxAwakeSeconds: Long = 24L * 3600
     private var emptySeconds: Long = 60
     private var warnMessage: String = ""
 
-    /** Intent declared; waiting for empty grace. */
-    private var pending: Boolean = false
-
-    /** When we last finished a stop (UTC instant); persisted. */
-    private var lastCompleted: Instant? = null
-
+    private var awakeSeconds: Long = 0
+    private var due: Boolean = false
     private var emptySinceMs: Long? = null
 
     override fun onEnable() {
         saveDefaultConfig()
-        // CI smoke: empty server near the daily `at` window must not pending-stop.
+        // CI smoke: an empty server must not stop itself during the smoke boot.
         if (isSmokeBoot()) {
             logger.info("restarter disabled (smoke boot)")
             return
         }
         reloadFromConfig()
-        lastCompleted = readLastCompleted()
-        // Every 10s is enough for a 60s empty gate.
-        server.scheduler.runTaskTimer(this, Runnable { tick() }, 20L * 10, 20L * 10)
+        // Every 10 s is enough for a 60 s empty gate; it also bounds the awake
+        // counter's granularity to 10 s, which is irrelevant at 24 h.
+        server.scheduler.runTaskTimer(this, Runnable { tick() }, TICK_TICKS, TICK_TICKS)
         logger.info(
             "restarter enabled=${config.getBoolean("enabled")} " +
-                "tz=$zone at=$at empty-seconds=$emptySeconds lastCompleted=$lastCompleted",
+                "maxAwake=${maxAwakeSeconds / 3600}h empty-seconds=$emptySeconds",
         )
     }
 
@@ -58,14 +51,7 @@ class BackendRestarterPlugin : JavaPlugin() {
 
     private fun reloadFromConfig() {
         reloadConfig()
-        zone = runCatching { ZoneId.of(config.getString("timezone") ?: "UTC") }
-            .getOrElse { ZoneId.systemDefault() }
-        // `at` preferred; `window-start` kept as alias for old configs.
-        at = parseTime(
-            config.getString("at")
-                ?: config.getString("window-start")
-                ?: "05:00",
-        )
+        maxAwakeSeconds = (config.getLong("max-awake-hours").takeIf { it > 0 } ?: 24L) * 3600
         emptySeconds = config.getLong("empty-seconds").coerceAtLeast(10)
         warnMessage = config.getString("warn-message")?.trim().orEmpty()
     }
@@ -73,25 +59,19 @@ class BackendRestarterPlugin : JavaPlugin() {
     private fun tick() {
         if (!config.getBoolean("enabled") || stopping.get()) return
 
-        val nowZoned = Clock.system(zone).instant().atZone(zone)
-        val nowInstant = nowZoned.toInstant()
-        val todayAt = nowZoned.toLocalDate().atTime(at).atZone(zone).toInstant()
-
-        if (!pending && !nowInstant.isBefore(todayAt)) {
-            val doneThisSlot = lastCompleted != null && !lastCompleted!!.isBefore(todayAt)
-            if (!doneThisSlot) {
-                pending = true
-                emptySinceMs = null
-                logger.info("restarter pending (daily at=$at tz=$zone)")
-            }
+        awakeSeconds += TICK_SECONDS
+        if (!due && RestarterDecision.isDue(awakeSeconds, maxAwakeSeconds)) {
+            due = true
+            logger.info(
+                "restarter: ${awakeSeconds / 3600}h awake, waiting for empty",
+            )
         }
-
-        if (!pending) return
+        if (!due) return
 
         val online = Bukkit.getOnlinePlayers().size
         if (online > 0) {
             if (emptySinceMs != null) {
-                logger.info("restarter: $online player(s) online — empty timer reset (still pending)")
+                logger.info("restarter: $online player(s) online — empty timer reset (still waiting)")
             }
             emptySinceMs = null
             return
@@ -100,41 +80,23 @@ class BackendRestarterPlugin : JavaPlugin() {
         val nowMs = System.currentTimeMillis()
         val since = emptySinceMs ?: nowMs.also { emptySinceMs = it }
         val waitedSec = (nowMs - since) / 1000
-        if (waitedSec < emptySeconds) return
+        if (!RestarterDecision.shouldStop(due, online, emptySeconds, waitedSec)) return
 
         if (!stopping.compareAndSet(false, true)) return
-        logger.info("restarter: empty for ${waitedSec}s — graceful stop")
+        logger.info(
+            "restarter: ${awakeSeconds / 3600}h awake and empty for ${waitedSec}s — graceful stop",
+        )
         if (warnMessage.isNotEmpty()) {
             val component = LegacyComponentSerializer.legacyAmpersand().deserialize(warnMessage)
             Bukkit.getServer().sendMessage(component)
         }
-        pending = false
-        lastCompleted = Instant.now()
-        writeLastCompleted(lastCompleted!!)
         server.scheduler.runTaskLater(this, Runnable {
             Bukkit.shutdown()
         }, 40L)
     }
 
-    private fun lastCompletedFile() = dataFolder.resolve("last-completed")
-
-    private fun readLastCompleted(): Instant? {
-        val f = lastCompletedFile()
-        if (!f.isFile) return null
-        return runCatching { Instant.parse(f.readText().trim()) }
-            .onFailure { logger.warning("ignoring bad last-completed: ${it.message}") }
-            .getOrNull()
+    private companion object {
+        const val TICK_SECONDS = 10L
+        const val TICK_TICKS = 20L * 10
     }
-
-    private fun writeLastCompleted(instant: Instant) {
-        runCatching {
-            Files.createDirectories(dataFolder.toPath())
-            lastCompletedFile().writeText(instant.toString())
-        }.onFailure { logger.warning("could not persist last-completed: ${it.message}") }
-    }
-
-    private fun parseTime(raw: String): LocalTime =
-        runCatching { LocalTime.parse(raw.trim(), DateTimeFormatter.ofPattern("H:mm")) }
-            .recoverCatching { LocalTime.parse(raw.trim(), DateTimeFormatter.ofPattern("HH:mm")) }
-            .getOrElse { LocalTime.of(5, 0) }
 }

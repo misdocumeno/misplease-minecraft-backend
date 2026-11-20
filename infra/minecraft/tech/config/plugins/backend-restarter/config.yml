@@ -1,5 +1,7 @@
+# Restart after this many hours of *awake* time. Frozen time (hibernation)
+# does not count, so a server asleep for days is not restarted just for waking.
+# The restart waits until the server has been empty for `empty-seconds`.
 enabled: true
-timezone: America/Argentina/Buenos_Aires
-at: "05:00"
+max-awake-hours: 24
 empty-seconds: 60
-warn-message: "&eReinicio diario: el servidor se apaga en unos segundos…"
+warn-message: "&eReinicio programado: el servidor se apaga en unos segundos."
