@@ -410,14 +410,31 @@ jobs:
           docker push "${image}:${{ github.sha }}"
           docker push "${image}:dev"
 
+  # Pure unit tests: deploy pin rules and hibernate decisions. No docker, no root,
+  # no network (those are covered by the live matrix in
+  # .local/notes/test-matrix.md). A red test blocks promote-sha-tags, so the pin
+  # never points at a sha whose rules are known-broken.
+  unit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Deploy pin rules
+        run: python -m unittest discover -s tools/deploy/tests -v
+      - name: Hibernate state machine
+        run: python -m unittest discover -s tools/hibernate/tests -v
+
   # Deploy pins IMAGE_TAG=$sha for every service. paths-filter skips unchanged cells, so
   # those :$sha tags would 404 — retag :dev → :$sha for anything not rebuilt this run.
   promote-sha-tags:
-    needs: [changes, auth, servers]
+    needs: [changes, auth, servers, unit]
     if: |
       always() &&
       github.event_name != 'pull_request' &&
       needs.changes.result == 'success' &&
+      needs.unit.result == 'success' &&
       (needs.auth.result == 'success' || needs.auth.result == 'skipped') &&
       (needs.servers.result == 'success' || needs.servers.result == 'skipped')
     runs-on: ubuntu-24.04
