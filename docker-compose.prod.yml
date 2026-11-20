@@ -89,7 +89,7 @@ services:
       # and memory handed back when the server is idle.
       # -XX:-UseBASE64Intrinsics: stopgap for CVE-2026-114938 (Java4Shell, fixed in
       # 25.0.5.1+). Remove once the image reports 25.0.5.1 or newer.
-      - JVM_OPTS=${MAIN_JVM_OPTS:--Xms256M -Xmx3G -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC -XX:+UseCompactObjectHeaders -XX:G1PeriodicGCInterval=300000 -XX:MinHeapFreeRatio=20 -XX:MaxHeapFreeRatio=40 -XX:-UseBASE64Intrinsics -Dorg.maxgamer.quickshop.util.envcheck.skip.SIGNATURE_VERIFY -Dpaper.preferSparkPlugin=true --add-modules=jdk.incubator.vector}
+      - JVM_OPTS=${MAIN_JVM_OPTS:--Xms256M -Xmx3G -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+DisableExplicitGC -XX:+UseCompactObjectHeaders -XX:G1PeriodicGCInterval=300000 -XX:MinHeapFreeRatio=20 -XX:MaxHeapFreeRatio=40 -XX:-UseBASE64Intrinsics -Dorg.maxgamer.quickshop.util.envcheck.skip.SIGNATURE_VERIFY -Dpaper.preferSparkPlugin=true -Ddisable.watchdog=true --add-modules=jdk.incubator.vector}
       - RCON_PASSWORD=${RCON_PASSWORD:-}
     volumes:
       - ./infra/minecraft/main/config:/config:ro
@@ -131,7 +131,7 @@ services:
       - FLOODGATE_KEY_PEM=${FLOODGATE_KEY_PEM:-}
       - FLOODGATE_KEY_B64=${FLOODGATE_KEY_B64:-}
       # Default = live prod tech cmdline + preferSparkPlugin. Override heaps via TECH_JVM_OPTS.
-      - JVM_OPTS=${TECH_JVM_OPTS:--Xms256M -Xmx2G -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseCompactObjectHeaders -XX:G1PeriodicGCInterval=300000 -XX:MinHeapFreeRatio=20 -XX:MaxHeapFreeRatio=40 -XX:-UseBASE64Intrinsics -Dpaper.preferSparkPlugin=true}
+      - JVM_OPTS=${TECH_JVM_OPTS:--Xms256M -Xmx2G -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseCompactObjectHeaders -XX:G1PeriodicGCInterval=300000 -XX:MinHeapFreeRatio=20 -XX:MaxHeapFreeRatio=40 -XX:-UseBASE64Intrinsics -Dpaper.preferSparkPlugin=true -Ddisable.watchdog=true}
       - RCON_PASSWORD=${RCON_PASSWORD:-}
     volumes:
       - ./infra/minecraft/tech/config:/config:ro

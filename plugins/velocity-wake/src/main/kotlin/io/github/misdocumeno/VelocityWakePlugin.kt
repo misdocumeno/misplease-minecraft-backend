@@ -3,19 +3,27 @@ package io.github.misdocumeno
 import com.google.inject.Inject
 import com.velocitypowered.api.event.PostOrder
 import com.velocitypowered.api.event.Subscribe
+import com.velocitypowered.api.event.connection.DisconnectEvent
+import com.velocitypowered.api.event.player.KickedFromServerEvent
+import com.velocitypowered.api.event.player.ServerConnectedEvent
 import com.velocitypowered.api.event.player.ServerPreConnectEvent
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
 import com.velocitypowered.api.plugin.Plugin
+import com.velocitypowered.api.proxy.Player
 import com.velocitypowered.api.proxy.ProxyServer
+import com.velocitypowered.api.scheduler.ScheduledTask
 import io.lettuce.core.RedisClient
 import io.lettuce.core.SetArgs
 import io.lettuce.core.api.StatefulRedisConnection
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
 import org.slf4j.Logger
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 /**
@@ -26,15 +34,17 @@ import java.util.concurrent.TimeUnit
  * host agent thaws it. All this plugin has to do is *ask*: on a connect to a
  * server the host agent has published as `asleep`, drop a wake request in Redis
  * and tell the player what is happening. Velocity's
- * `[advanced] connection-timeout` (10 s) is what covers the thaw (measured 1.2 s).
+ * `[advanced] connection-timeout` is what covers the thaw (measured 1-18 s).
  *
  * Deliberately does not deny the connection: denying would send the player back
- * to the limbo (or kick them on the first join) for a one-second wait.
+ * to the limbo (or kick them on the first join) for a one-second-to-20-second
+ * wait. The action bar repeats until the player is actually on the target
+ * server, so the "waking up" message does not fade while they wait.
  */
 @Plugin(
     id = "wake",
     name = "Wake",
-    version = "0.1.0",
+    version = "0.2.0",
     description = "Wakes hibernated backends before the proxy connects to them",
     authors = ["Mis"],
 )
@@ -52,6 +62,12 @@ class VelocityWakePlugin @Inject constructor(
 
     private var redis: RedisClient? = null
     private var connection: StatefulRedisConnection<String, String>? = null
+
+    /** A connect to [target] is in flight; [previous] is where the player was. */
+    private data class Pending(val target: String, val previous: String?)
+
+    private val pending = ConcurrentHashMap<UUID, Pending>()
+    private val tasks = ConcurrentHashMap<UUID, ScheduledTask>()
 
     @Subscribe
     fun onInit(event: ProxyInitializeEvent) {
@@ -74,6 +90,9 @@ class VelocityWakePlugin @Inject constructor(
 
     @Subscribe
     fun onShutdown(event: ProxyShutdownEvent) {
+        tasks.values.forEach { it.cancel() }
+        tasks.clear()
+        pending.clear()
         connection?.close()
         redis?.shutdown()
     }
@@ -89,21 +108,141 @@ class VelocityWakePlugin @Inject constructor(
         val server = event.result.server.orElse(null)?.serverInfo?.name ?: return
         if (server !in asleep) return
 
-        val conn = connection ?: return
-        try {
-            // NX + TTL: repeated attempts in the same second are one wake.
+        val player = event.player
+        val existing = pending[player.uniqueId]
+        if (existing != null && existing.target != server) {
+            // Two backends cannot be connected at once. Keep the first wake and
+            // tell the player instead of racing two Velocity connections.
+            event.result = ServerPreConnectEvent.ServerResult.denied()
+            player.sendMessage(
+                mm.deserialize(
+                    "$PREFIX<gray>Ya estás conectando a <white>${existing.target}</white>. " +
+                        "Esperá un momento.</gray>",
+                ),
+            )
+            return
+        }
+
+        val created = requestWake(server)
+        logger.info(
+            "{} requested wake of {} (new={})",
+            player.username,
+            server,
+            created,
+        )
+
+        if (existing?.target == server) return // already showing the progress bar
+        startProgress(player, server, event.previousServer?.serverInfo?.name)
+    }
+
+    /** The player is on the target (or somewhere else): the wait is over. */
+    @Subscribe
+    fun onServerConnected(event: ServerConnectedEvent) {
+        stop(event.player.uniqueId)
+    }
+
+    @Subscribe
+    fun onDisconnect(event: DisconnectEvent) {
+        stop(event.player.uniqueId)
+    }
+
+    /**
+     * If the backend still fails (crashed, not merely slow), put the player back
+     * where they came from instead of dropping them to the multiplayer menu.
+     */
+    @Subscribe
+    fun onKickedFromServer(event: KickedFromServerEvent) {
+        val waiting = pending[event.player.uniqueId] ?: return
+        if (event.server.serverInfo.name != waiting.target) return
+        stop(event.player.uniqueId)
+
+        val back = waiting.previous
+            ?.let { proxy.getServer(it).orElse(null) }
+            ?.takeIf { it.serverInfo.name != waiting.target }
+            ?: return
+        event.result = KickedFromServerEvent.RedirectPlayer.create(
+            back,
+            mm.deserialize(
+                "$PREFIX<gray>No pudimos conectarte a <white>${waiting.target}</white>. " +
+                    "Volviste a <white>${back.serverInfo.name}</white>.</gray>",
+            ),
+        )
+    }
+
+    private fun startProgress(player: Player, target: String, previous: String?) {
+        val id = player.uniqueId
+        pending[id] = Pending(target, previous)
+        player.sendMessage(
+            mm.deserialize(
+                buildString {
+                    append(PREFIX)
+                    append("<gray>Despertando <white>")
+                    append(target)
+                    append("</white>…")
+                    if (previous != null) {
+                        append(" <dark_gray>Podés seguir jugando mientras termina.</dark_gray>")
+                    }
+                    append("</gray>")
+                },
+            ),
+        )
+
+        var frame = 0
+        val task = proxy.scheduler
+            .buildTask(
+                this,
+                Runnable {
+                    val still = pending[id]
+                    if (still == null || still.target != target || !player.isActive) {
+                        tasks.remove(id)?.cancel()
+                        return@Runnable
+                    }
+                    if (frame >= MAX_FRAMES) {
+                        player.sendMessage(
+                            mm.deserialize(
+                                "$PREFIX<gray>No pudimos despertar <white>$target</white> a " +
+                                    "tiempo. Probá de nuevo.</gray>",
+                            ),
+                        )
+                        stop(id)
+                        return@Runnable
+                    }
+                    player.sendActionBar(actionBar(target, frame++))
+                },
+            )
+            .repeat(FRAME_MILLIS, TimeUnit.MILLISECONDS)
+            .schedule()
+        tasks.put(id, task)?.cancel() // replace a stale task if one survived
+    }
+
+    private fun stop(id: UUID) {
+        pending.remove(id)
+        tasks.remove(id)?.cancel()
+    }
+
+    /** Alternating colour and animated dots, so the wait visibly progresses. */
+    private fun actionBar(target: String, frame: Int): Component {
+        val dots = ".".repeat((frame / 2) % 3 + 1)
+        val colour = if (frame % 2 == 0) "<gray>" else "<light_purple>"
+        val close = if (frame % 2 == 0) "</gray>" else "</light_purple>"
+        return mm.deserialize("$colour Despertando <white>$target</white>$dots$close")
+    }
+
+    /** Returns true when this call actually created the wake key. */
+    private fun requestWake(server: String): Boolean {
+        val conn = connection ?: return false
+        return try {
+            // NX + TTL: repeated attempts while the same freeze is in progress
+            // are one wake, even if the player spams the warp command.
             conn.sync().set(
                 WAKE_PREFIX + server,
                 System.currentTimeMillis().toString(),
                 SetArgs.Builder.nx().ex(120),
-            )
-            logger.info("{} requested wake of {}", event.player.username, server)
+            ) == "OK"
         } catch (e: Exception) {
             logger.warn("redis wake request failed for {}: {}", server, e.message)
+            false
         }
-        event.player.sendActionBar(
-            mm.deserialize("$PREFIX<gray>Despertando <white>$server</white>…</gray>"),
-        )
     }
 
     private fun refresh() {
@@ -127,6 +266,9 @@ class VelocityWakePlugin @Inject constructor(
         /** Keep in sync with `tools/hibernate/agent.py`. */
         const val STATE_KEY = "misplease:hibernate:state"
         const val WAKE_PREFIX = "misplease:hibernate:wake:"
+
+        const val FRAME_MILLIS = 400L
+        const val MAX_FRAMES = 150 // 60 s, comfortably past connection-timeout
 
         /** Same prefix as the rest of the network. */
         const val PREFIX =

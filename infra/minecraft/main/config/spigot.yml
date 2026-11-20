@@ -19,11 +19,12 @@ settings:
   player-shuffle: 0
   user-cache-size: 1000
   log-villager-deaths: true
-  # -1 = disabled. The watchdog measures wall-clock idle time, so any container
-  # freeze longer than this (hibernation, `docker pause`) makes it "restart" the
-  # server as soon as it thaws: main rebooted 20 s after a wake on 2026-11-19
-  # (8 min freeze, timeout 60). Hangs are covered by the obs stack + TPS alerts
-  # and the deploy health check instead.
+  # Paper/Purpur clamps timeout-time <= 0 to 300 s (WatchdogThread.doStart), so
+  # -1 alone does NOT disable it: a long `docker pause` thaws with a huge tick
+  # gap and the watchdog halts the server (main did exactly that on 2026-11-20,
+  # 15 h frozen). The real switch is -Ddisable.watchdog=true in JVM_OPTS (see
+  # docker-compose*.yml). Hangs are covered by the obs stack + TPS alerts and
+  # the deploy health check instead.
   timeout-time: -1
   restart-on-crash: true
   restart-script: ./start.sh
