@@ -41,6 +41,11 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+# Pure decisions live in decisions.py so they can be tested without root/docker.
+# The script's directory is on sys.path both for `/app/agent.py` in the container
+# and for `python tools/hibernate/agent.py` from the repo root.
+from decisions import freeze_blocker, should_reclaim, tick_due
+
 POLL_SECONDS = float(os.getenv("HIBERNATE_POLL_SECONDS", "15"))
 # While something sleeps, watch the wake keys this often instead of POLL_SECONDS.
 WAKE_POLL_SECONDS = float(os.getenv("HIBERNATE_WAKE_POLL_SECONDS", "1"))
@@ -439,16 +444,19 @@ def tick() -> None:
                 thaw(server)
                 continue            # Keep converging: a freeze that stopped early (agent restarted, or
             # the host was busy) finishes here instead of waiting for a replay.
-            # Skipped while a deploy is queued, since that unpauses it anyway.
-            if not deploy_pending() and not backup_running():
-                try:
-                    cg = cgroup_dir(server)
-                    current = int((cg / "memory.current").read_text().strip())
-                except Exception:
-                    current = 0
-                if current > RECLAIM_FLOOR_MB * 1024 * 1024:
-                    log(f"{server}: asleep with {current // (1024 * 1024)} MiB, reclaiming")
-                    reclaim(server)
+            try:
+                cg = cgroup_dir(server)
+                current = int((cg / "memory.current").read_text().strip())
+            except Exception:
+                current = 0
+            if should_reclaim(
+                memory_bytes=current,
+                floor_bytes=RECLAIM_FLOOR_MB * 1024 * 1024,
+                deploy_pending=deploy_pending(),
+                backup_running=backup_running(),
+            ):
+                log(f"{server}: asleep with {current // (1024 * 1024)} MiB, reclaiming")
+                reclaim(server)
             continue
 
         # Awake: make sure it still answers, the way Spigot's watchdog used to.
@@ -472,17 +480,13 @@ def tick() -> None:
         if idle < AFTER_SECONDS:
             continue
 
-        reason = None
-        if deploy_pending():
-            reason = "deploy pending"
-        elif maintenance_on():
-            reason = "maintenance on"
-        elif backup_running():
-            reason = "backup running"
-        elif wake_requested(server):
-            reason = "wake requested"
-        elif not RCON_PASSWORD:
-            reason = "no RCON password"
+        reason = freeze_blocker(
+            deploy_pending=deploy_pending(),
+            maintenance_on=maintenance_on(),
+            backup_running=backup_running(),
+            wake_requested=wake_requested(server),
+            has_rcon_password=bool(RCON_PASSWORD),
+        )
         if reason:
             log(f"{server}: empty {idle:.0f}s but {reason}, staying awake")
             continue
@@ -523,7 +527,12 @@ def run() -> None:
                 if woke:
                     for server in woke:
                         thaw(server)
-                elif time.monotonic() - last_tick >= POLL_SECONDS:
+                elif tick_due(
+                    sleeping=True,
+                    now=time.monotonic(),
+                    last_tick=last_tick,
+                    poll_seconds=POLL_SECONDS,
+                ):
                     # Still tick while everything sleeps: a freeze interrupted by
                     # an agent restart (every deploy recreates this container)
                     # leaves the container above the reclaim floor, and tick() is
