@@ -110,29 +110,34 @@ class VelocityWakePlugin @Inject constructor(
 
         val player = event.player
         val existing = pending[player.uniqueId]
-        if (existing != null && existing.target != server) {
-            // Two backends cannot be connected at once. Keep the first wake and
-            // tell the player instead of racing two Velocity connections.
-            event.result = ServerPreConnectEvent.ServerResult.denied()
-            player.sendMessage(
-                mm.deserialize(
-                    "$PREFIX<gray>Ya estás conectando a <white>${existing.target}</white>. " +
-                        "Esperá un momento.</gray>",
-                ),
-            )
-            return
+        when (WakeDecision.onPreConnect(server, existing?.target)) {
+            WakeDecision.Action.DENY -> {
+                // Two backends cannot be connected at once. Keep the first wake
+                // and tell the player instead of racing two Velocity connects.
+                val busy = existing?.target ?: return
+                event.result = ServerPreConnectEvent.ServerResult.denied()
+                player.sendMessage(
+                    mm.deserialize(
+                        "$PREFIX<gray>Ya estás conectando a <white>$busy</white>. " +
+                            "Esperá un momento.</gray>",
+                    ),
+                )
+            }
+
+            WakeDecision.Action.START,
+            WakeDecision.Action.CONTINUE -> {
+                val created = requestWake(server)
+                logger.info(
+                    "{} requested wake of {} (new={})",
+                    player.username,
+                    server,
+                    created,
+                )
+                if (existing?.target != server) {
+                    startProgress(player, server, event.previousServer?.serverInfo?.name)
+                }
+            }
         }
-
-        val created = requestWake(server)
-        logger.info(
-            "{} requested wake of {} (new={})",
-            player.username,
-            server,
-            created,
-        )
-
-        if (existing?.target == server) return // already showing the progress bar
-        startProgress(player, server, event.previousServer?.serverInfo?.name)
     }
 
     /** The player is on the target (or somewhere else): the wait is over. */
@@ -153,20 +158,28 @@ class VelocityWakePlugin @Inject constructor(
     @Subscribe
     fun onKickedFromServer(event: KickedFromServerEvent) {
         val waiting = pending[event.player.uniqueId] ?: return
-        if (event.server.serverInfo.name != waiting.target) return
-        stop(event.player.uniqueId)
-
-        val back = waiting.previous
-            ?.let { proxy.getServer(it).orElse(null) }
-            ?.takeIf { it.serverInfo.name != waiting.target }
-            ?: return
-        event.result = KickedFromServerEvent.RedirectPlayer.create(
-            back,
-            mm.deserialize(
-                "$PREFIX<gray>No pudimos conectarte a <white>${waiting.target}</white>. " +
-                    "Volviste a <white>${back.serverInfo.name}</white>.</gray>",
-            ),
-        )
+        when (
+            val action = WakeDecision.onKick(
+                kickedServer = event.server.serverInfo.name,
+                pendingTarget = waiting.target,
+                previous = waiting.previous,
+            )
+        ) {
+            WakeDecision.KickAction.Ignore -> return
+            WakeDecision.KickAction.Disconnect -> stop(event.player.uniqueId)
+            is WakeDecision.KickAction.Redirect -> {
+                stop(event.player.uniqueId)
+                val back = proxy.getServer(action.server).orElse(null) ?: return
+                event.result = KickedFromServerEvent.RedirectPlayer.create(
+                    back,
+                    mm.deserialize(
+                        "$PREFIX<gray>No pudimos conectarte a " +
+                            "<white>${waiting.target}</white>. Volviste a " +
+                            "<white>${back.serverInfo.name}</white>.</gray>",
+                    ),
+                )
+            }
+        }
     }
 
     private fun startProgress(player: Player, target: String, previous: String?) {

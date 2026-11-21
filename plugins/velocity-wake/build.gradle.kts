@@ -5,6 +5,7 @@ plugins {
 dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.lettuce.core)
+    testImplementation(kotlin("test"))
 }
 
 tasks.shadowJar {
