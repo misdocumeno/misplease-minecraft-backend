@@ -1106,8 +1106,16 @@ def image_fallback_sha(wanted: str) -> str | None:
     if not (ROOT / ".git").is_dir():
         return None
     run(["git", "config", "--global", "--add", "safe.directory", str(ROOT)], check=False)
+    # Forced refspec: this clone is shallow and its `origin/main` can be a commit
+    # from before a history rewrite. A plain `main:refs/remotes/origin/main` fetch
+    # is then rejected as non-fast-forward, leaving the ref stale, so the
+    # rev-list below never contains `wanted` and the fallback silently returns
+    # None - the deploy waits forever for tags that will never exist.
     run(
-        ["git", "fetch", "--quiet", "--depth=40", "origin", "main:refs/remotes/origin/main"],
+        [
+            "git", "fetch", "--quiet", "--depth=40",
+            "origin", "+main:refs/remotes/origin/main",
+        ],
         check=False,
     )
     try:
