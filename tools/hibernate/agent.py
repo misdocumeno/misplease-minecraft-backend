@@ -69,6 +69,10 @@ PROBE_SECONDS = float(os.getenv("HIBERNATE_PROBE_SECONDS", "30"))
 HANG_ALERT_AFTER = int(os.getenv("HIBERNATE_HANG_ALERT_AFTER", "3"))
 HANG_RESTART_AFTER = int(os.getenv("HIBERNATE_HANG_RESTART_AFTER", "6"))
 ALERT_WEBHOOK = os.getenv("DEPLOY_ALERT_WEBHOOK", "")
+# Consecutive reconcile/tick failures before alerting. One failed call is normal
+# while Redis or Docker is being recreated; a stuck loop is not: frozen backends
+# cannot wake until it recovers.
+ALERT_AFTER_FAILURES = int(os.getenv("HIBERNATE_ALERT_AFTER_FAILURES", "4"))
 
 STATE_KEY = "misplease:hibernate:state"
 WAKE_PREFIX = "misplease:hibernate:wake:"
@@ -511,14 +515,24 @@ def run() -> None:
         f"step={RECLAIM_STEP_MB} MiB floor={RECLAIM_FLOOR_MB} MiB dry_run={DRY_RUN}")
     if not RCON_PASSWORD:
         log("RCON_PASSWORD is empty: freezing is disabled")
+    failures = 0
     while True:
         try:
             reconcile()
             break
         except Exception as e:
-            log(f"reconcile failed: {type(e).__name__}: {e}")
+            failures += 1
+            log(f"reconcile failed ({failures}): {type(e).__name__}: {e}")
+            if failures == ALERT_AFTER_FAILURES:
+                alert(
+                    f"hibernate agent cannot start after {failures} attempts: "
+                    f"{type(e).__name__}: {e}. Frozen backends cannot wake."
+                )
             time.sleep(POLL_SECONDS)
+    if failures:
+        alert(f"hibernate agent recovered after {failures} failed starts")
     last_tick = 0.0
+    failures = 0
     while True:
         try:
             sleeping = asleep_now()
@@ -544,11 +558,19 @@ def run() -> None:
                     tick()
                     last_tick = time.monotonic()
                 time.sleep(WAKE_POLL_SECONDS)
+                failures = 0
                 continue
             tick()
             last_tick = time.monotonic()
+            failures = 0
         except Exception as e:
-            log(f"tick failed: {type(e).__name__}: {e}")
+            failures += 1
+            log(f"tick failed ({failures}): {type(e).__name__}: {e}")
+            if failures == ALERT_AFTER_FAILURES:
+                alert(
+                    f"hibernate agent failing for {failures} ticks: "
+                    f"{type(e).__name__}: {e}. Wakes and freezes are not running."
+                )
         time.sleep(POLL_SECONDS)
 
 
