@@ -199,7 +199,13 @@ services:
       redis-server
       --requirepass ${REDIS_PASSWORD}
       --appendonly no
-      --save ""
+      --save "3600 1" --save "300 100" --save "60 10000"
+    volumes:
+      # RDB snapshots: the auth sessions (game-sessions:authenticated) are the only
+      # non-derived state here, and losing them on a compose recreate logs everyone
+      # out. AOF stays off so writes do not fsync every second; Redis saves at the
+      # checkpoints above and on a graceful shutdown, and loads on boot.
+      - misplease-redis-data:/data
     healthcheck:
       test: redis-cli -a ${REDIS_PASSWORD} ping
       interval: 10s
@@ -365,3 +371,4 @@ services:
 
 volumes:
   github-runner-data:
+  misplease-redis-data:
