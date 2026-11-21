@@ -47,6 +47,7 @@ from pathlib import Path
 from decisions import (  # noqa: E402
     freeze_blocker,
     presence_age_seconds,
+    redis_endpoint,
     should_reclaim,
     tick_due,
 )

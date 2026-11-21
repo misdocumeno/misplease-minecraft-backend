@@ -12,6 +12,7 @@ from decisions import (  # noqa: E402
     should_reclaim,
     tick_due,
 )
+import agent  # noqa: E402
 
 
 class FreezeBlockerTest(unittest.TestCase):
@@ -170,6 +171,25 @@ class RedisEndpointTest(unittest.TestCase):
             ("localhost", 6379, "0", None),
             redis_endpoint("redis://localhost"),
         )
+
+
+class RedisCommandTest(unittest.TestCase):
+    """Exercises agent.redis() end to end: a missing import here broke prod once."""
+
+    def test_password_travels_in_redisauth_not_argv(self):
+        import os
+        from unittest import mock
+
+        os.environ["REDIS_URL"] = "redis://default:s3cret@redis:6379/0"
+        with mock.patch.object(agent.subprocess, "run") as run:
+            run.return_value = mock.Mock(returncode=0, stdout="PONG\n", stderr="")
+            self.assertEqual("PONG", agent.redis("PING"))
+
+        cmd, kwargs = run.call_args
+        self.assertNotIn("s3cret", " ".join(cmd[0]))
+        self.assertEqual("s3cret", kwargs["env"]["REDISCLI_AUTH"])
+        for flag in ("-h", "redis", "-p", "6379", "-n", "0", "PING"):
+            self.assertIn(flag, cmd[0])
 
 
 if __name__ == "__main__":
