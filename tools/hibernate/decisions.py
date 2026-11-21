@@ -13,6 +13,38 @@ finishes an interrupted ladder. `tick_due()` makes that rule explicit.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
+
+def presence_age_seconds(updated_at: str, now: datetime) -> float:
+    """Seconds since the presence payload was last *changed*.
+
+    `velocity-presence` writes RFC 3339 with nanoseconds (`...123456789Z`) and
+    Go/Python clients may pad or omit the fraction. A parser that silently
+    returns 0 on an odd shape would keep an empty backend awake forever, so the
+    caller gets 0 only for genuinely unparseable input (and then seeds its idle
+    timer from "now", which is the conservative direction).
+    """
+    try:
+        text = updated_at.replace("Z", "+00:00")
+        if "." in text:
+            head, rest = text.split(".", 1)
+            fraction = ""
+            tz = "+00:00"
+            for i, ch in enumerate(rest):
+                if ch.isdigit():
+                    fraction += ch
+                else:
+                    tz = rest[i:]
+                    break
+            text = f"{head}.{(fraction + '000000')[:6]}{tz}"
+        then = datetime.fromisoformat(text)
+    except Exception:
+        return 0.0
+    if then.tzinfo is None:
+        then = then.replace(tzinfo=timezone.utc)
+    return max(0.0, (now - then).total_seconds())
+
 
 def freeze_blocker(
     *,

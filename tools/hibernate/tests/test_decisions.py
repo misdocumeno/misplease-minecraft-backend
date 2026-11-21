@@ -1,10 +1,16 @@
 import sys
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from decisions import freeze_blocker, should_reclaim, tick_due  # noqa: E402
+from decisions import (  # noqa: E402
+    freeze_blocker,
+    presence_age_seconds,
+    should_reclaim,
+    tick_due,
+)
 
 
 class FreezeBlockerTest(unittest.TestCase):
@@ -110,6 +116,37 @@ class TickDueTest(unittest.TestCase):
     def test_sleeping_ticks_after_the_poll(self):
         self.assertTrue(tick_due(sleeping=True, now=15.0, last_tick=0.0, poll_seconds=15))
         self.assertTrue(tick_due(sleeping=True, now=99.0, last_tick=0.0, poll_seconds=15))
+
+
+class PresenceAgeTest(unittest.TestCase):
+    """The idle timer is seeded from `updatedAt`; a bad parse postpones freezing."""
+
+    NOW = datetime(2026, 11, 21, 12, 0, 0, tzinfo=timezone.utc)
+
+    def test_nanosecond_timestamp_from_the_proxy(self):
+        # velocity-presence writes Instant.toString(): 9 fractional digits + Z.
+        # Sub-second precision survives; the rest is truncated, never ignored.
+        self.assertAlmostEqual(
+            119.876544,
+            presence_age_seconds("2026-11-21T11:58:00.123456789Z", self.NOW),
+            places=6,
+        )
+
+    def test_whole_seconds_with_z(self):
+        self.assertEqual(60.0, presence_age_seconds("2026-11-21T11:59:00Z", self.NOW))
+
+    def test_explicit_offset(self):
+        self.assertEqual(60.0, presence_age_seconds("2026-11-21T08:59:00-03:00", self.NOW))
+
+    def test_missing_timezone_is_utc(self):
+        self.assertEqual(60.0, presence_age_seconds("2026-11-21T11:59:00", self.NOW))
+
+    def test_future_timestamp_never_goes_negative(self):
+        self.assertEqual(0.0, presence_age_seconds("2026-11-21T12:00:30Z", self.NOW))
+
+    def test_garbage_is_zero_not_an_exception(self):
+        for raw in ("", "not-a-date", "2026-13-40T99:99:99Z"):
+            self.assertEqual(0.0, presence_age_seconds(raw, self.NOW))
 
 
 if __name__ == "__main__":

@@ -44,7 +44,12 @@ from pathlib import Path
 # Pure decisions live in decisions.py so they can be tested without root/docker.
 # The script's directory is on sys.path both for `/app/agent.py` in the container
 # and for `python tools/hibernate/agent.py` from the repo root.
-from decisions import freeze_blocker, should_reclaim, tick_due
+from decisions import (  # noqa: E402
+    freeze_blocker,
+    presence_age_seconds,
+    should_reclaim,
+    tick_due,
+)
 
 POLL_SECONDS = float(os.getenv("HIBERNATE_POLL_SECONDS", "15"))
 # While something sleeps, watch the wake keys this often instead of POLL_SECONDS.
@@ -224,30 +229,15 @@ def probe_liveness(server: str) -> None:
 def presence_age(presence: dict) -> float:
     """Seconds since the proxy last published presence.
 
-    `velocity-presence` writes on boot, join, switch and leave, so this is how
-    long the current (empty) state has been true - not a heartbeat. Same reading
-    as `empty_age_seconds` in `tools/deploy/agent.py`.
+    `velocity-presence` writes on boot, join, switch and leave (and re-writes the
+    same payload on its heartbeat), so this is how long the current (empty) state
+    has been true - not a heartbeat. Same reading as `empty_age_seconds` in
+    `tools/deploy/agent.py`; parsing lives in `decisions.py` so it is tested.
     """
-    raw = presence.get("updatedAt") or ""
-    try:
-        text = raw.replace("Z", "+00:00")
-        if "." in text:
-            head, rest = text.split(".", 1)
-            frac = ""
-            tz = "+00:00"
-            for i, ch in enumerate(rest):
-                if ch.isdigit():
-                    frac += ch
-                else:
-                    tz = rest[i:]
-                    break
-            text = f"{head}.{(frac + '000000')[:6]}{tz}"
-        then = datetime.fromisoformat(text)
-    except Exception:
-        return 0.0
-    if then.tzinfo is None:
-        then = then.replace(tzinfo=timezone.utc)
-    return max(0.0, (datetime.now(timezone.utc) - then).total_seconds())
+    return presence_age_seconds(
+        presence.get("updatedAt") or "",
+        datetime.now(timezone.utc),
+    )
 
 
 def empty_servers(presence: dict | None) -> set[str] | None:
