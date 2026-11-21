@@ -1143,10 +1143,10 @@ plugins:
     sha256: 76ce40194de1c923683fadf9ea5d2d16bf440c609a4b1ade4dba932b47c0bf07
   - name: BetterWarps
     source: github
-    version: v0.1.3
+    version: v0.1.4
     filename: BetterWarps-1.0-SNAPSHOT.jar
-    url: https://api.github.com/repos/misdocumeno/BetterWarps/releases/tags/v0.1.3
-    sha256: a38bde8b9471174d9d8580cd53e00ee9e7701691b06c51d106e98969283c8fc5
+    url: https://api.github.com/repos/misdocumeno/BetterWarps/releases/tags/v0.1.4
+    sha256: b5c3c1d21044251bc8af7384159fa33ea8bd53d67d38f0f81490c9f73265d911
   - name: BiomePrinter
     source: github
     version: v0.1.1
