@@ -119,11 +119,24 @@ def alert(msg: str) -> None:
 
 
 def redis(*args: str) -> str:
-    """Thin redis-cli wrapper; the image already ships it (same as the deployer)."""
-    out = subprocess.run(
-        ["redis-cli", "-u", os.environ["REDIS_URL"], "--no-auth-warning", *args],
-        capture_output=True, text=True, timeout=15,
-    )
+    """Thin redis-cli wrapper; the image already ships it (same as the deployer).
+
+    The password goes in `REDISCLI_AUTH`, never in argv: the old `-u <url>` form
+    leaked credentials into the log whenever a call timed out (Redis restart),
+    because `TimeoutExpired` includes the command line.
+    """
+    host, port, db, password = redis_endpoint(os.environ["REDIS_URL"])
+    env = {**os.environ}
+    if password:
+        env["REDISCLI_AUTH"] = password
+    cmd = [
+        "redis-cli", "-h", host, "-p", str(port), "-n", db,
+        "--no-auth-warning", *args,
+    ]
+    try:
+        out = subprocess.run(cmd, capture_output=True, text=True, timeout=15, env=env)
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(f"redis-cli {args[0]} timed out after 15s")
     if out.returncode != 0:
         raise RuntimeError(f"redis-cli {args[0]} failed: {out.stderr.strip()}")
     return out.stdout.strip()

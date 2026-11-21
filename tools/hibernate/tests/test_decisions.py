@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from decisions import (  # noqa: E402
     freeze_blocker,
     presence_age_seconds,
+    redis_endpoint,
     should_reclaim,
     tick_due,
 )
@@ -147,6 +148,28 @@ class PresenceAgeTest(unittest.TestCase):
     def test_garbage_is_zero_not_an_exception(self):
         for raw in ("", "not-a-date", "2026-13-40T99:99:99Z"):
             self.assertEqual(0.0, presence_age_seconds(raw, self.NOW))
+
+
+class RedisEndpointTest(unittest.TestCase):
+    """Credentials must never end up in argv (TimeoutExpired logs the command)."""
+
+    def test_full_url(self):
+        self.assertEqual(
+            ("redis", 6379, "0", "s3cret"),
+            redis_endpoint("redis://default:s3cret@redis:6379/0"),
+        )
+
+    def test_defaults_and_percent_encoding(self):
+        self.assertEqual(
+            ("cache.local", 6379, "2", "p@ss word/1"),
+            redis_endpoint("redis://:p%40ss%20word%2F1@cache.local/2"),
+        )
+
+    def test_no_password(self):
+        self.assertEqual(
+            ("localhost", 6379, "0", None),
+            redis_endpoint("redis://localhost"),
+        )
 
 
 if __name__ == "__main__":

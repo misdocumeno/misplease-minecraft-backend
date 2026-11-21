@@ -14,6 +14,23 @@ finishes an interrupted ladder. `tick_due()` makes that rule explicit.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from urllib.parse import unquote, urlsplit
+
+
+def redis_endpoint(url: str) -> tuple[str, int, str, str | None]:
+    """Split a `redis://` URL into (host, port, db, password).
+
+    Exists so the password can travel in `REDISCLI_AUTH` instead of argv: a
+    `TimeoutExpired` repr includes the command line, which used to print the
+    whole URL - credentials included - into the logs during a Redis bounce.
+    """
+    parts = urlsplit(url)
+    return (
+        parts.hostname or "localhost",
+        parts.port or 6379,
+        (parts.path or "/0").lstrip("/") or "0",
+        unquote(parts.password) if parts.password else None,
+    )
 
 
 def presence_age_seconds(updated_at: str, now: datetime) -> float:
