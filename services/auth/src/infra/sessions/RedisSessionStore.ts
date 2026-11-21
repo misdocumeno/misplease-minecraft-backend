@@ -11,8 +11,14 @@ export class RedisSessionStore implements SessionStore {
     private static EVENTS_CHANNEL = 'game-sessions:events'
     private static ORIGIN_PREFIX = 'game-sessions:origin:'
     private static CREATED_PREFIX = 'game-sessions:created-at:'
-    /** A session lives in memory of the player, not here; the id is only for logs. */
-    private static SESSION_META_TTL_SECONDS = 24 * 60 * 60
+    /**
+     * TTL of the correlation metadata only. The session itself is membership in
+     * AUTH_SET_KEY and never expires on its own: it is removed by DisconnectEvent,
+     * the proxy reconcile, or clear-all. A player is never asked to /login again
+     * for being connected too long, so this must outlive any plausible session;
+     * it is just a sweeper for rows whose invalidation never arrived.
+     */
+    private static SESSION_META_TTL_SECONDS = 7 * 24 * 60 * 60
 
     constructor(private readonly redis: AppRedisClient) {}
 
