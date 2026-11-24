@@ -1,13 +1,17 @@
 // Alloy config for the misplease prod VM.
 //
-// Three jobs, nothing else:
+// Four jobs, nothing else:
 //   1. host metrics        (node_exporter collectors, in-process)
 //   2. container metrics   (cAdvisor, in-process; no separate container)
-//   3. OTLP receiver       (traces -> VictoriaTraces; the login trace work)
+//   3. container logs      (docker API -> VictoriaLogs, live)
+//   4. OTLP receiver       (traces -> VictoriaTraces; the login trace work)
 //
-// Logs are NOT shipped from here. They live in docker's json-file/Paper logs and
-// are backfilled on demand with tools/obs/import-logs.py, so a stopped
-// VictoriaLogs never costs us data or memory.
+// Logs are tailed from the docker API and pushed to VictoriaLogs as they are
+// written. Docker's own json-file is only the transport buffer: it is rotated in
+// compose (50 MB x 2), so disk stays bounded, and a container that is deleted or
+// recreated does not take its logs with it. Alloy keeps a positions file in
+// /var/lib/alloy/data, so an Alloy restart resumes instead of losing the gap.
+// tools/obs/import-logs.py remains for backfilling logs from before this was on.
 //
 // Editing this file on the VM is not the source of truth: it is mounted from the
 // repo checkout at ./tools/obs/alloy/config.alloy.
@@ -87,6 +91,60 @@ prometheus.scrape "containers" {
 prometheus.remote_write "metrics" {
   endpoint {
     url = "http://victoriametrics:8428/api/v1/write"
+  }
+}
+
+// --- container logs ----------------------------------------------------------
+// Recommended path for docker logs with Alloy: discover containers through the
+// docker API and tail their stdout/stderr, rather than reading json files from
+// /var/lib/docker or switching the daemon to journald.
+
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+discovery.relabel "logs" {
+  targets = discovery.docker.containers.targets
+
+  // Container name without the leading slash ("/misplease-main" -> "misplease-main").
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "^/(.*)$"
+    target_label  = "container"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_log_stream"]
+    target_label  = "stream"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "service"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_image"]
+    target_label  = "image"
+  }
+}
+
+loki.source.docker "containers" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.logs.output
+  labels     = {}
+  forward_to = [loki.write.logs.receiver]
+}
+
+// VictoriaLogs speaks the Loki push protocol on /insert/loki/api/v1/push; its
+// own 7d retention (docker-compose.obs.yml) is what bounds history.
+loki.write "logs" {
+  endpoint {
+    url = "http://victoria-logs:9428/insert/loki/api/v1/push"
+  }
+
+  external_labels = {
+    host = "misplease-prod-vm",
   }
 }
 

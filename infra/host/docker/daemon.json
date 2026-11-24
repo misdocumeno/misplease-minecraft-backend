@@ -1,6 +1,0 @@
-{
-  "log-driver": "journald",
-  "log-opts": {
-    "tag": "{{.Name}}"
-  }
-}

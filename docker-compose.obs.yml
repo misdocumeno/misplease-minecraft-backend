@@ -5,16 +5,16 @@
 # treat anything else in that project as an orphan. Nothing here is ever touched
 # by CD, and nothing here restarts the game.
 #
-#   core  (always on, ~130 MB): victoriametrics + victoria-traces + alloy
+#   core  (always on, ~150 MB): metrics + traces + alloy + victoria-logs
 #   ui    (on demand, +~180 MB): grafana, http://<vm>:3001
-#   logs  (on demand, +~200 MB): victoria-logs, backfilled from docker's files
+#
+# VictoriaLogs is core, not optional: alloy ships container logs into it live, so
+# stopping it is losing logs, which is the exact thing this stack exists to avoid.
 #
 # Usage, from the stack root:
 #   docker compose -f docker-compose.obs.yml up -d                        # core
 #   docker compose -f docker-compose.obs.yml --profile ui up -d           # + Grafana
-#   docker compose -f docker-compose.obs.yml --profile logs up -d         # + logs
-#   docker compose -f docker-compose.obs.yml --profile ui --profile logs up -d
-#   docker compose -f docker-compose.obs.yml --profile ui --profile logs down
+#   docker compose -f docker-compose.obs.yml stop grafana                 # UI off
 #   docker compose -f docker-compose.obs.yml logs -f alloy
 #
 # Docs: tools/obs/README.md. Reasoning and RAM budget: .local/notes/observability.md
@@ -68,8 +68,9 @@ services:
     cpus: 0.5
     logging: *logging
 
-  # One agent: host metrics, per-container metrics, and the OTLP receiver the
-  # JVMs will send login spans to. cAdvisor runs in-process (no extra container).
+  # One agent: host metrics, per-container metrics, container logs, and the OTLP
+  # receiver the JVMs will send login spans to. cAdvisor runs in-process (no
+  # extra container).
   alloy:
     image: grafana/alloy:v1.22.0
     container_name: misplease-obs-alloy
@@ -96,7 +97,7 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
       - /run/udev:/run/udev:ro
-    mem_limit: 256m
+    mem_limit: 320m
     cpus: 1.0
     ports:
       # OTLP + Alloy API on loopback only, for local debugging and test spans.
@@ -137,10 +138,11 @@ services:
     cpus: 1.0
     logging: *logging
 
-  # Log store. Starting it late is fine: `tools/obs/import-logs.py` backfills
-  # the container logs still on disk, so nothing that mattered is lost.
+  # Log store, always on. alloy pushes container stdout/stderr here (Loki push
+  # protocol) as it is written, so history survives container recreation and
+  # deploys. Retention 7d on disk; nothing else in the stack depends on it, so it
+  # can be stopped for maintenance - you just lose the gap.
   victoria-logs:
-    profiles: ["logs"]
     image: victoriametrics/victoria-logs:v1.54.0
     container_name: misplease-obs-logs
     restart: unless-stopped
@@ -152,7 +154,7 @@ services:
       - logs-data:/victoria-logs-data
     ports:
       - 127.0.0.1:9428:9428
-    mem_limit: 192m
+    mem_limit: 256m
     cpus: 1.0
     logging: *logging
 

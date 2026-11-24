@@ -1,27 +1,27 @@
-# Observability (VictoriaMetrics stack)
+# Observability (Victoria stack)
 
-Lightweight metrics + traces for the misplease stack. Deliberately **not** LGTM:
-the game VM runs with ~500 MiB to spare, so Prometheus/Loki/Tempo would push it
-into swap.
+Lightweight metrics + logs + traces for the misplease stack. Deliberately **not**
+LGTM: the game VM runs with a few hundred MiB of RAM to spare, so
+Prometheus/Loki/Tempo would push it into swap.
 
 | Piece | Role | Always on? |
 |---|---|---|
 | `victoriametrics` | metrics, 48 h | yes |
 | `victoria-traces` | OTLP traces, 14 d | yes (idle until instrumented) |
-| `alloy` | host + container metrics, OTLP receiver | yes |
+| `alloy` | host + container metrics, container logs, OTLP receiver | yes |
+| `victoria-logs` | logs, 7 d | yes |
 | `grafana` | dashboards, LAN `:3001` | on demand (`ui`) |
-| `victoria-logs` | logs, 7 d | on demand (`logs`) |
 
-Measured on prod: core ≈ 130 MB (alloy 87, metrics 36, traces 3). Grafana adds
-~170 MB, VictoriaLogs ~2-20 MB. Every container has a hard `mem_limit`, so a
-runaway scraper or UI cannot take the game down with it.
+Measured on prod: core ~ 150 MB (alloy 87+, metrics 36, traces 3, logs 2-20).
+Grafana adds ~170 MB. Every container has a hard `mem_limit`, so a runaway
+scraper or UI cannot take the game down with it.
 
 **Shipping:** a push touching `docker-compose.obs.yml` or `tools/obs/**` pins the
-deploy, and the deployer applies this project only (`up -d`, core services) — no
+deploy, and the deployer applies this project only (`up -d`, core services) - no
 maintenance mode, no empty gate, no game restart. Mixed commits do both.
 
 Grafana is on demand on purpose: 170 MB resident is not free on a VM that already
-swaps, and it holds no data of its own — starting it takes seconds.
+swaps, and it holds no data of its own - starting it takes seconds.
 
 ## Use
 
@@ -31,40 +31,48 @@ never touches it and it never restarts the game.
 ```bash
 cd /home/mis/misplease
 
-# core (metrics + traces), survives reboots
+# core (metrics + traces + logs), survives reboots
 docker compose -f docker-compose.obs.yml up -d
 
 # + Grafana (UI)
 docker compose -f docker-compose.obs.yml --profile ui up -d
 
-# + VictoriaLogs (the log tier)
-docker compose -f docker-compose.obs.yml --profile logs up -d
-
-# drop them again (their data is kept). Use `stop`, not `down`: `down` takes the
-# whole project, core included, because profiles only affect `up`.
-docker compose -f docker-compose.obs.yml stop grafana victoria-logs
+# drop the UI again (its data is kept). Use `stop`, not `down`: `down` takes the
+# whole project, logs included.
+docker compose -f docker-compose.obs.yml stop grafana
 ```
 
 Grafana: `http://<prod-vm>:3001` (admin / `GRAFANA_ADMIN_PASSWORD` from the
-stack `.env`). Metrics, traces and logs are **not** published beyond the host;
-they listen on `127.0.0.1` (`8428` metrics, `10428` traces, `9428` logs).
+stack `.env`). Nothing is published beyond the host; metrics, traces and logs
+listen on `127.0.0.1` (`8428`, `10428`, `9428`).
 
-## Logs are on demand, and that is intentional
+## Logs ship live
 
-Docker keeps every container's log on disk, so a stopped VictoriaLogs costs no
-data. Start the log tier, then backfill:
+`alloy` discovers containers through the docker API and tails their
+stdout/stderr (`loki.source.docker`), pushing to VictoriaLogs as the lines are
+written. That means:
 
-```bash
-python3 tools/obs/import-logs.py --since 48h
-```
+- history survives a deploy, a container recreate, or `docker rm`;
+- the only copy Docker keeps is a rotated buffer (`25m x 2` per container, set in
+  `docker-compose.prod.yml`), so a chatty container cannot fill the disk;
+- Alloy persists read positions in `/var/lib/alloy/data`, so restarting Alloy
+  resumes instead of skipping the gap.
 
-Fields: `container` (stream name), `_msg`, `_time`. Query in Grafana, or with
+Fields per entry: `container` (container name), `service` (compose service),
+`image`, `stream` (`stdout`/`stderr`), `_msg`, `_time`. Query in Grafana, or with
 LogsQL over HTTP:
 
 ```bash
 curl -s 'http://127.0.0.1:9428/select/logsql/query' \
   --data-urlencode 'query=container:=misplease-main "logged in"' \
   --data-urlencode 'limit=50'
+```
+
+For a period before this was on (or if Alloy was down long enough to rotate the
+buffer away), backfill from what Docker still has:
+
+```bash
+python3 tools/obs/import-logs.py --since 48h
 ```
 
 ## Sending traces
@@ -79,7 +87,7 @@ Tempo API (`/select/tempo`), so TraceQL and Traces Drilldown both work.
 
 ## Adding a metric or a dashboard
 
-- Scrapers live in `tools/obs/alloy/config.alloy`.
+- Scrapers and the log pipeline live in `tools/obs/alloy/config.alloy`.
 - Datasources: `tools/obs/grafana/provisioning/datasources/datasources.yml`.
 - Dashboards: `tools/obs/grafana/dashboards/*.json` (file provider, `misplease`
   folder). `misplease-host.json` is the RAM/CPU/disk one.

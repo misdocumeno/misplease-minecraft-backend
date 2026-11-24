@@ -7,11 +7,22 @@
 #
 # IMAGE_TAG must be a full commit sha (set in .env; deployer pins after healthy apply).
 
+# Docker's json-file is only the transport buffer: alloy tails every container
+# through the docker API and ships it to VictoriaLogs (docker-compose.obs.yml).
+# Keep this small and rotated so a chatty or stuck container cannot fill the disk;
+# the durable copy is already in VictoriaLogs by the time a file rotates.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "25m"
+    max-file: "2"
+
 services:
   velocity:
     image: ghcr.io/misdocumeno/misplease-minecraft-backend/velocity:${IMAGE_TAG:?set IMAGE_TAG to a commit sha}
     container_name: misplease-proxy
     init: true
+    logging: *logging
     stop_grace_period: 30s
     cap_add:
       - SYS_ADMIN
@@ -63,6 +74,7 @@ services:
     image: ghcr.io/misdocumeno/misplease-minecraft-backend/main:${IMAGE_TAG:?set IMAGE_TAG to a commit sha}
     container_name: misplease-main
     init: true
+    logging: *logging
     stop_grace_period: 90s
     cap_add:
       - SYS_ADMIN
@@ -109,6 +121,7 @@ services:
     image: ghcr.io/misdocumeno/misplease-minecraft-backend/tech:${IMAGE_TAG:?set IMAGE_TAG to a commit sha}
     container_name: misplease-tech
     init: true
+    logging: *logging
     stop_grace_period: 90s
     cap_add:
       - SYS_ADMIN
@@ -148,6 +161,7 @@ services:
   auth:
     image: ghcr.io/misdocumeno/misplease-minecraft-backend/auth:${IMAGE_TAG:?set IMAGE_TAG to a commit sha}
     container_name: misplease-auth
+    logging: *logging
     restart: unless-stopped
     environment:
       - DATABASE_URL=postgres://misplease:${DB_PASSWORD}@db:5432/misplease
@@ -163,6 +177,7 @@ services:
   db-migrate:
     image: ghcr.io/misdocumeno/misplease-minecraft-backend/auth:${IMAGE_TAG:?set IMAGE_TAG to a commit sha}
     container_name: misplease-db-migrate
+    logging: *logging
     environment:
       - DATABASE_URL=postgres://misplease:${DB_PASSWORD}@db:5432/misplease
     depends_on:
@@ -173,6 +188,7 @@ services:
   db:
     image: postgres:18-alpine
     container_name: misplease-db
+    logging: *logging
     restart: unless-stopped
     environment:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
@@ -194,6 +210,7 @@ services:
   redis:
     image: redis:8-alpine
     container_name: misplease-redis
+    logging: *logging
     restart: unless-stopped
     command: >
       redis-server
@@ -217,6 +234,7 @@ services:
   resource-pack:
     image: nginx:stable-alpine
     container_name: misplease-resource-pack
+    logging: *logging
     restart: unless-stopped
     volumes:
       - ./infra/minecraft/main/data/state/resource-pack/public:/usr/share/nginx/html:ro
@@ -229,6 +247,7 @@ services:
     profiles: ["ops"]
     image: myoung34/github-runner:ubuntu-noble
     container_name: misplease-gha-runner
+    logging: *logging
     restart: unless-stopped
     environment:
       REPO_URL: https://github.com/misdocumeno/misplease-minecraft-backend
@@ -273,6 +292,7 @@ services:
     profiles: ["ops"]
     image: python:3.13-alpine
     container_name: misplease-deployer
+    logging: *logging
     restart: unless-stopped
     entrypoint:
       - /bin/sh
@@ -311,6 +331,7 @@ services:
     profiles: ["ops"]
     image: python:3.13-alpine
     container_name: misplease-hibernate
+    logging: *logging
     restart: unless-stopped
     entrypoint:
       - /bin/sh
@@ -349,6 +370,7 @@ services:
     profiles: ["ops"]
     image: restic/restic:0.20
     container_name: misplease-backup
+    logging: *logging
     restart: unless-stopped
     entrypoint: ["/bin/sh", "-c", "apk add --no-cache docker-cli docker-cli-compose >/dev/null && exec /bin/sh /scripts/restic-loop.sh"]
     environment:

@@ -76,6 +76,7 @@ OBS_COMPOSE_FILE = os.environ.get("OBS_COMPOSE_FILE", "docker-compose.obs.yml")
 OBS_CONTAINERS = [
     os.environ.get("OBS_METRICS_CONTAINER", "misplease-obs-metrics"),
     os.environ.get("OBS_TRACES_CONTAINER", "misplease-obs-traces"),
+    os.environ.get("OBS_LOGS_CONTAINER", "misplease-obs-logs"),
     os.environ.get("OBS_ALLOY_CONTAINER", "misplease-obs-alloy"),
 ]
 # Paths owned by the observability project. A diff limited to these is pinned
@@ -481,7 +482,7 @@ def apply_obs() -> bool:
 
     Its own compose project and its own health: never arms maintenance, never
     waits for the empty gate and never touches a game container. Core services
-    only (profiles such as `ui`/`logs` stay as the operator left them).
+    only (profiles such as `ui` stay as the operator left them).
     """
     path = ROOT / OBS_COMPOSE_FILE
     if not path.is_file():
@@ -493,6 +494,20 @@ def apply_obs() -> bool:
     except subprocess.CalledProcessError as e:
         alert(f"obs apply failed ({e}) — game deploy unaffected")
         return False
+
+    # `up -d` does not recreate a container whose only change is a bind-mounted
+    # config file, and alloy's config is one. SIGHUP makes it re-read the file
+    # without losing the log positions kept in its data volume.
+    alloy = OBS_CONTAINERS[-1]
+    r = subprocess.run(
+        ["docker", "kill", "-s", "HUP", alloy],
+        cwd=str(ROOT),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if r.returncode != 0:
+        log(f"obs: alloy reload signal failed: {r.stderr.strip()}")
 
     not_running = []
     for name in OBS_CONTAINERS:
