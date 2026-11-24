@@ -22,10 +22,11 @@ export function logEvent(level: LogLevel, event: string, fields: LogFields = {})
         level,
         svc: 'auth',
         event,
-        // `msg` is the field VictoriaLogs promotes to the searchable message
-        // (alloy pushes with ?_msg_field=msg). Without it every line lands as
-        // "missing _msg field" and full-text search skips it.
-        msg: event,
+        // VictoriaLogs unpacks JSON log lines into fields; `_msg` is the field it
+        // keeps as the searchable message. Without it every line lands as
+        // "missing _msg field" and full-text search skips it. (alloy pushes
+        // protobuf, so the ?_msg_field= query arg does not apply.)
+        _msg: event,
         ...fields,
     })
     if (level === 'error') console.error(line)
