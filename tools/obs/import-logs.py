@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Backfill container logs into VictoriaLogs.
 
-The log tier is on demand (`--profile logs`), so starting it late must not lose
-history: docker already keeps the logs on disk. This dumps them, timestamps
-included, into VictoriaLogs.
+Logs are shipped live by alloy since 2026-11-24, so this is only for what that
+missed: history from before it was on, or a stretch when alloy/logs were down.
+It dumps `docker logs`, timestamps included, into VictoriaLogs.
 
     python3 tools/obs/import-logs.py                    # misplease*, 24h
     python3 tools/obs/import-logs.py --since 72h
@@ -11,7 +11,7 @@ included, into VictoriaLogs.
     python3 tools/obs/import-logs.py --all              # every container on the host
 
 Requires: python3 (stdlib only), the docker CLI, and VictoriaLogs running on
-127.0.0.1:9428 (`docker compose -f docker-compose.obs.yml --profile logs up -d`).
+127.0.0.1:9428 (a core service: `docker compose -f docker-compose.obs.yml up -d`).
 Safe to re-run: duplicates show up as repeats, which is honest (docker cannot
 tell us a log line's identity).
 """
