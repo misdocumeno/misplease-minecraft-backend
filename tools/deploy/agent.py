@@ -477,6 +477,26 @@ def obs_paths_changed(applied: str | None, wanted: str) -> bool:
     return any(path_matches(_OBS_GLOBS, path) for _, path, _ in changes)
 
 
+def reload_alloy() -> None:
+    """Make alloy re-read its bind-mounted config.
+
+    Alloy's config lives in the checkout, so any pin can change it, even when
+    this diff does not touch the obs paths. The reload endpoint is cheap and
+    idempotent and keeps the log positions in alloy's data volume; SIGHUP would
+    terminate the process instead. The deployer shares `misplease_default` with
+    alloy, so `alloy:12345` reaches it; if alloy is absent the reload is skipped.
+    """
+    try:
+        req = urllib.request.Request("http://alloy:12345/-/reload", method="POST")
+        with urllib.request.urlopen(req, timeout=15) as r:
+            body = r.read().decode("utf-8", "replace").strip()
+            log(f"obs: alloy reload -> {r.status} {body}")
+    except urllib.error.HTTPError as e:
+        alert(f"obs: alloy rejected its config reload ({e}) — it keeps the old one")
+    except (urllib.error.URLError, TimeoutError, OSError) as e:
+        log(f"obs: alloy reload skipped ({e})")
+
+
 def apply_obs() -> bool:
     """Bring the obs project to the pinned checkout (idempotent).
 
@@ -496,19 +516,9 @@ def apply_obs() -> bool:
         return False
 
     # `up -d` does not recreate a container whose only change is a bind-mounted
-    # config file, and alloy's config is one. Its reload endpoint re-reads the
-    # file without dropping the log positions kept in its data volume; SIGHUP
-    # would just terminate the process. The deployer shares `misplease_default`
-    # with alloy, so `alloy:12345` reaches it.
-    alloy = OBS_CONTAINERS[-1]
-    try:
-        req = urllib.request.Request("http://alloy:12345/-/reload", method="POST")
-        with urllib.request.urlopen(req, timeout=15) as r:
-            body = r.read().decode("utf-8", "replace").strip()
-            log(f"obs: alloy reload -> {r.status} {body}")
-    except (urllib.error.URLError, TimeoutError, OSError) as e:
-        alert(f"obs: alloy config reload failed ({e}) — it keeps the old config")
-        return False
+    # config file, and alloy's config is one. reload_alloy() re-reads it.
+    # (Also called after every git pin: a range of commits can carry an alloy
+    # change even when this particular diff does not touch the obs paths.)
 
     not_running = []
     for name in OBS_CONTAINERS:
@@ -892,6 +902,7 @@ def apply_config_hot_reload(sha: str, actions: list[dict[str, Any]]) -> bool:
             # Empty diff or agent-only: pin checkout; re-exec so the new code
             # from the /app bind mount replaces this process.
             git_pin(sha)
+            reload_alloy()
             if obs_paths_changed(prev_applied, sha):
                 apply_obs()
             st = load_state()
@@ -915,6 +926,7 @@ def apply_config_hot_reload(sha: str, actions: list[dict[str, Any]]) -> bool:
         )
         # Pin first so the checkout (and the rules file on disk) matches wanted.
         git_pin(sha)
+        reload_alloy()
         if obs_paths_changed(prev_applied, sha):
             apply_obs()
         rules_by_id = {
@@ -1205,6 +1217,7 @@ def apply_compose(sha: str) -> bool:
 
         unpause_all()
         git_pin(sha)
+        reload_alloy()
         if obs_paths_changed(prev_applied, sha):
             apply_obs()
         used_tag = compose_pull_up(sha)
