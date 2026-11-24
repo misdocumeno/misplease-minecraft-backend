@@ -138,9 +138,15 @@ loki.source.docker "containers" {
 
 // VictoriaLogs speaks the Loki push protocol on /insert/loki/api/v1/push; its
 // own 7d retention (docker-compose.obs.yml) is what bounds history.
+//
+// _msg_field=msg is a VictoriaLogs extension: when a line is JSON it unpacks it
+// into fields, and without this the message would be replaced by a "missing
+// _msg field" placeholder (auth and alloy log JSON). With it, `msg` becomes the
+// searchable message and every other field stays queryable. Plain lines (Paper,
+// Velocity, Postgres) are unaffected.
 loki.write "logs" {
   endpoint {
-    url = "http://victoria-logs:9428/insert/loki/api/v1/push"
+    url = "http://victoria-logs:9428/insert/loki/api/v1/push?_msg_field=msg"
   }
 
   external_labels = {

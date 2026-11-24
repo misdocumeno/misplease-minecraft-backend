@@ -496,18 +496,19 @@ def apply_obs() -> bool:
         return False
 
     # `up -d` does not recreate a container whose only change is a bind-mounted
-    # config file, and alloy's config is one. SIGHUP makes it re-read the file
-    # without losing the log positions kept in its data volume.
+    # config file, and alloy's config is one. Its reload endpoint re-reads the
+    # file without dropping the log positions kept in its data volume; SIGHUP
+    # would just terminate the process. The deployer shares `misplease_default`
+    # with alloy, so `alloy:12345` reaches it.
     alloy = OBS_CONTAINERS[-1]
-    r = subprocess.run(
-        ["docker", "kill", "-s", "HUP", alloy],
-        cwd=str(ROOT),
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if r.returncode != 0:
-        log(f"obs: alloy reload signal failed: {r.stderr.strip()}")
+    try:
+        req = urllib.request.Request("http://alloy:12345/-/reload", method="POST")
+        with urllib.request.urlopen(req, timeout=15) as r:
+            body = r.read().decode("utf-8", "replace").strip()
+            log(f"obs: alloy reload -> {r.status} {body}")
+    except (urllib.error.URLError, TimeoutError, OSError) as e:
+        alert(f"obs: alloy config reload failed ({e}) — it keeps the old config")
+        return False
 
     not_running = []
     for name in OBS_CONTAINERS:
